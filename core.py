@@ -156,8 +156,9 @@ class Inversion:
     that you are sensitive to in your profile.  Increase *Qmin* to avoid
     values at low Q which will not have the correct phase reconstruction 
     when Q is less than Qc^2 for both surround variation measurements
-    used in the phase reconstruction calculation. See :func:`reconstruct`
-    for details.  *Qmax* and *Qmin* default to the limits of the input data.
+    used in the phase reconstruction calculation. Use this technique
+    sparingly --- the overall shape of the profile is sensitive to data
+    at low Q.  *Qmax* and *Qmin* default to the limits of the input data.
 
     TODO: test and debug backrefl
     *backrefl* should be true if the film is measured with an incident
@@ -224,16 +225,15 @@ class Inversion:
     ================
 
         *Qinput*, *RealRinput*    input data
-        *Qmeshed*, *RealRmeshed*  gridded input data used for calculation
         *Q*,*RealR*,*dRealR*      output data
         *z*,*rho*,*drho*          output profile
+        *signals*,*profiles*      individual inversion stages
 
     The input data *Qinput*, *RealRinput* need to be placed on an even grid
-    going from 0 to *Qmax*.  The gridding algorithm resamples the input data 
-    using linear interpolation, storing the result in *Qmeshed*, *RealRmeshed*.
-    Values below *Qmin* are set to zero.  The number of points between *Qmin* 
-    and *Qmax* is preserved.  This resampling works best when the input data 
-    are equally spaced, starting at k*dQ for some k.
+    going from 0 to *Qmax* using linear interpolation.  Values below *Qmin*
+    are set to zero, and the number of points between *Qmin* and *Qmax* is 
+    preserved.  This resampling works best when the input data are equally 
+    spaced, starting at k*dQ for some k.
 
     The returned *Q*, *RealR*, *dRealR* are the values averaged over multiple
     stages with added noise.  The plots show this as the range of input
@@ -247,24 +247,31 @@ class Inversion:
     will be larger than the actual film thickness, and a portion of the
     vacuum will be included at the beginning of the profile. 
     
-    *rho* is the SLD at depth *z* in units of 10^-6 inv A^2.  This value 
-    will include the correction for the substrate SLD defined by 
-    *surround*.
+    *rho* is the SLD at depth *z* in units of 10^-6 inv A^2.  It is
+    calculated from the average of the inverted profiles from the noisy
+    data sets, and includes the correction for the substrate SLD defined by 
+    *surround*.  The inverted *rho* will contain artifacts from the abrupt
+    cutoff in the signal at *Qmin* and *Qmax*.
 
-    Note that the reflectivity computed from *rho* will not match 
-    the input data because the effect of the substrate has been 
-    removed in the process of reconstructing the phase.  Instead, you
-    will need to compute reflectivity from *rho*-*surround* on the
-    reversed profile.  This is done in :meth:`refl` when no fronting 
-    material is selected, and can be used to show the difference 
-    between measured and inverted reflectivity.  Note that you may need
-    to increase *calcpoints* or modify *thickness* to get a close match.
+    *drho* is the uncertainty in the SLD profile at depth *z*.  It is
+    calculated from the standard deviation of the inverted profiles from
+    the noisy data sets.  The uncertainty *drho* does not take into 
+    account the possible variation in the signal above *Qmax*.
 
-    *drho* is the average of the inverted noisy data sets.  Set *stages*, 
-    *noise* and *monitors* to generate real values.  The uncertainty 
-    *drho* does not take into account the possible variation in the signal 
-    above *Qmax*, and will include spurious ringing because of the 
-    assumption that the signal above *Qmax* abruptly drops to zero.
+    The reflectivity computed from *z*, *rho* will not match the input 
+    data because the effect of the substrate has been removed in the 
+    process of reconstructing the phase.  Instead, you will need to 
+    compute reflectivity from *rho*-*surround* on the reversed profile.  
+    This is done in :meth:`refl` when no fronting material is selected, 
+    and can be used to show the difference between measured and inverted 
+    reflectivity.  You may need to increase *calcpoints* or modify 
+    *thickness* to get a close match.
+
+    *signals* is a list of the noisy (Q,RealR) input signals generated 
+    by the uncertainty controls, and *profiles* is a list of the
+    corresponding (z,rho) profiles.  The first stage is computed without
+    noise, so *signals[0]* contains the meshed input and *profiles[0]* 
+    contains the output of the inversion process without additional noise.
 
     Output methods
     ==============
@@ -327,7 +334,7 @@ class Inversion:
 
     def _remesh(self):
         """
-        Set *Qmeshed*, *RealRmeshed* to gridded data.
+        Returns Qmeshed, RealRmeshed.
 
         Resamples the data on an even grid, setting values below Qmin
         and above Qmax to zero.  The number of points between Qmin and
@@ -346,7 +353,8 @@ class Inversion:
         dQ = (Q[-1]-Q[0])/(len(Q) - 1)
         npts = int(Q[-1]/dQ + 1.5)
         Q,RealR = remesh([Q,RealR], 0, Q[-1], npts, left=0, right=0)
-        self.Qmeshed,self.RealRmeshed = Q,RealR
+        
+        return Q,RealR
 
     def run(self, **kw):
         """
@@ -359,16 +367,17 @@ class Inversion:
         sets *profiles* to the list of generated (z,rho) profiles.
         """
         self._set(**kw)
-        self._remesh()
-        Q,realR = self.Qmeshed,self.RealRmeshed
-        npts = len(realR)
+        Q,RealR = self._remesh()
         signals = []
         profiles = []
         for i in range(self.stages):
-            pnoise = poisson(self.monitor*abs(realR))/self.monitor - abs(realR)
-            unoise = uniform(-1,1,npts)
-            noisyR = realR + self.noise*unoise*pnoise
-            #noisyR = realR + normal(realR,noise*0.01*abs(realR))
+            if i == 0:
+                noisyR = RealR
+            else:
+                pnoise = poisson(self.monitor*abs(RealR))/self.monitor - abs(RealR)
+                unoise = uniform(-1,1,RealR.shape)
+                noisyR = RealR + self.noise*unoise*pnoise
+            #noisyR = RealR + normal(RealR,noise*0.01*abs(RealR))
             ctf = self._transform(noisyR, Qmax=Q[-1], bse=0, porder=1)
             qp = self._invert(ctf, iters=self.iters)
             if self.showiters: # Show individual iterations
@@ -394,7 +403,7 @@ class Inversion:
         drho = std([p[1] for p in self.profiles], axis=0)
         return drho[::-1] if self.backrefl else drho
     def _get_Q(self):
-        return self.Qmeshed
+        return self.signals[0][0]
     def _get_RealR(self):
         return mean([p[1] for p in self.signals], axis=0)
     def _get_dRealR(self):
@@ -467,36 +476,50 @@ class Inversion:
         pylab.subplot(212 if not resid else 313)
         self.plotprofile(details=details)
 
-    def plotdata(self, details=False):
+    def plotdata(self, details=False, lowQ_inset=True):
         """
         Plot the input data.
 
         If *details* is True, then plot the individual stages used to calculate
         the average, otherwise just plot the envelope.
+
+        If *lowQ_inset* is True, then plot a graph of the low Q values not
+        scaled by Q**2.
         """
         import pylab
-        if not hasattr(self, 'signals'):
-            pylab.plot(self.Qmeshed, self.Qmeshed**2*self.RealRmeshed)
-            return
 
-        Q,RealR,dRealR = self.Q, self.RealR, self.dRealR
-        [orig] = pylab.plot(Q, Q**2*RealR)
-        r = self.refl(Q)
-        pylab.plot(Q, Q**2*real(r), 'g')
-        pylab.legend(['original','inverted'])
         if details:
-            Q = self.Q
-            hold = pylab.ishold()
+            realplot(self.Qinput, self.RealRinput)
             for p in self.signals:
-                pylab.plot(Q, Q**2*p[1], hold=hold)
-                hold=True
+                realplot(self.Q, p[1], hold=True)
         else:
-            pylab.fill_between(Q,Q**2*(RealR-dRealR),Q**2*(RealR+dRealR),
-                               color=orig.get_color(),alpha=0.5)
-            #pylab.plot(Q, Q**2*(RealR+dRealR), '--', color=h.get_color())
-            #pylab.plot(Q, Q**2*(RealR-dRealR), '--', color=h.get_color())
-        pylab.ylabel("Q**2 Re r")
-        pylab.xlabel("Q (inv A)")
+            realplot(self.Q, self.RealR, dRealR=self.dRealR, label=None,
+                     linestyle='', color="blue")
+            realplot(self.Qinput, self.RealRinput, label="original", 
+                     color="blue")
+            Rinverted = real(self.refl(self.Qinput))
+            realplot(self.Qinput, Rinverted, label="inverted", color="red")
+            pylab.legend()
+            
+            if lowQ_inset==True:
+                # Low Q inset
+                orig = pylab.gca()
+                box = orig.get_position()
+                ax = pylab.axes([box.xmin+0.02, box.ymin+0.02, 
+                                 box.width/4, box.height/4],
+                                 axisbg=[0.95,0.95,0.65,0.85])
+                ax.plot(self.Qinput, self.RealRinput, color="blue")
+                ax.plot(self.Qinput, Rinverted, color="red")
+                ax.text(0.99,0.01,"Q,Re r for Q<0.05", 
+                        fontsize="10",transform=ax.transAxes,
+                        ha='right', va='bottom')
+                xmax = 0.05
+                ymax = max(max(self.RealRinput[self.Qinput<xmax]),
+                           max(Rinverted[self.Qinput<xmax]))
+                pylab.setp(ax, xticks=[], yticks=[], 
+                           xlim=[0,xmax], ylim=[-1,1.1*(ymax+1)-1])
+                pylab.axes(orig)
+            
 
     def plotprofile(self, details=False):
         """
@@ -516,7 +539,7 @@ class Inversion:
             z,rho,drho = self.z, self.rho, self.drho
             [h] = pylab.plot(z, rho)
             pylab.fill_between(z,rho-drho,rho+drho,
-                               color=h.get_color(),alpha=0.5)
+                               color=h.get_color(),alpha=0.3)
             #pylab.plot(z, rho+drho, '--', color=h.get_color())
             #pylab.plot(z, rho-drho, '--', color=h.get_color())
         pylab.ylabel('SLD (inv A^2)')
@@ -544,7 +567,7 @@ class Inversion:
                 raise ValueError("No attribute "+k+" in inversion")
         self.rhoscale =  1e6 / (4 * pi * self.thickness**2)
 
-    def _transform(self, realR, Qmax=None, bse=0, porder=1):
+    def _transform(self, RealR, Qmax=None, bse=0, porder=1):
         """
         Returns the cosine transform function used by inversion
         
@@ -554,12 +577,12 @@ class Inversion:
         """
         if not 0 <= porder <= 6:
             raise ValueError("porder must be between 0 and 6")
-        npts = len(realR)
+        npts = len(RealR)
         dK = 0.5 * Qmax / npts
         kappa = sqrt(bse*1e-6)
         dx = self.thickness/self.rhopoints
         dim = int(2*pi/(dx*dK))
-        ct = real(fft(realR, dim)/sqrt(dim))
+        ct = real(fft(RealR, dim)/sqrt(dim))
         xs = dx*arange(2*self.rhopoints)
         convertfac = 2*dK/pi * sqrt(dim) * self.thickness
         ctdatax = convertfac * ct[:len(xs)] # * rhoscale
@@ -621,6 +644,21 @@ class Inversion:
             q = hstack((q,0,0))
         return qp
 
+def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
+    """
+    Plot Q,Re(r) data.
+    """
+    import pylab
+    scale = Q**2 if scaled else 1
+    [h] = pylab.plot(Q, scale*RealR,**kw)
+    if dRealR is not None:
+        pylab.fill_between(Q,scale*(RealR-dRealR),scale*(RealR+dRealR),
+                           color=h.get_color(),alpha=0.3)
+        #pylab.plot(Q, scale*(R-dR), '--', color=h.get_color())
+        #pylab.plot(Q, scale*(R+dR), '--', color=h.get_color())
+        
+    pylab.ylabel("Q**2 Re r" if scaled else "Re r")
+    pylab.xlabel("Q (inv A)")
 
 class Interpolator:
     """
