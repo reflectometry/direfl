@@ -20,11 +20,11 @@
 """
 Phase reconstruction and inversion for reflectometry data.
 
-Command line reconstruction + inversion:
+Command line phase reconstruction + phase inversion:
 
     python invert.py -b 2.1 -f 0 -0.53 --thickness=400 f1.refl f2.refl
 
-Command line inversion only:
+Command line phase inversion only:
 
     python invert.py --thickness=150 wsh02_re.dat
 
@@ -43,19 +43,24 @@ output (*z*, *rho*, *drho*).  There are methods for plotting  (*plot*,
 *plotresid*) and storing (*save*).  The analysis can be rerun with
 different attributes (*run(key=val,...)*).
 
-See :func:`reconstruct` and :meth:`Inversion` for details.
+See :func:`reconstruct` and :class:`Inversion` for details.
 
-The algorithm is described in [Berk2009]_ and references therein.
+The phase reconstruction algorithm is described in [Majkrzak1998].  The 
+phase inversion algorithm is described in [Berk2009]_ and references therein.
 It is based on the partial differential equation solver described
 in [Sacks1993]_.
 
 References
 ==========
 
-.. [Berk2009] N. F. Berk and C. F. Majkrzak, "Statistical Analysis of
-Phase-Inversion Neutron Specular Reflectivity", Langmuir 25, 4132-4144 (2009)
+.. [Majkrzak1998] C. F. Majkrzak and N. F. Berk, "Exact determination of
+the phase in neutron reflectometry by variation of the surrounding media",
+*Phys. Rev B* 58, 15416 (1998).
 
-.. [Sacks1993] P. E. Sacks, Wave Motion 18, 21-30 (1993)
+.. [Berk2009] N. F. Berk and C. F. Majkrzak, "Statistical analysis of
+phase-inversion neutron specular reflectivity", *Langmuir* 25, 4132-4144 (2009)
+
+.. [Sacks1993] P. E. Sacks, *Wave Motion* 18, 21-30 (1993)
 """
 
 from __future__ import division
@@ -145,7 +150,6 @@ class Inversion:
     the correct value of surround will shift the profile back to the
     correct values.
     
-    WARNING: Qmin, Qmax are not yet debugged.
     *Qmin*, *Qmax* is the range of input data to use for the calculation.
     Reduce *Qmax* to avoid contamination from noise at high Q and improve
     precision.  However, doing this will reduce the size of the features
@@ -155,7 +159,7 @@ class Inversion:
     used in the phase reconstruction calculation. See :func:`reconstruct`
     for details.  *Qmax* and *Qmin* default to the limits of the input data.
 
-    WARNING: backrefl not debugged
+    TODO: test and debug backrefl
     *backrefl* should be true if the film is measured with an incident
     beam through the substrate rather than the surface.
 
@@ -314,25 +318,27 @@ class Inversion:
 
     def _setdata(self, Q, RealR, name="data"):
         """
-        Set data from q,real(r) vectors.
-
-        Resamples the data on an even grid, setting values below Qmin
-        and above Qmax to zero.  The number of points between Qmin and
-        Qmax is preserved.  This works best when data are equally spaced
-        to begin with, starting a k*dQ for some k.
-
-        *Qinput*, *RealRinput* are set to a copy of the original data.
-        *Qmeshed*, *RealRmeshed* are set to the gridded data.
+        Set *Qinput*, *RealRinput* from q,real(r) vectors.
         """
         self.name = name
         # Force equal spacing by interpolation
         Q,RealR = array(Q),array(RealR)
         self.Qinput,self.RealRinput = Q,RealR
 
+    def _remesh(self):
+        """
+        Set *Qmeshed*, *RealRmeshed* to gridded data.
+
+        Resamples the data on an even grid, setting values below Qmin
+        and above Qmax to zero.  The number of points between Qmin and
+        Qmax is preserved.  This works best when data are equally spaced
+        to begin with, starting a k*dQ for some k.
+        """
+        Q, RealR = self.Qinput, self.RealRinput
         # Trim from Qmin to Qmax
-        if self.Qmin != None:
+        if self.Qmin is not None:
             Q,RealR = Q[Q>=self.Qmin], RealR[Q>=self.Qmin]
-        if self.Qmax != None:
+        if self.Qmax is not None:
             Q,RealR = Q[Q<=self.Qmax], RealR[Q<=self.Qmax]
 
         # Resample on even spaced grid, preserving approximately the
@@ -353,8 +359,8 @@ class Inversion:
         sets *profiles* to the list of generated (z,rho) profiles.
         """
         self._set(**kw)
+        self._remesh()
         Q,realR = self.Qmeshed,self.RealRmeshed
-        Qmax = self.Qmax if self.Qmax else Q[-1]
         npts = len(realR)
         signals = []
         profiles = []
@@ -363,7 +369,7 @@ class Inversion:
             unoise = uniform(-1,1,npts)
             noisyR = realR + self.noise*unoise*pnoise
             #noisyR = realR + normal(realR,noise*0.01*abs(realR))
-            ctf = self._transform(noisyR, Qmax=Qmax, bse=0, porder=1)
+            ctf = self._transform(noisyR, Qmax=Q[-1], bse=0, porder=1)
             qp = self._invert(ctf, iters=self.iters)
             if self.showiters: # Show individual iterations
                 import pylab
@@ -371,7 +377,7 @@ class Inversion:
                 for qpi in qp:
                     pylab.plot(qpi[0],qpi[1],hold=hold)
                     hold = True
-                pylab.ginput()
+                pylab.ginput(show_clicks=False)
             z,rho = remesh(qp[-1],0,self.thickness,self.rhopoints)
             signals.append((Q,noisyR))
             profiles.append((z,rho))
@@ -796,7 +802,7 @@ def reconstruct(file1,file2,b,f1,f2):
     footprint correction the other measurement should use a backing SLD
     greater than the fronting SLD.
     
-    WARNING: not sure if this calculation is for two frontings and one
+    TODO: not sure if this calculation is for two frontings and one
     backing or two backings and one fronting.
     
     Inputs::
@@ -817,7 +823,6 @@ def reconstruct(file1,file2,b,f1,f2):
     containing at least two columns q,r, with remaining columns such as
     dr, dq, lambda ignored.
     """
-    #TODO: find paper reference for phase reconstruction
     return SurroundVariation(file1,file2,b,f1,f2)
 
 class SurroundVariation:
