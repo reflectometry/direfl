@@ -31,9 +31,9 @@ Command line phase inversion only:
 Scripts can use :func:`reconstruct` and :func:`invert`.  For example::
 
     import invert
-    backing = 2.1
-    fronting = 0,-0.53
-    phase = invert.reconstruct("file1","file2",backing,fronting[1],fronting[2])
+    substrate = 2.1
+    f1, f2 = 0, -0.53
+    phase = invert.reconstruct("file1", "file2", substrate, f1, f2)
     inversion = invert.invert(data=(phase.Q,phase.RealR), thickness=200)
     inversion.plot()
     inversion.save("profile.dat")
@@ -45,7 +45,7 @@ different attributes (*run(key=val,...)*).
 
 See :func:`reconstruct` and :class:`Inversion` for details.
 
-The phase reconstruction algorithm is described in [Majkrzak1998].  The 
+The phase reconstruction algorithm is described in [Majkrzak2003].  The
 phase inversion algorithm is described in [Berk2009]_ and references therein.
 It is based on the partial differential equation solver described
 in [Sacks1993]_.
@@ -53,9 +53,8 @@ in [Sacks1993]_.
 References
 ==========
 
-.. [Majkrzak1998] C. F. Majkrzak and N. F. Berk, "Exact determination of
-the phase in neutron reflectometry by variation of the surrounding media",
-*Phys. Rev B* 58, 15416 (1998).
+.. [Majkrzak2003] C. F. Majkrzak, N. F. Berk and U. A. Perez-Salas,
+"Phase-Sensitive Neutron Reflectometry", *Langmuir* 19, 7796-7810 (2003).
 
 .. [Berk2009] N. F. Berk and C. F. Majkrzak, "Statistical analysis of
 phase-inversion neutron specular reflectivity", *Langmuir* 25, 4132-4144 (2009)
@@ -66,7 +65,7 @@ phase-inversion neutron specular reflectivity", *Langmuir* 25, 4132-4144 (2009)
 from __future__ import division
 import numpy
 from numpy import pi, inf, nan, sqrt, exp, sin, cos, tan, log
-from numpy import ceil, floor, real, imag
+from numpy import ceil, floor, real, imag, sign, isinf, isnan
 from numpy import (interp, diff, sum, mean, std,
                    linspace, array, arange, hstack, zeros, diag)
 from numpy.fft import fft
@@ -106,7 +105,7 @@ class Inversion:
 
     This object holds the data and results associated with the direct inversion
     of the real value of the phase from a reflected signal.
-    
+
     Inversion converts a real reflectivity amplitude as computed by
     :func:`reconstruct` into a step profile of scattering length density
     as a function of depth.  This process will only work for real-valued
@@ -117,7 +116,7 @@ class Inversion:
 
     The following attributes and methods are of most interest::
 
-        *data*, *thickness*, *surround*, *Qmin*, *Qmax*  (`Inputs`__)
+        *data*, *thickness*, *substrate*, *Qmin*, *Qmax*  (`Inputs`__)
         *stages*, *monitor*, *noise*     (`Uncertainty controls`__)
         *rhopoints*, *calcpoints*        (`Inversion controls`__)
         *z*, *rho*, *drho*               (`Computed profile`__)
@@ -128,33 +127,33 @@ class Inversion:
 
         *data*               input filename or Q,RealR data  (required)
         *thickness* (400)    film thickness
-        *surround* (0)       substrate SLD
+        *substrate* (0)       substrate SLD
         *Qmin* (0)           minimum Q to use from data
         *Qmax* (None)        maximum Q to use from data
-        *backrefl* (True)    measures reflection from the back of the sample
+        *backrefl* (True)    reflection measured through the substrate
 
-    *data* is the name of an input file or a pair of vectors (Q,RealR), 
+    *data* is the name of an input file or a pair of vectors (Q,RealR),
     where RealR is the real portion of the complex reflectivity amplitude.
 
     *thickness* defines the total thickness of the film of interest.  If
     the value chosen is too small, the inverted profile will not be able
     to match the input reflection signal.  If the thickness is too large,
     the film of interest should be properly reconstructed, but will be
-    extended into a reconstructed vacuum layer above of the film.  The 
-    reflection signal from this profile will show excess variation as 
+    extended into a reconstructed vacuum layer above of the film.  The
+    reflection signal from this profile will show excess variation as
     the inversion process adapts to the noise in the input.
-    
-    *surround* is the scattering length density of the substrate.  The
-    inversion calculation determines the scattering length densities (SLDs) 
+
+    *substrate* is the scattering length density of the substrate.  The
+    inversion calculation determines the scattering length densities (SLDs)
     within the profile relative to the SLD of the substrate.  Entering
-    the correct value of surround will shift the profile back to the
+    the correct value of substrate will shift the profile back to the
     correct values.
-    
+
     *Qmin*, *Qmax* is the range of input data to use for the calculation.
     Reduce *Qmax* to avoid contamination from noise at high Q and improve
     precision.  However, doing this will reduce the size of the features
     that you are sensitive to in your profile.  Increase *Qmin* to avoid
-    values at low Q which will not have the correct phase reconstruction 
+    values at low Q which will not have the correct phase reconstruction
     when Q is less than Qc^2 for both surround variation measurements
     used in the phase reconstruction calculation. Use this technique
     sparingly --- the overall shape of the profile is sensitive to data
@@ -196,6 +195,7 @@ class Inversion:
     will take a long time.  The additional smoothness generated by a high
     value of *rhopoints* is illusory --- the information content of the
     profile is limited by the number of Q points which have been measured.
+    Set *rhopoints* to (1/*dz*) for a step size near *dz* in the profile.
 
     *calcpoints* is used internally to improve the accuracy of the
     calculation.  For larger values of *rhopoints*, smaller values of
@@ -208,16 +208,16 @@ class Inversion:
     small factor.  This problem is reduced by having a larger
     number of profile steps, which we do by setting the default
     value of *calcpoints* to 4.
-    
+
     *iters* is the number of steps to use in the differential equation
     solver that is at the heart of the inversion process.  A value of 6
     seems to work well.  You can observe this by setting *showiters* to
     True and looking at the convergence of each stage of the averaging
-    calculation.  
-    
-    *showiters* shows the convergence of the inversion calculation. 
+    calculation.
+
+    *showiters* shows the convergence of the inversion calculation.
     Click the graph to move to the next stage.
-      
+
     *ctf_window* smoothes the cosine transform at the heart of the
     computation.  In practice, it is set to 0 for no smoothing.
 
@@ -231,53 +231,53 @@ class Inversion:
 
     The input data *Qinput*, *RealRinput* need to be placed on an even grid
     going from 0 to *Qmax* using linear interpolation.  Values below *Qmin*
-    are set to zero, and the number of points between *Qmin* and *Qmax* is 
-    preserved.  This resampling works best when the input data are equally 
+    are set to zero, and the number of points between *Qmin* and *Qmax* is
+    preserved.  This resampling works best when the input data are equally
     spaced, starting at k*dQ for some k.
 
     The returned *Q*, *RealR*, *dRealR* are the values averaged over multiple
     stages with added noise.  The plots show this as the range of input
     variation used in approximating the profile variation.
-    
-    *z*, *rho*, *drho* define the output profile.  
-    
+
+    *z*, *rho*, *drho* define the output profile.
+
     *z* represents the depth into the profile.  *z* equals *thickness*
     at the substrate.  If the thickness is correct, then *z* will be zero
     at the top of the film, but in practice the *thickness* value provided
     will be larger than the actual film thickness, and a portion of the
-    vacuum will be included at the beginning of the profile. 
-    
+    vacuum will be included at the beginning of the profile.
+
     *rho* is the SLD at depth *z* in units of 10^-6 inv A^2.  It is
     calculated from the average of the inverted profiles from the noisy
-    data sets, and includes the correction for the substrate SLD defined by 
-    *surround*.  The inverted *rho* will contain artifacts from the abrupt
+    data sets, and includes the correction for the substrate SLD defined by
+    *substrate*.  The inverted *rho* will contain artifacts from the abrupt
     cutoff in the signal at *Qmin* and *Qmax*.
 
     *drho* is the uncertainty in the SLD profile at depth *z*.  It is
     calculated from the standard deviation of the inverted profiles from
-    the noisy data sets.  The uncertainty *drho* does not take into 
+    the noisy data sets.  The uncertainty *drho* does not take into
     account the possible variation in the signal above *Qmax*.
 
-    The reflectivity computed from *z*, *rho* will not match the input 
-    data because the effect of the substrate has been removed in the 
-    process of reconstructing the phase.  Instead, you will need to 
-    compute reflectivity from *rho*-*surround* on the reversed profile.  
-    This is done in :meth:`refl` when no fronting material is selected, 
-    and can be used to show the difference between measured and inverted 
-    reflectivity.  You may need to increase *calcpoints* or modify 
+    The reflectivity computed from *z*, *rho* will not match the input
+    data because the effect of the substrate has been removed in the
+    process of reconstructing the phase.  Instead, you will need to
+    compute reflectivity from *rho*-*substrate* on the reversed profile.
+    This is done in :meth:`refl` when no surround material is selected,
+    and can be used to show the difference between measured and inverted
+    reflectivity.  You may need to increase *calcpoints* or modify
     *thickness* to get a close match.
 
-    *signals* is a list of the noisy (Q,RealR) input signals generated 
+    *signals* is a list of the noisy (Q,RealR) input signals generated
     by the uncertainty controls, and *profiles* is a list of the
     corresponding (z,rho) profiles.  The first stage is computed without
-    noise, so *signals[0]* contains the meshed input and *profiles[0]* 
+    noise, so *signals[0]* contains the meshed input and *profiles[0]*
     contains the output of the inversion process without additional noise.
 
     Output methods
     ==============
 
     The primary output methods are::
-    
+
         *save*         save the profile to a file
         *show*         show the profile on the screen
         *plot*         plot data and profile
@@ -298,7 +298,7 @@ class Inversion:
     calcpoints = 4
     monitor = 50000
     noise = 10
-    surround = 0
+    substrate = 0
     ctf_window = 0
     stages = 10
     iters = 6
@@ -353,7 +353,7 @@ class Inversion:
         dQ = (Q[-1]-Q[0])/(len(Q) - 1)
         npts = int(Q[-1]/dQ + 1.5)
         Q,RealR = remesh([Q,RealR], 0, Q[-1], npts, left=0, right=0)
-        
+
         return Q,RealR
 
     def run(self, **kw):
@@ -397,7 +397,7 @@ class Inversion:
         return self.profiles[0][0]
     def _get_rho(self):
         """returns SLD profile in 10^-6 * inv A^2 units, with 0 at the top"""
-        rho = mean([p[1] for p in self.profiles], axis=0) + self.surround
+        rho = mean([p[1] for p in self.profiles], axis=0) + self.substrate
         return rho[::-1] if self.backrefl else rho
     def _get_drho(self):
         drho = std([p[1] for p in self.profiles], axis=0)
@@ -437,25 +437,25 @@ class Inversion:
         numpy.savetxt(fid, array([self.z,self.rho,self.drho]).T)
         fid.close()
 
-    def refl(self, Q=None, fronting=None):
+    def refl(self, Q=None, surround=None):
         """
         Return the complex reflectivity amplitude.
 
         Use *Q* if provided, otherwise use the evenly spaced Q values used
         for the inversion.
-        
-        If *fronting* is provided, compute the reflectivity for the
-        free film in the context of the fronting and the surround, otherwise
+
+        If *surround* is provided, compute the reflectivity for the
+        free film in the context of the substrate and the surround, otherwise
         compute the reflectivity of the reversed free film to match against
         the real portion of the reflectivity amplitude supplied as input.
         """
         if Q is None: Q == self.Q
-        if fronting is None:
+        if surround is None:
             dz = hstack((0,diff(self.z)))
-            rho = self.rho[::-1]-self.surround
+            rho = self.rho[::-1]-self.substrate
         else:
             dz = hstack((0,diff(self.z[::-1]),0))
-            rho = hstack((fronting,self.rho,self.surround))
+            rho = hstack((surround,self.rho,self.substrate))
         r = refl(Q,dz,rho)
         return  r
 
@@ -495,31 +495,31 @@ class Inversion:
         else:
             realplot(self.Q, self.RealR, dRealR=self.dRealR, label=None,
                      linestyle='', color="blue")
-            realplot(self.Qinput, self.RealRinput, label="original", 
+            realplot(self.Qinput, self.RealRinput, label="original",
                      color="blue")
             Rinverted = real(self.refl(self.Qinput))
             realplot(self.Qinput, Rinverted, label="inverted", color="red")
             pylab.legend()
-            
+
             if lowQ_inset==True:
                 # Low Q inset
                 orig = pylab.gca()
                 box = orig.get_position()
-                ax = pylab.axes([box.xmin+0.02, box.ymin+0.02, 
+                ax = pylab.axes([box.xmin+0.02, box.ymin+0.02,
                                  box.width/4, box.height/4],
                                  axisbg=[0.95,0.95,0.65,0.85])
                 ax.plot(self.Qinput, self.RealRinput, color="blue")
                 ax.plot(self.Qinput, Rinverted, color="red")
-                ax.text(0.99,0.01,"Q,Re r for Q<0.05", 
+                ax.text(0.99,0.01,"Q,Re r for Q<0.05",
                         fontsize="10",transform=ax.transAxes,
                         ha='right', va='bottom')
                 xmax = 0.05
                 ymax = max(max(self.RealRinput[self.Qinput<xmax]),
                            max(Rinverted[self.Qinput<xmax]))
-                pylab.setp(ax, xticks=[], yticks=[], 
+                pylab.setp(ax, xticks=[], yticks=[],
                            xlim=[0,xmax], ylim=[-1,1.1*(ymax+1)-1])
                 pylab.axes(orig)
-            
+
 
     def plotprofile(self, details=False):
         """
@@ -533,7 +533,7 @@ class Inversion:
         if details:
             hold = pylab.ishold()
             for p in self.profiles:
-                pylab.plot(p[0], p[1]+self.surround, hold=hold)
+                pylab.plot(p[0], p[1]+self.substrate, hold=hold)
                 hold=True
         else:
             z,rho,drho = self.z, self.rho, self.drho
@@ -570,8 +570,11 @@ class Inversion:
     def _transform(self, RealR, Qmax=None, bse=0, porder=1):
         """
         Returns the cosine transform function used by inversion
-        
-        *bse* is bound-state energy, with units of 10^-6 inv A^2
+
+        *bse* is bound-state energy, with units of 10^-6 inv A^2.  It
+        was used in the past to handle profiles with negative SLD at
+        the beginning, but the the plain correction of bse=0 has since
+        been found to be good enough for the profiles we are looking at.
         *porder* is the order of the interpolating polynomial, which
         must be 1 for the current interpolation class.
         """
@@ -581,9 +584,12 @@ class Inversion:
         dK = 0.5 * Qmax / npts
         kappa = sqrt(bse*1e-6)
         dx = self.thickness/self.rhopoints
-        dim = int(2*pi/(dx*dK))
-        ct = real(fft(RealR, dim)/sqrt(dim))
         xs = dx*arange(2*self.rhopoints)
+        dim = int(2*pi/(dx*dK))
+        if dim < len(xs):
+            raise ValueError("Q spacing is too low for the given thickness")
+        # 1/sqrt(dim) is the normalization convention for Mathematica FFT
+        ct = real(fft(RealR, dim)/sqrt(dim))
         convertfac = 2*dK/pi * sqrt(dim) * self.thickness
         ctdatax = convertfac * ct[:len(xs)] # * rhoscale
 
@@ -591,11 +597,12 @@ class Inversion:
         ## Mathematica guarantees that the interpolation function
         ## goes through the points, so Interpolator(xs, ctall)(xs)
         ## is just the same as ctall, and so newctall is just ctdatax.
+        ## Furthermore, "ctf[x_] := newctif[x]" is an identity transform
+        ## and is not necessary.  In the end, we only need one
+        ## interplotor plus the correction for ctf[0] == 0.
         #ctall = ctdatax
         #ctif = Interpolation(xs, ctall, InterpolationOrder -> porder)
-        #newctall = ctif(xs)\
-        ## Furthermore, "ctf[x_] := newctif[x]" is an identity transform
-        ## and is not necessary.
+        #newctall = ctif(xs)
         #newctif = Interpolation(xs, newctall, InterpolationOrder -> porder)
         #ctf[x_] := newctif[x]
         # This is the uncorrected Cosine Transform
@@ -603,7 +610,9 @@ class Inversion:
         # This is the boundstate-corrected Cosine Transform
         ## PAK -->
 
+        # This is the uncorrected Cosine Transform
         raw_ctf = Interpolator(xs, ctdatax, porder=porder)
+        # This is the boundstate-corrected Cosine Transform
         ctf = lambda x: raw_ctf(x) - exp(-kappa*x) * raw_ctf(0)
         return ctf
 
@@ -649,15 +658,15 @@ def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
     Plot Q,Re(r) data.
     """
     import pylab
-    scale = Q**2 if scaled else 1
+    scale = 1e6*Q**2 if scaled else 1
     [h] = pylab.plot(Q, scale*RealR,**kw)
     if dRealR is not None:
         pylab.fill_between(Q,scale*(RealR-dRealR),scale*(RealR+dRealR),
                            color=h.get_color(),alpha=0.3)
         #pylab.plot(Q, scale*(R-dR), '--', color=h.get_color())
         #pylab.plot(Q, scale*(R+dR), '--', color=h.get_color())
-        
-    pylab.ylabel("Q**2 Re r" if scaled else "Re r")
+
+    pylab.ylabel("10^6 Q**2 Re r" if scaled else "Re r")
     pylab.xlabel("Q (inv A)")
 
 class Interpolator:
@@ -685,6 +694,7 @@ def remesh(data, xmin, xmax, npts, left=None, right=None):
     Resample the data on a fixed grid.
     """
     x,y = data
+    x,y = x[~isnan(x)], y[~isnan(x)]
     newx = linspace(xmin, xmax, npts)
     newy = interp(newx, x, y, left=left, right=right)
     return array((newx,newy))
@@ -790,27 +800,28 @@ def _refl_calc(kz,wavelength,depth,rho,mu,sigma):
     r = B12/B11
     return r
 
-def reconstruct(file1,file2,b,f1,f2):
+def reconstruct(file1,file2,u,v1,v2,stages=100):
     """
     Phase reconstruction by surround variation magic.
 
     Two reflectivity measurements of a film with different surrounding
     media |r_1|^2 and |r_2|^2 can be combined to compute the expected
-    complex reflection amplitude r_reversed of the free standing film 
+    complex reflection amplitude r_reversed of the free standing film
     measured from the opposite side.  The calculation can be done by
-    varying the fronting media or by varying the backing media.
+    varying the fronting media or by varying the backing media.  For
+    this code we only support measurements through a uniform substrate *u*,
+    on two varying surrounding materials *v1*, *v2*.
 
     We have to be careful about terminology.  We will use the term
     substrate to mean the base on which we deposit our film of interest,
-    fronting to be the medium through which the neutron beam travels
-    before encountering our film of interest, and backing to be the
-    medium on the other side.
-    
+    and surround to be the material we put on the other side.  We are
+    using u for the uniform substrate and v for the varying surround.
+
     In the experimental setup at the NCNR, we have a liquid resevoir which
     we can place above the film.  We measure first with one liquid in the
     resevoir such as water and again with a contrasting liquid such as
-    heavy water (D2O).  We measure the film through the substrate (either 
-    silicon or sapphire) since they are more transparent to neutrons 
+    heavy water (D2O).  We measure the film through the substrate (either
+    silicon or sapphire) since they are more transparent to neutrons
     than water.
 
     .. figure:: backrefl_setup.png
@@ -820,10 +831,10 @@ def reconstruct(file1,file2,b,f1,f2):
        subject to the same absorption as the reflected beam.
        Refraction on entering and leaving the substrated is accounted
        for by a small adjustment to Q inside the reflectivity calculation.
-    
-    When measuring reflectivity through the substrate, the beam enters 
-    the substrate from the side, refracts a little because of the steep 
-    angle of entry, reflects off the sample, and leaves through the other 
+
+    When measuring reflectivity through the substrate, the beam enters
+    the substrate from the side, refracts a little because of the steep
+    angle of entry, reflects off the sample, and leaves through the other
     side of the substrate with an equal but opposite refraction.  The
     reflectivity calculation takes this into account.  Traveling
     through several centimeters of substrate, some of the beam will
@@ -834,34 +845,40 @@ def reconstruct(file1,file2,b,f1,f2):
 
     The phase cannot be properly computed for Q values which are below
     the critical edge Qc^2 for both surround variations.  This problem
-    can be avoided by choosing a backing which is smaller than the fronting
+    can be avoided by choosing a substrate which is smaller than the surround
     on at least one of the measurements.  This measurement will not
     have a critical edge at positive Q.  In order to do a correct
-    footprint correction the other measurement should use a backing SLD
-    greater than the fronting SLD.
-    
-    TODO: not sure if this calculation is for two frontings and one
-    backing or two backings and one fronting.
-    
+    footprint correction the other measurement should use a substrate SLD
+    greater than the surround SLD.
+
+    If the input file records uncertainty in the measurement, we
+    perform a Monte Carlo uncertainty estimate of the reconstructed
+    complex amplitude.
+
     Inputs::
 
         *file1*, *file2*  reflectivity measurements at identical Q values
-        *f1*, *f2*  SLD of surrounds for measurements in *file1* and *file2*
-        *b*         SLD of the substrate
+        *v1*, *v2*  SLD of varying surrounds in *file1* and *file2*
+        *u*         SLD of the uniform substrate
+        *stages*    number of trials in Monte Carlo uncertainty estimate
 
     Returns a :class:`SurroundVariation` object with the following
     attributes::
 
-        *RealR*, *ImagR*  real and imaginary reflectivity
-        *alpha*, *beta*, *tfs*  intermediate values from the calculation
-        *name1*, *name2*  names of the input files
-        *save(file)*      save Q, RealR, ImagR to a file
+        *RealR*, *ImagR*     real and imaginary reflectivity
+        *dRealR*, *dImagR*   Monte Carlo uncertainty estimate
+        *name1*, *name2*     names of the input files
+        *save(file)*         save Q, RealR, ImagR to a file
+        *show()*, *plot()*   display the results
 
     *file1* and *file2* can be pairs of vectors (q1,r1), (q2,r2) or files
     containing at least two columns q,r, with remaining columns such as
-    dr, dq, lambda ignored.
+    dr, dq, lambda ignored.  If a third vector, dr, is present in both
+    datasets, then an uncertainty estimate will be calculated for the
+    reconstructed phase.
     """
-    return SurroundVariation(file1,file2,b,f1,f2)
+    print "reconstructing"
+    return SurroundVariation(file1,file2,u,v1,v2,stages=stages)
 
 class SurroundVariation:
     """
@@ -870,30 +887,56 @@ class SurroundVariation:
     See :func:`reconstruction` for details.
 
     Attributes::
-    
-        *RealR*, *ImagR*  real and imaginary reflectivity
-        *alpha*, *beta*, *tfs*  intermediate values from the calculation
-        *name1*, *name2*  names of the input files
-        *save(file)*      save Q, RealR, ImagR to a file
-        *show*            show Q, RealR, ImagR on the screen
+
+        *Q*, *RealR*, *ImagR*  real and imaginary reflectivity
+        *dRealR*, *dImagR*     Monte Carlo uncertainty estimate or None
+        *Qin*, *R1*, *R2*      input data
+        *dR1*, *dR2*           input uncertainty or None
+        *name1*, *name2*       input file names
+        *save(file)*           save output
+        *show()*,*plot()*      show Q, RealR, ImagR
+
     """
-    def __init__(self, file1, file2, b, f1, f2):
-        self.b = b
-        self.f1, self.f2 = f1, f2
+    def __init__(self, file1, file2, u, v1, v2, stages=100):
+        self.u = u
+        self.v1, self.v2 = v1, v2
         self._load(file1, file2)
         self._calc()
+        self._calc_err(stages=stages)
 
-    def save(self, outfile=None):
+        # Toss invalid values
+        Q,re,im = self.Qin,self.RealR,self.ImagR
+        if self.dRealR is not None:
+            dre,dim = self.dRealR,self.dImagR
+            keep = ~reduce(lambda y,x: isinf(x)|isnan(x)|y,
+                           [re,im], False)
+            self.Q,self.RealR,self.dRealR,self.ImagR,self.dImagR \
+                = [v[keep] for v in (Q,re,dre,im,dim)]
+        else:
+            keep = ~reduce(lambda y,x: isinf(x)|isnan(x)|y,
+                           [re,im], False)
+            self.Q,self.RealR,self.ImagR \
+                = [v[keep] for v in (Q,re,im)]
+
+    def save(self, outfile=None, uncertainty=True):
         """
         Save Q,RealR,ImagR to three column text file named *outfile*.
+        Include dRealR,dImagR if they exist and if *uncertainty* is True,
+        making a five column file.
         """
         if outfile is None:
             basefile = os.path.splitext(os.path.basename(self.name1))[0]
             outfile = basefile+os.extsep+"amp"
 
+        header = "# %13s %15s %15s"%("Q","RealR","ImagR")
+        v = [self.Q, self.RealR, self.ImagR]
+        if self.dRealR is not None and uncertainty:
+            header += " %15s %15s"%("dRealR","dImagR")
+            v += [self.dRealR,self.dImagR]
+
         fid = open(outfile,"w")
-        fid.write("# %13s %15s %15s\n"%("Q","RealR","ImagR"))
-        numpy.savetxt(fid, array([self.Q,self.RealR,self.ImagR]).T)
+        fid.write(header+"\n")
+        numpy.savetxt(fid, array(v).T)
         fid.close()
 
     def show(self):
@@ -903,6 +946,12 @@ class SurroundVariation:
         print "# %9s %11s %11s"%("Q","RealR","ImagR")
         for point in zip(self.Q, self.RealR, self.ImagR):
             print "%11.4g %11.4g %11.4g"%point
+
+    def plot(self):
+        import pylab
+        realplot(self.Q, self.RealR, dRealR=self.dRealR, label="Re r")
+        realplot(self.Q, self.ImagR, dRealR=self.dImagR, label="Im r")
+        pylab.legend()
 
     def _load(self, file1, file2):
         """
@@ -922,64 +971,69 @@ class SurroundVariation:
             name2 = "data2"
         q1,r1 = d1[0:2]
         q2,r2 = d2[0:2]
+        # Check if we have uncertainty
+        try:
+            dr1,dr2 = d1[2],d2[2]
+        except:
+            dr1 = dr2 = None
         if not q1.shape == q2.shape or not all(q1==q2):
             raise ValueError("Q points do not match in data files")
         self.name1,self.name2 = name1,name2
-        self.q, self.r1, self.r2 = q1, r1, r2
+        self.Qin, self.R1in, self.R2in = q1, r1, r2
+        self.dR1in, self.dR2in = dr1, dr2
 
     def _calc(self):
         """
         Call the phase reconstruction calculator.
         """
-        res = _phase_reconstruction(self.q, self.r1, self.r2,
-                                    self.b*1e-6, self.f1*1e-6, self.f2*1e-6)
-        self.RealR = res['rre']
-        self.ImagR = res['rimp']
-        self.alpha = res['alpp']
-        self.beta = res['betp']
-        self.tfs = res['tfs']
+        re,im = _phase_reconstruction(self.Qin, self.R1in, self.R2in,
+                                      self.u, self.v1, self.v2)
+        self.RealR, self.ImagR = re,im
+
+    def _calc_err(self, stages):
+        if self.dR1in is None:
+            dRealR = dImagR = None
+        else:
+            runs = []
+            for i in range(stages):
+                R1 = normal(self.R1in,self.dR1in)
+                R2 = normal(self.R2in,self.dR2in)
+                RealR,ImagR = _phase_reconstruction(self.Qin, R1, R2,
+                                                    self.u, self.v1, self.v2)
+                runs.append((RealR,ImagR))
+            dRealR = std([r[0] for r in runs],axis=0)
+            dImagR = std([r[1] for r in runs],axis=0)
+        self.dRealR, self.dImagR = dRealR, dImagR
 
 
-def _phase_reconstruction(q, rs1, rs2, GBF, GAF1, GAF2):
+def _phase_reconstruction(Q, R1sq, R2sq, rho_u, rho_v1, rho_v2):
     """
-    Compute phase reconstruction from back reflectivity on paired samples.
+    Compute phase reconstruction from back reflectivity on paired samples
+    with varying surface materials.
 
     Inputs::
 
-        *q*  is the measurement positions
-        *rs1*, *rs2* are the measurements in the two conditions
-        *GBF* is the backing material
-        *GAF1*, *GAF2* are the fronting materials corresponding to *rs1*, *rs2*
+        *Q*  is the measurement positions
+        *R1sq*, *R2sq* are the measurements in the two conditions
+        *rho_v1*, *rho_v2* are the backing media SLDs for *R1sq* and *R2sq*
+        *rho_u* is the fronting medium SLD
 
-    Returns a dictionary containing::
-
-        *rre* real signal
-        *rimp* +imaginary signal
-        *rimm* -imaginary signal
-        *alpp* alpha intermediate value
-        *betp* beta intermediate value
-        *tfs* refractive index for the backing material (??)
+    Returns RealR, ImagR
     """
 
-    qsq = q*q + 16.*pi*GBF
-    RIBFS = 1. - 16.*pi*GBF/qsq
-    RIAF1S = 1. - 16.*pi*GAF1/qsq
-    RIAF2S = 1. - 16.*pi*GAF2/qsq
-    RIBF = sqrt(RIBFS)
-    RIAF1 = sqrt(RIAF1S)
-    RIAF2 = sqrt(RIAF2S)
-    sum1 = 2.*((1.+rs1)/(1.-rs1))*RIAF1*RIBF
-    sum2 = 2.*((1.+rs2)/(1.-rs2))*RIAF2*RIBF
-    alpp = (sum1-sum2)*RIBFS/(RIAF1S-RIAF2S)
-    betp = (RIAF2S*sum1-RIAF1S*sum2)/(RIAF2S-RIAF1S)
-    rre = (alpp-betp)/(2.*RIBFS+alpp+betp)
-    gamps = alpp*betp-RIBFS*RIBFS
-    gamp = sqrt(gamps)
-    rimp = -2.0*gamp/(2.0*RIBFS+alpp+betp)
-    rimm = -rimp
-    tfs = 2.0*RIBFS
+    Qsq = Q**2 + 16.*pi*rho_u*1e-6
+    usq,v1sq,v2sq = [(1-16*pi*rho*1e-6/Qsq) for rho in (rho_u,rho_v1,rho_v2)]
 
-    return dict(rimp=rimp, rimm=rimm, rre=rre, alpp=alpp, betp=betp, tfs=tfs)
+    sigma1 = 2 * sqrt(v1sq*usq) * (1+R1sq) / (1-R1sq)
+    sigma2 = 2 * sqrt(v2sq*usq) * (1+R2sq) / (1-R2sq)
+
+    alpha = usq * (sigma1-sigma2) / (v1sq-v2sq)
+    beta = (v2sq*sigma1-v1sq*sigma2) / (v2sq-v1sq)
+    gamma = sqrt(alpha*beta - usq**2)
+    Rre = (alpha-beta) / (2*usq+alpha+beta)
+    Rim = -2*gamma / (2*usq+alpha+beta)
+
+    return Rre,Rim
 
 
 def main():
@@ -992,9 +1046,10 @@ def main():
     description="""\
 Compute the scattering length density profile from the real portion
 of the phase reconstructed reflectivity.  Call with a phase reconstructed
-reflectivity dataset AMP, or with a pair of reduced reflectivity 
-datasets RF1 and RF2 for complete phase inversion.   Phase inversion 
-requires two fronting materials and one backing material to be specified."""
+reflectivity dataset AMP, or with a pair of reduced reflectivity
+datasets RF1 and RF2 for complete phase inversion.   Phase inversion
+requires two surrounding materials and one substrate material to be specified.
+The measurement is assumed to come through the substrate."""
     parser = OptionParser(usage="%prog [options] AMP or RF1 RF2",
                           description=description,
                           version="%prog 1.0")
@@ -1004,14 +1059,14 @@ requires two fronting materials and one backing material to be specified."""
     group.add_option("-t","--thickness",dest="thickness",
                       default=Inversion.thickness,type="float",
                       help="sample thickness (A)")
-    group.add_option("-b","--backing",dest="surround",
-                      default=Inversion.surround, type="float",
-                      help="sample backing material (10^6 * SLD)")
-    group.add_option("-f","--fronting",dest="fronting",
+    group.add_option("-u","--substrate",dest="substrate",
+                      default=Inversion.substrate, type="float",
+                      help="sample substrate material (10^6 * SLD)")
+    group.add_option("-v","--surround",dest="surround",
                       type="float", nargs=2,
-                      help="fronting materials f1 f2 (10^6 * SLD) [for phase]")
+                      help="varying materials v1 v2 (10^6 * SLD) [for phase]")
     # fronting is not an inversion key
-    inversion_keys += ['thickness','surround']
+    inversion_keys += ['thickness','substrate']
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Data description", description=None)
@@ -1032,10 +1087,10 @@ requires two fronting materials and one backing material to be specified."""
 
     group = OptionGroup(parser, "Outputs", description=None)
     group.add_option("-o","--outfile",dest="outfile", default=None,
-                      help="output file (infile.prf) or - for console output")
+                      help="profile file (infile.prf), use '-' for console")
     group.add_option("--ampfile",dest="ampfile", default=None,
-                      help="output file (infile.amp)")
-    group.add_option("-v","--verbose",dest="doplot",
+                      help="amplitude file (infile.amp)")
+    group.add_option("-p","--plot",dest="doplot",
                       action="store_true",
                       help="show plot of result")
     group.add_option("-q","--quiet",dest="doplot",
@@ -1057,9 +1112,12 @@ requires two fronting materials and one backing material to be specified."""
     group.add_option("--calcpoints",dest="calcpoints",
                       default=Inversion.calcpoints, type="int",
                       help="number of calculation points per profile step")
-    group.add_option("-A","--stages",dest="stages",
+    group.add_option("--stages",dest="stages",
                       default=Inversion.stages, type="int",
                       help="number of inversions to average over")
+    group.add_option("-a",dest="amp_only", default=False,
+                      action="store_true",
+                      help="calculate amplitude and stop")
     inversion_keys += ['rhopoints','calcpoints','stages']
     parser.add_option_group(group)
 
@@ -1072,15 +1130,23 @@ requires two fronting materials and one backing material to be specified."""
     if len(args) == 1:
         data = args[0]
     elif len(args) == 2:
-        if not options.fronting or not options.surround:
+        if not options.surround or not options.substrate:
             parser.error("need fronting and backing for phase inversion")
-        f1,f2 = options.fronting
-        b = options.surround
-        phase = SurroundVariation(args[0],args[1],b=b,f1=f1,f2=f2)
+        v1,v2 = options.surround
+        u = options.substrate
+        phase = SurroundVariation(args[0],args[1],u=u,v1=v1,v2=v2)
         data = phase.Q, phase.RealR
+        if options.ampfile:
+            phase.save(options.ampfile)
+        if options.amp_only and options.doplot:
+            import pylab
+            phase.plot()
+            pylab.show()
+
+    if options.amp_only: return
 
     if options.dz: options.rhopoints = ceil(1/options.dz)
-    # Rather than trying to remember which control parameters I 
+    # Rather than trying to remember which control parameters I
     # have options for, I update the list of parameters that I
     # allow for each group of parameters, and pull the returned
     # values out below.
