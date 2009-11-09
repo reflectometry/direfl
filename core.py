@@ -694,7 +694,7 @@ def remesh(data, xmin, xmax, npts, left=None, right=None):
     Resample the data on a fixed grid.
     """
     x,y = data
-    x,y = x[~isnan(x)], y[~isnan(x)]
+    x,y = x[~(isnan(x)|isinf(x))], y[~(isnan(x)|isinf(x))]
     newx = linspace(xmin, xmax, npts)
     newy = interp(newx, x, y, left=left, right=right)
     return array((newx,newy))
@@ -903,7 +903,12 @@ class SurroundVariation:
         self._load(file1, file2)
         self._calc()
         self._calc_err(stages=stages)
+        self.clean()
 
+    def clean(self):
+        """
+        Remove points which are NaN or Inf from the computed phase.
+        """
         # Toss invalid values
         Q,re,im = self.Qin,self.RealR,self.ImagR
         if self.dRealR is not None:
@@ -989,6 +994,7 @@ class SurroundVariation:
         re,im = _phase_reconstruction(self.Qin, self.R1in, self.R2in,
                                       self.u, self.v1, self.v2)
         self.RealR, self.ImagR = re,im
+        self.Q = self.Qin
 
     def _calc_err(self, stages):
         if self.dR1in is None:

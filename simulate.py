@@ -25,17 +25,16 @@ class Simulation:
       *q*, *dq*         measurement points
       *u*, *v1*, *v2*   uniform and varying SLDs for surround variation
       *noise*           percentage noise in the measurement
-      *roughness*       interface roughness
 
     The defaults are set to u=Si (2.1), v1=Air (0) and v2=D2O (6.33).
     Noise and roughness are set to 0.
 
     TODO: Resolution and roughness are not yet supported.
     """
-    def __init__(self, sample=None, roughness=0, q=None, dq=None,
+    def __init__(self, sample=None, q=None, dq=None, urough=0,
                  u=2.1, v1=0, v2=6.33, noise=0, inversion_args={}):
         self.q, self.dq = q,dq
-        self.sample, self.roughness = sample, roughness
+        self.sample, self.urough = sample, urough
         self.u, self.v1, self.v2 = u, v1, v2
         self.noise = noise
         self.inversion_args = inversion_args
@@ -52,15 +51,18 @@ class Simulation:
         # through the substrate, so we need to reverse the sample layers
         # in the calculation of the reflectivity.
         q,u,v1,v2 = self.q,self.u,self.v1,self.v2
+        urough = self.urough
 
         rho = [p[0] for p in self.sample]
         d = [0] + [p[1] for p in self.sample] + [0]
-        r1 = refl(q,d,[u]+rho+[v1])
-        r2 = refl(q,d,[u]+rho+[v2])
+        sigma = [p[2] for p in self.sample]
+        r1 = refl(q,d,[u]+rho+[v1], sigma=[urough]+sigma)
+        r2 = refl(q,d,[u]+rho+[v2], sigma=[urough]+sigma)
 
-        revshift_rho = [p[0]-u for p in reversed(self.sample)]
+        revrho = [p[0]-u for p in reversed(self.sample)]
         revd = [0] + [p[1] for p in reversed(self.sample)] + [0]
-        rfree = refl(q,revd,[0]+revshift_rho+[0])
+        revsigma = [p[2] for p in reversed(self.sample)]
+        rfree = refl(q,revd,[0]+revrho+[0],sigma=revsigma+[urough])
 
         self.rfree,self.r1,self.r2 = rfree,r1,r2
 
@@ -82,7 +84,7 @@ class Simulation:
         Generate the sample profile.
         """
         z,rho_u = self.invert.z, self.invert.substrate
-        rhos, widths = zip(*self.sample)
+        rhos, widths, sigmas = zip(*self.sample)
         vacuum_width = self.invert.thickness - numpy.sum(widths)
         widths = numpy.hstack((vacuum_width, widths))
         rhos = numpy.hstack((0,rhos,rho_u))
