@@ -391,6 +391,16 @@ class Inversion:
             signals.append((Q,noisyR))
             profiles.append((z,rho))
         self.signals, self.profiles = signals, profiles
+        
+    def chisq(self):
+        """
+        Return chisq computed from non-zero dRealR.
+        """
+        q,rer,drer = self.Q,self.RealR,self.dRealR
+        idx = drer > 0
+        rerinv = real(self.refl(q[idx]))
+        chisq = sum(((rerinv-rer[idx])/drer[idx])**2)/len(q[idx])
+        return chisq
 
     # Computed attributes.
     def _get_z(self):
