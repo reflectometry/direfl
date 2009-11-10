@@ -20,20 +20,25 @@
 """
 Phase reconstruction and inversion for reflectometry data.
 
-Command line phase reconstruction + phase inversion:
+Command line phase reconstruction + phase inversion::
 
-    python invert.py -b 2.1 -f 0 -0.53 --thickness=400 f1.refl f2.refl
+    invert -u 2.1 -v 6.34 0 --Qmin 0.014 \
+       --thickness 1000 qrd1.refl qrd2.refl
 
-Command line phase inversion only:
 
-    python invert.py --thickness=150 wsh02_re.dat
+Command line phase inversion only::
+
+    invert --thickness=150 --Qmax 0.35 wsh02_re.dat
+
+
 
 Scripts can use :func:`reconstruct` and :func:`invert`.  For example::
 
+    from reflectometry import
     import invert
     substrate = 2.1
     f1, f2 = 0, -0.53
-    phase = invert.reconstruct("file1", "file2", substrate, f1, f2)
+    phase = reflectometry.reconstruct("file1", "file2", substrate, f1, f2)
     inversion = invert.invert(data=(phase.Q,phase.RealR), thickness=200)
     inversion.plot()
     inversion.save("profile.dat")
@@ -435,7 +440,8 @@ class Inversion:
         Compute normalized sum squared difference between original real r and
         the real r for the inverted profile.
         """
-        idx = self.dRealR > 0
+        idx = self.dRealR > 1e-15
+        #print "min dR",min(self.dRealR[self.dRealR>1e-15])
         q,rer,drer = self.Q[idx],self.RealR[idx],self.dRealR[idx]
         rerinv = real(self.refl(q))
         chisq = numpy.sum(((rer - rerinv)/drer)**2)/len(q)
@@ -532,7 +538,6 @@ class Inversion:
         import pylab
         pylab.subplot(211 if not phase else 311)
         self.plotdata(details=details)
-        pylab.title("Direct inversion of "+self.name)
         pylab.subplot(212 if not phase else 312)
         self.plotprofile(details=details)
         if phase:
@@ -561,7 +566,7 @@ class Inversion:
                 F = abs(refl(q,[0,0],[surround,self.substrate]))**2
             pylab.plot(q,R/F, '.', label=label,
                            color=color, hold=hold)
-            pylab.plot(q,abs(r)**2/F,'-',label=label+" inv",
+            pylab.plot(q,abs(r)**2/F,'-',label=None,
                            color=color, hold=True)
             if dR is not None:
                 pylab.fill_between(q,(R-dR)/F,(R+dR)/F,
@@ -575,23 +580,23 @@ class Inversion:
         chisq2,n2 = plot1(data2, surround2, label2, 'blue')
         pylab.legend()
         chisq = (chisq1+chisq2)/(n1+n2)
-        pylab.text(0.01,0.01, "chisq=%.1f"%chisq,fontsize="10",
+        pylab.text(0.01,0.01, "chisq=%.1f"%chisq,
                    transform=pylab.gca().transAxes,
                    ha='left', va='bottom')
 
-        pylab.title('Measured data')
-        pylab.ylabel('|r^2|/R_F')
+        plottitle('Measured data')
+        pylab.ylabel('R/R_F')
         pylab.xlabel('Q (inv A)')
 
-    def plotdata(self, details=False, lowQ_inset=True):
+    def plotdata(self, details=False, lowQ_inset=0):
         """
         Plot the input data.
 
-        If *details* is True, then plot the individual stages used to calculate
-        the average, otherwise just plot the envelope.
+        If *details* is True, then plot the individual stages used
+        to calculate the average, otherwise just plot the envelope.
 
-        If *lowQ_inset* is True, then plot a graph of the low Q values not
-        scaled by Q**2.
+        If *lowQ_inset* > 0, then plot a graph of Q, Real r values
+        below lowQ_inset, without scaling by Q**2.
         """
         import pylab
 
@@ -608,11 +613,11 @@ class Inversion:
             realplot(self.Qinput, Rinverted, label="inverted", color="red")
             pylab.legend()
             chisq = self.chisq() # Note: cache calculated profile?
-            pylab.text(0.01,0.99, "chisq=%.1f"%chisq,fontsize="10",
+            pylab.text(0.01,0.01, "chisq=%.1f"%chisq,
                        transform=pylab.gca().transAxes,
-                       ha='left', va='top')
+                       ha='left', va='bottom')
 
-            if lowQ_inset==True:
+            if lowQ_inset > 0:
                 # Low Q inset
                 orig = pylab.gca()
                 box = orig.get_position()
@@ -621,15 +626,16 @@ class Inversion:
                                  axisbg=[0.95,0.95,0.65,0.85])
                 ax.plot(self.Qinput, self.RealRinput, color="blue")
                 ax.plot(self.Qinput, Rinverted, color="red")
-                ax.text(0.99,0.01,"Q,Re r for Q<0.05",
+                ax.text(0.99,0.01,"Q,Re r for Q<%g"%lowQ_inset,
                         fontsize="10",transform=ax.transAxes,
                         ha='right', va='bottom')
-                xmax = 0.05
-                ymax = max(max(self.RealRinput[self.Qinput<xmax]),
-                           max(Rinverted[self.Qinput<xmax]))
+                qmax = lowQ_inset
+                ymax = max(max(self.RealRinput[self.Qinput<qmax]),
+                           max(Rinverted[self.Qinput<qmax]))
                 pylab.setp(ax, xticks=[], yticks=[],
-                           xlim=[0,xmax], ylim=[-1,1.1*(ymax+1)-1])
+                           xlim=[0,qmax], ylim=[-1,1.1*(ymax+1)-1])
                 pylab.axes(orig)
+        plottitle('Reconstructed phase')
 
 
     def plotprofile(self, details=False):
@@ -653,6 +659,13 @@ class Inversion:
                                color=h.get_color(),alpha=0.3)
             #pylab.plot(z, rho+drho, '--', color=h.get_color())
             #pylab.plot(z, rho-drho, '--', color=h.get_color())
+        plottitle('Depth profile')
+        pylab.text(0.01,0.01,'surface',
+                   transform=pylab.gca().transAxes,
+                   ha='left', va='bottom')
+        pylab.text(0.99,0.01,'substrate',
+                   transform=pylab.gca().transAxes,
+                   ha='right', va='bottom')
         pylab.ylabel('SLD (inv A^2)')
         pylab.xlabel('depth (A)')
 
@@ -666,6 +679,7 @@ class Inversion:
         pylab.plot(Q, Q**2*(real(r)-RealR))
         pylab.ylabel('residuals [Q**2 * (Re r - input)]')
         pylab.xlabel("Q (inv A)")
+        plottitle('Phase residuals')
 
     def _set(self, **kw):
         """
@@ -764,6 +778,12 @@ class Inversion:
             q = hstack((q,0,0))
         return qp
 
+def plottitle(t):
+    import pylab
+    pylab.text(0.5,0.99,t,
+               transform=pylab.gca().transAxes,
+               ha='center', va='top', backgroundcolor=(0.9,0.9,0.6))
+
 def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
     """
     Plot Q,Re(r) data.
@@ -805,7 +825,7 @@ def remesh(data, xmin, xmax, npts, left=None, right=None):
     Resample the data on a fixed grid.
     """
     x,y = data
-    x,y = x[~(isnan(x)|isinf(x))], y[~(isnan(x)|isinf(x))]
+    x,y = x[isfinite(x)], y[isfinite(x)]
     newx = linspace(xmin, xmax, npts)
     newy = interp(newx, x, y, left=left, right=right)
     return array((newx,newy))
