@@ -124,34 +124,10 @@ class Simulation:
         """Plot the simulated data"""
         import pylab
         pylab.subplot(subplot)
-        q,R1,R2 = self.q,self.R1,self.R2
-        r1 = self.invert.refl(q,surround=self.v1)
-        r2 = self.invert.refl(q,surround=self.v2)
-        v1_color = 'green'
-        v2_color = 'blue'
-        pylab.semilogy(q,R1,'.',label="v1",
-                       color=v1_color, hold=False)
-        pylab.semilogy(q,R2,'.',label="v2",
-                       color=v2_color, hold=True)
-        pylab.semilogy(q,abs(r1)**2,'-',label="inverted v1",
-                       color=v1_color,hold=True)
-        pylab.semilogy(q,abs(r2)**2,'-',label="inverted v2",
-                       color=v2_color,hold=True)
-        pylab.legend()
-        if self.noise != 0:
-            dR1,dR2 = self.dR1,self.dR2
-            chisq1 = sum(((abs(r1)**2-R1)/dR1)**2)
-            chisq2 = sum(((abs(r2)**2-R2)/dR2)**2)
-            chisq = (chisq1+chisq2)/(2*len(q))
-            pylab.text(0.01,0.01, "chisq=%.1f"%chisq,fontsize="10",
-                       transform=pylab.gca().transAxes,
-                       ha='left', va='bottom')
-            pylab.fill_between(q,R1-dR1,R1+dR1,
-                               color=v1_color,alpha=0.3)
-            pylab.fill_between(q,R2-dR2,R2+dR2,
-                               color=v2_color,alpha=0.3)
-        pylab.title('Measured data')
-        pylab.ylabel('R')
+        self.invert.plot_measurement((self.q,self.R1,self.dR1),
+                                     self.v1, "v1",
+                                     (self.q,self.R2,self.dR2),
+                                     self.v2, "v2")
 
     def plot_real(self, subplot=111):
         """Plot the simulated phase and the reconstructed phase (real)"""
@@ -160,7 +136,7 @@ class Simulation:
 
         # Plot reconstructed phase with uncertainty
         q,re,dre = self.phase.Q, self.phase.RealR, self.phase.dRealR
-        scale = 1e6*q**2
+        scale = 1e4*q**2
         [h] = pylab.plot(q, scale*re, '.', hold=False, label="measured")
         if dre is not None:
             pylab.fill_between(q, scale*(re-dre), scale*(re+dre),
@@ -168,25 +144,25 @@ class Simulation:
 
         # Plot free film phase for comparison
         q_free,re_free = self.q, real(self.rfree)
-        scale = 1e6*q_free**2
+        scale = 1e4*q_free**2
         pylab.plot(q_free, scale*re_free, hold=True, label="ideal")
 
         pylab.legend()
         pylab.xlabel('q')
-        pylab.ylabel('10^6 q**2 Re r')
+        pylab.ylabel('(100 q)^2 Re r')
         pylab.title('Phase reconstruction real part')
 
     def plot_imag(self, subplot=111):
         """Plot the simulated phase (imag)"""
         import pylab
         pylab.subplot(subplot)
-        pylab.plot(self.phase.Q, 1e6*self.phase.Q**2*self.phase.ImagR,
+        pylab.plot(self.phase.Q, 1e4*self.phase.Q**2*self.phase.ImagR,
                    hold=True, label="Im r+")
-        pylab.plot(self.phase.Q, -1e6*self.phase.Q**2*self.phase.ImagR,
+        pylab.plot(self.phase.Q, -1e4*self.phase.Q**2*self.phase.ImagR,
                    hold=True, label="Im r-")
         pylab.legend()
         pylab.xlabel('q')
-        pylab.ylabel('10^6 q**2 * Im r')
+        pylab.ylabel('(100 q)^2 Im r')
         pylab.title('Phase reconstruction Imag')
 
 

@@ -519,22 +519,69 @@ class Inversion:
         r = refl(Q,dz,rho)
         return  r
 
-    def plot(self, details=False, resid=False):
+    def plot(self, details=False, phase=None):
         """
         Plot the data and the inversion.
 
         If *details* is True, then plot the individual stages used to calculate
         the average, otherwise just plot the envelope.
+
+        If *phase* is a phase reconstruction object, plot the
+        original measurements.
         """
         import pylab
-        pylab.subplot(211 if not resid else 311)
+        pylab.subplot(211 if not phase else 311)
         self.plotdata(details=details)
         pylab.title("Direct inversion of "+self.name)
-        if resid:
-            pylab.subplot(312)
-            self.plotresid(details=details)
-        pylab.subplot(212 if not resid else 313)
+        pylab.subplot(212 if not phase else 312)
         self.plotprofile(details=details)
+        if phase:
+            pylab.subplot(313)
+            self.plot_measurement((phase.Qin,phase.R1in,phase.dR1in),
+                                  phase.v1, phase.name1,
+                                  (phase.Qin,phase.R2in,phase.dR2in),
+                                  phase.v2, phase.name2)
+
+    def plot_measurement(self, data1, surround1, label1,
+                         data2, surround2, label2):
+        """Plot the data against the inversion"""
+        import pylab
+
+        def plot1(data, surround, label, color, hold=True):
+            if len(data) == 2:
+                q,R = data
+                dR = None
+            else:
+                q,R,dR = data
+            r = self.refl(q, surround=surround)
+            # Fresnel reflectivity
+            if self.backrefl:
+                F = abs(refl(q,[0,0],[self.substrate,surround]))**2
+            else:
+                F = abs(refl(q,[0,0],[surround,self.substrate]))**2
+            pylab.plot(q,R/F, '.', label=label,
+                           color=color, hold=hold)
+            pylab.plot(q,abs(r)**2/F,'-',label=label+" inv",
+                           color=color, hold=True)
+            if dR is not None:
+                pylab.fill_between(q,(R-dR)/F,(R+dR)/F,
+                                   color=color,alpha=0.3, hold=True)
+                chisq = sum(((abs(r)**2-R)/dR)**2)
+                return chisq,len(q)
+            else:
+                return 0,1
+
+        chisq1,n1 = plot1(data1, surround1, label1, 'green', hold=False)
+        chisq2,n2 = plot1(data2, surround2, label2, 'blue')
+        pylab.legend()
+        chisq = (chisq1+chisq2)/(n1+n2)
+        pylab.text(0.01,0.01, "chisq=%.1f"%chisq,fontsize="10",
+                   transform=pylab.gca().transAxes,
+                   ha='left', va='bottom')
+
+        pylab.title('Measured data')
+        pylab.ylabel('|r^2|/R_F')
+        pylab.xlabel('Q (inv A)')
 
     def plotdata(self, details=False, lowQ_inset=True):
         """
@@ -722,7 +769,7 @@ def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
     Plot Q,Re(r) data.
     """
     import pylab
-    scale = 1e6*Q**2 if scaled else 1
+    scale = 1e4*Q**2 if scaled else 1
     [h] = pylab.plot(Q, scale*RealR,**kw)
     if dRealR is not None:
         pylab.fill_between(Q,scale*(RealR-dRealR),scale*(RealR+dRealR),
@@ -730,7 +777,7 @@ def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
         #pylab.plot(Q, scale*(R-dR), '--', color=h.get_color())
         #pylab.plot(Q, scale*(R+dR), '--', color=h.get_color())
 
-    pylab.ylabel("10^6 Q**2 Re r" if scaled else "Re r")
+    pylab.ylabel("10^4 Q**2 Re r" if scaled else "Re r")
     pylab.xlabel("Q (inv A)")
 
 class Interpolator:
@@ -1178,10 +1225,7 @@ The measurement is assumed to come through the substrate."""
     group.add_option("-q","--quiet",dest="doplot",
                       action="store_false",default=True,
                       help="don't show output plot")
-    group.add_option("-r","--resid",dest="resid",
-                      action="store_true",default=False,
-                      help="show residual plot")
-    # doplot and resid are post inversion options
+    # doplot is a post inversion options
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Calculation controls", description=None)
@@ -1210,6 +1254,7 @@ The measurement is assumed to come through the substrate."""
 
     basefile = os.path.splitext(os.path.basename(args[0]))[0]
     if len(args) == 1:
+        phase = None
         data = args[0]
     elif len(args) == 2:
         if not options.surround or not options.substrate:
@@ -1217,7 +1262,7 @@ The measurement is assumed to come through the substrate."""
         v1,v2 = options.surround
         u = options.substrate
         phase = SurroundVariation(args[0],args[1],u=u,v1=v1,v2=v2)
-        data = phase.Q, phase.RealR
+        data = phase.Q, phase.RealR, phase.dRealR
         if options.ampfile:
             phase.save(options.ampfile)
         if options.amp_only and options.doplot:
@@ -1244,7 +1289,7 @@ The measurement is assumed to come through the substrate."""
         res.save(options.outfile)
     if options.doplot:
         import pylab
-        res.plot(resid=options.resid)
+        res.plot(phase=phase)
         pylab.show()
 
 if __name__ == "__main__":
