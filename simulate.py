@@ -21,10 +21,15 @@ class Simulation:
 
     Parameters::
 
-      *sample*          structure [(rho1,d1), ..., (rhon, dn)]
-      *q*, *dq*         measurement points
-      *u*, *v1*, *v2*   uniform and varying SLDs for surround variation
-      *noise*           percentage noise in the measurement
+        *sample*        structure [(rho1,d1), ..., (rhon, dn)]
+        *q*, *dq*       measurement points
+        *u*, *v1*, *v2* uniform and varying SLDs for surround variation
+        *noise*         percentage noise in the measurement
+        *perfect_reconstruction*
+                        use real(r) from free film rather than simulated
+                        reflectivity
+        *phase_args*    keyword arguments for reconstruction calculation
+        *invert_args*   keyword arguments for inversion calculation
 
     The defaults are set to u=Si (2.1), v1=Air (0) and v2=D2O (6.33).
     Noise and roughness are set to 0.
@@ -32,12 +37,15 @@ class Simulation:
     TODO: Resolution and roughness are not yet supported.
     """
     def __init__(self, sample=None, q=None, dq=None, urough=0,
-                 u=2.1, v1=0, v2=6.33, noise=0, inversion_args={}):
+                 u=2.1, v1=0, v2=6.33, noise=0,
+                 phase_args={}, invert_args={},
+                 perfect_reconstruction=False):
         self.q, self.dq = q,dq
         self.sample, self.urough = sample, urough
         self.u, self.v1, self.v2 = u, v1, v2
         self.noise = noise
-        self.inversion_args = inversion_args
+        self.phase_args, self.invert_args = phase_args, invert_args
+        self.perfect_reconstruction = perfect_reconstruction
         self.set()
 
     def set(self, **kw):
@@ -53,16 +61,17 @@ class Simulation:
         q,u,v1,v2 = self.q,self.u,self.v1,self.v2
         urough = self.urough
 
-        rho = [p[0] for p in self.sample]
+        # Measuring through the substrate so use -q to generate r1,r2
+        rho = [p[0] for p in self.sample]+[u]
         d = [0] + [p[1] for p in self.sample] + [0]
-        sigma = [p[2] for p in self.sample]
-        r1 = refl(q,d,[u]+rho+[v1], sigma=[urough]+sigma)
-        r2 = refl(q,d,[u]+rho+[v2], sigma=[urough]+sigma)
+        sigma = [p[2] for p in self.sample]+[urough]
+        r1 = refl(-q,d,[v1]+rho, sigma=sigma)
+        r2 = refl(-q,d,[v2]+rho, sigma=sigma)
 
-        revrho = [p[0]-u for p in reversed(self.sample)]
-        revd = [0] + [p[1] for p in reversed(self.sample)] + [0]
-        revsigma = [p[2] for p in reversed(self.sample)]
-        rfree = refl(q,revd,[0]+revrho+[0],sigma=revsigma+[urough])
+        # Phase reconstruction returns the phase for the reversed free
+        # film relative to the substrate, so use +q reflectivity in
+        # u surround.
+        rfree = refl(q, d, [u]+rho, sigma=sigma)
 
         self.rfree,self.r1,self.r2 = rfree,r1,r2
 
@@ -77,7 +86,7 @@ class Simulation:
             self.R1, self.R2 = R1, R2
 
         self._reconstruct()
-        self._invert(**self.inversion_args)
+        self._invert()
 
     def sample_profile(self):
         """
@@ -85,8 +94,8 @@ class Simulation:
         """
         z,rho_u = self.invert.z, self.invert.substrate
         rhos, widths, sigmas = zip(*self.sample)
-        vacuum_width = self.invert.thickness - numpy.sum(widths)
-        widths = numpy.hstack((vacuum_width, widths))
+        substrate_width = self.invert.thickness - numpy.sum(widths)
+        widths = numpy.hstack((0,widths,substrate_width))
         rhos = numpy.hstack((0,rhos,rho_u))
         interface_z = numpy.cumsum(widths)
         rho_idx = numpy.searchsorted(interface_z, z)
@@ -105,6 +114,7 @@ class Simulation:
         import pylab
         pylab.rc('font',size=8)
         self.plot_measurement(221)
+        #self.plot_imag(223)
         self.plot_real(223)
         self.plot_inversion(222)
         self.plot_profile(224)
@@ -114,16 +124,32 @@ class Simulation:
         """Plot the simulated data"""
         import pylab
         pylab.subplot(subplot)
-        if self.noise != 0:
-            pylab.errorbar(self.q,self.R1,yerr=self.dR1,
-                           hold=False,label="v1")
-            pylab.errorbar(self.q,self.R2,yerr=self.dR2,
-                           hold=True,label="v2")
-            pylab.yscale('log')
-        else:
-            pylab.semilogy(self.q,self.R1,'.',hold=False,label="v1")
-            pylab.semilogy(self.q,self.R2,'.',hold=True,label="v2")
+        q,R1,R2 = self.q,self.R1,self.R2
+        r1 = self.invert.refl(q,surround=self.v1)
+        r2 = self.invert.refl(q,surround=self.v2)
+        v1_color = 'green'
+        v2_color = 'blue'
+        pylab.semilogy(q,R1,'.',label="v1",
+                       color=v1_color, hold=False)
+        pylab.semilogy(q,R2,'.',label="v2",
+                       color=v2_color, hold=True)
+        pylab.semilogy(q,abs(r1)**2,'-',label="inverted v1",
+                       color=v1_color,hold=True)
+        pylab.semilogy(q,abs(r2)**2,'-',label="inverted v2",
+                       color=v2_color,hold=True)
         pylab.legend()
+        if self.noise != 0:
+            dR1,dR2 = self.dR1,self.dR2
+            chisq1 = sum(((abs(r1)**2-R1)/dR1)**2)
+            chisq2 = sum(((abs(r2)**2-R2)/dR2)**2)
+            chisq = (chisq1+chisq2)/(2*len(q))
+            pylab.text(0.01,0.01, "chisq=%.1f"%chisq,fontsize="10",
+                       transform=pylab.gca().transAxes,
+                       ha='left', va='bottom')
+            pylab.fill_between(q,R1-dR1,R1+dR1,
+                               color=v1_color,alpha=0.3)
+            pylab.fill_between(q,R2-dR2,R2+dR2,
+                               color=v2_color,alpha=0.3)
         pylab.title('Measured data')
         pylab.ylabel('R')
 
@@ -135,7 +161,7 @@ class Simulation:
         # Plot reconstructed phase with uncertainty
         q,re,dre = self.phase.Q, self.phase.RealR, self.phase.dRealR
         scale = 1e6*q**2
-        [h] = pylab.plot(q, scale*re, hold=False, label="measured")
+        [h] = pylab.plot(q, scale*re, '.', hold=False, label="measured")
         if dre is not None:
             pylab.fill_between(q, scale*(re-dre), scale*(re+dre),
                                color=h.get_color(),alpha=0.3)
@@ -143,12 +169,12 @@ class Simulation:
         # Plot free film phase for comparison
         q_free,re_free = self.q, real(self.rfree)
         scale = 1e6*q_free**2
-        pylab.plot(q_free, scale*re_free, hold=True, label="freefilm")
+        pylab.plot(q_free, scale*re_free, hold=True, label="ideal")
 
         pylab.legend()
         pylab.xlabel('q')
-        pylab.ylabel('10^6 q**2 * Re r')
-        pylab.title('Phase reconstruction Real')
+        pylab.ylabel('10^6 q**2 Re r')
+        pylab.title('Phase reconstruction real part')
 
     def plot_imag(self, subplot=111):
         """Plot the simulated phase (imag)"""
@@ -183,7 +209,7 @@ class Simulation:
         [h] = pylab.plot(z,rho,hold=True)
         pylab.fill_between(z,numpy.zeros_like(rho),rho,
                            color=h.get_color(),alpha=0.3)
-        pylab.legend(['inverted','original'])
+        pylab.legend(['inverted','ideal'])
         pylab.title('SLD Profile')
 
     def plot_inversion(self, subplot=111):
@@ -214,16 +240,19 @@ class Simulation:
         data1 = self.q,self.R1,self.dR1
         data2 = self.q,self.R2,self.dR2
         u,v1,v2 = self.u,self.v1,self.v2
-        self.phase = SurroundVariation(data1,data2,u=u,v1=v1,v2=v2)
+        self.phase = SurroundVariation(data1,data2,u=u,v1=v1,v2=v2,
+                                       **self.phase_args)
 
-    def _invert(self, **kw):
+    def _invert(self):
         """Drive direct inversion"""
-        data = self.phase.Q, self.phase.RealR #, self.phase.dRealR
-        #data = self.q, real(self.rfree)
+        if self.perfect_reconstruction:
+            data = self.q, real(self.rfree)
+        else:
+            data = self.phase.Q, self.phase.RealR, self.phase.dRealR
         substrate = self.phase.u
         thickness = numpy.sum(L[1] for L in self.sample) + 50
         self.invert = Inversion(data=data,thickness=thickness,
-                                substrate=substrate,**kw)
+                                substrate=substrate,**self.invert_args)
         self.invert.run()
 
     def _swfvarnexdum(self):

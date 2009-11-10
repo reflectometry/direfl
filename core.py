@@ -65,9 +65,9 @@ phase-inversion neutron specular reflectivity", *Langmuir* 25, 4132-4144 (2009)
 from __future__ import division
 import numpy
 from numpy import pi, inf, nan, sqrt, exp, sin, cos, tan, log
-from numpy import ceil, floor, real, imag, sign, isinf, isnan
+from numpy import ceil, floor, real, imag, sign, isinf, isnan, isfinite
 from numpy import (interp, diff, sum, mean, std,
-                   linspace, array, arange, hstack, zeros, diag)
+                   linspace, array, asarray, arange, hstack, zeros, diag)
 from numpy.fft import fft
 from numpy.random import uniform, poisson, normal
 
@@ -116,7 +116,8 @@ class Inversion:
 
     The following attributes and methods are of most interest::
 
-        *data*, *thickness*, *substrate*, *Qmin*, *Qmax*  (`Inputs`__)
+        *data*, *thickness*, *substrate*, *Qmin*, *Qmax*
+                                         (`Inputs`__)
         *stages*, *monitor*, *noise*     (`Uncertainty controls`__)
         *rhopoints*, *calcpoints*        (`Inversion controls`__)
         *z*, *rho*, *drho*               (`Computed profile`__)
@@ -127,7 +128,8 @@ class Inversion:
 
         *data*               input filename or Q,RealR data  (required)
         *thickness* (400)    film thickness
-        *substrate* (0)       substrate SLD
+        *substrate* (0)      substrate SLD
+        *bse* (0)            bound state energy
         *Qmin* (0)           minimum Q to use from data
         *Qmax* (None)        maximum Q to use from data
         *backrefl* (True)    reflection measured through the substrate
@@ -139,15 +141,19 @@ class Inversion:
     the value chosen is too small, the inverted profile will not be able
     to match the input reflection signal.  If the thickness is too large,
     the film of interest should be properly reconstructed, but will be
-    extended into a reconstructed vacuum layer above of the film.  The
-    reflection signal from this profile will show excess variation as
-    the inversion process adapts to the noise in the input.
+    extended into a reconstructed substrate below the film.
 
-    *substrate* is the scattering length density of the substrate.  The
-    inversion calculation determines the scattering length densities (SLDs)
-    within the profile relative to the SLD of the substrate.  Entering
-    the correct value of substrate will shift the profile back to the
-    correct values.
+    *substrate* is the scattering length density of the substrate.
+    The inversion calculation determines the scattering length
+    densities (SLDs) within the profile relative to the SLD of the
+    substrate.  Entering the correct value of substrate will shift
+    the profile back to the correct values.
+
+    *bse* is the bound state energy correction factor.  Films with
+    large negative potentials at their base sometimes produce an
+    incorrect inversion, as indicated by an incorrect value for the
+    substrate portion of a film.  A value of substrate SLD - bound
+    state SLD seems to correct the reconstruction.
 
     *Qmin*, *Qmax* is the range of input data to use for the calculation.
     Reduce *Qmax* to avoid contamination from noise at high Q and improve
@@ -159,27 +165,33 @@ class Inversion:
     sparingly --- the overall shape of the profile is sensitive to data
     at low Q.  *Qmax* and *Qmin* default to the limits of the input data.
 
-    TODO: test and debug backrefl
-    *backrefl* should be true if the film is measured with an incident
+    *backrefl* is True if the film is measured with an incident
     beam through the substrate rather than the surface.
 
     Uncertainty controls
     ====================
 
-        *stages* (4)        number of inversions to average over
-        *monitor* (50000)   for generating poisson noise
-        *noise* (10)        for generating uniform noise
+        *stages* (4)      number of inversions to average over
+        *noise* (1)       noise scale factor
+        *monitor* (None)  incident beam intensity (poisson noise source)
 
     Uncertainty is handled by averaging over *stages* inversions with
-    noise added to the input data for each inversion.  The noise is a
-    combination of Poisson noise modified by a random uniform scale factor::
+    noise added to the input data for each inversion.  Usually the
+    measurement uncertainty is estimated during data reduction and
+    phase reconstruction, and Gaussian noise is added to the data.
+    This is scaled by a factor of *noise* so the effects of noisier
+    or quieter input are easy to estimate.  If the uncertainty
+    estimate is not available, 5% relative noise per point is assumed.
+
+    If *monitor* is specified, then Poisson noise is used instead,
+    according to the following::
 
         *noise* U[-1,1] (poisson(*monitor* |re r|)/*monitor* - |re r|)
 
     That is, a value is pulled from the Poisson distribution of the
     expected counts, and the noise is the difference between this and
-    the actual counts.  This is further scaled by a fudge factor of *noise*
-    and a further random uniform in [-1,1].
+    the actual counts.  This is further scaled by a fudge factor of
+    *noise* and a further random uniform in [-1,1].
 
     Inversion controls
     ==================
@@ -293,11 +305,12 @@ class Inversion:
 
     Qmin = 0
     Qmax = None
+    bse = 0
     thickness = 400
     rhopoints = 128
     calcpoints = 4
-    monitor = 50000
-    noise = 10
+    monitor = None
+    noise = 1
     substrate = 0
     ctf_window = 0
     stages = 10
@@ -310,27 +323,31 @@ class Inversion:
         if isinstance(data, basestring):
             self._loaddata(data)
         else: # assume it is a pair, e.g., a tuple, a list, or an Nx2 array.
-            Q,RealR = data
-            self._setdata(Q,RealR)
+            self._setdata(data)
 
         # Run with current keywords
         self._set(**kw)
 
     def _loaddata(self, file):
         """
-        Load data from a file of q,real(r)
+        Load data from a file of q,real(r),dreal(r)
         """
-        Q,RealR = numpy.loadtxt(file).T
-        self._setdata(Q, RealR, name=file)
+        data = numpy.loadtxt(file).T
+        self._setdata(data, name=file)
 
-    def _setdata(self, Q, RealR, name="data"):
+    def _setdata(self, data, name="data"):
         """
         Set *Qinput*, *RealRinput* from q,real(r) vectors.
         """
         self.name = name
+        if len(data) == 3:
+            q,rer,drer = data
+        else:
+            q,rer = data
+            drer = None
         # Force equal spacing by interpolation
-        Q,RealR = array(Q),array(RealR)
-        self.Qinput,self.RealRinput = Q,RealR
+        self.Qinput,self.RealRinput = asarray(q),asarray(rer)
+        self.dRealRinput = asarray(drer) if drer is not None else None
 
     def _remesh(self):
         """
@@ -341,20 +358,29 @@ class Inversion:
         Qmax is preserved.  This works best when data are equally spaced
         to begin with, starting a k*dQ for some k.
         """
-        Q, RealR = self.Qinput, self.RealRinput
+        q, rer, drer = self.Qinput, self.RealRinput, self.dRealRinput
+        if drer is None: drer = 0*rer
+
         # Trim from Qmin to Qmax
         if self.Qmin is not None:
-            Q,RealR = Q[Q>=self.Qmin], RealR[Q>=self.Qmin]
+            idx = q >= self.Qmin
+            q,rer,drer = q[idx], rer[idx], drer[idx]
         if self.Qmax is not None:
-            Q,RealR = Q[Q<=self.Qmax], RealR[Q<=self.Qmax]
+            idx = q <= self.Qmax
+            q,rer,drer = q[idx], rer[idx], drer[idx]
 
         # Resample on even spaced grid, preserving approximately the
         # points between Qmin and Qmax
-        dQ = (Q[-1]-Q[0])/(len(Q) - 1)
-        npts = int(Q[-1]/dQ + 1.5)
-        Q,RealR = remesh([Q,RealR], 0, Q[-1], npts, left=0, right=0)
+        dq = (q[-1]-q[0])/(len(q) - 1)
+        npts = int(q[-1]/dq + 1.5)
+        q,rer = remesh([q,rer], 0, q[-1], npts, left=0, right=0)
+        # Process uncertainty
+        if self.dRealRinput is not None:
+            q,drer = remesh([q,drer], 0, q[-1], npts, left=0, right=0)
+        else:
+            drer = None
 
-        return Q,RealR
+        return q,rer,drer
 
     def run(self, **kw):
         """
@@ -367,18 +393,28 @@ class Inversion:
         sets *profiles* to the list of generated (z,rho) profiles.
         """
         self._set(**kw)
-        Q,RealR = self._remesh()
+        q,rer,drer = self._remesh()
         signals = []
         profiles = []
-        for i in range(self.stages):
+        stages = self.stages if self.noise > 0 else 1
+        for i in range(stages):
             if i == 0:
-                noisyR = RealR
+                # Use data noise for the first stage
+                noisyR = rer
+            elif self.monitor is not None:
+                # Use incident beam as noise source
+                pnoise = poisson(self.monitor*abs(rer))/self.monitor - abs(rer)
+                unoise = uniform(-1,1,rer.shape)
+                noisyR = rer + self.noise*unoise*pnoise
+            elif drer is not None:
+                # Use gaussian uncertainty estimate as noise source
+                noisyR = rer + normal(0,1)*self.noise*drer
             else:
-                pnoise = poisson(self.monitor*abs(RealR))/self.monitor - abs(RealR)
-                unoise = uniform(-1,1,RealR.shape)
-                noisyR = RealR + self.noise*unoise*pnoise
-            #noisyR = RealR + normal(RealR,noise*0.01*abs(RealR))
-            ctf = self._transform(noisyR, Qmax=Q[-1], bse=0, porder=1)
+                # Use 5% relative amplitude as noise source
+                noisyR = rer + normal(0,1)*self.noise*0.05*abs(rer)
+
+            ctf = self._transform(noisyR, Qmax=q[-1],
+                                  bse=self.bse, porder=1)
             qp = self._invert(ctf, iters=self.iters)
             if self.showiters: # Show individual iterations
                 import pylab
@@ -388,35 +424,43 @@ class Inversion:
                     hold = True
                 pylab.ginput(show_clicks=False)
             z,rho = remesh(qp[-1],0,self.thickness,self.rhopoints)
-            signals.append((Q,noisyR))
+            if not self.backrefl:
+                z,rho = z[::-1],rho[::-1]
+            signals.append((q,noisyR))
             profiles.append((z,rho))
         self.signals, self.profiles = signals, profiles
-        
+
     def chisq(self):
         """
-        Return chisq computed from non-zero dRealR.
+        Compute normalized sum squared difference between original real r and
+        the real r for the inverted profile.
         """
-        q,rer,drer = self.Q,self.RealR,self.dRealR
-        idx = drer > 0
-        rerinv = real(self.refl(q[idx]))
-        chisq = sum(((rerinv-rer[idx])/drer[idx])**2)/len(q[idx])
+        idx = self.dRealR > 0
+        q,rer,drer = self.Q[idx],self.RealR[idx],self.dRealR[idx]
+        rerinv = real(self.refl(q))
+        chisq = numpy.sum(((rer - rerinv)/drer)**2)/len(q)
         return chisq
 
     # Computed attributes.
     def _get_z(self):
+        """Inverted SLD profile depth in Angstroms"""
         return self.profiles[0][0]
     def _get_rho(self):
-        """returns SLD profile in 10^-6 * inv A^2 units, with 0 at the top"""
+        """Inverted SLD profile in 10^-6 * inv A^2 units"""
         rho = mean([p[1] for p in self.profiles], axis=0) + self.substrate
-        return rho[::-1] if self.backrefl else rho
+        return rho
     def _get_drho(self):
+        """Inverted SLD profile uncertainty"""
         drho = std([p[1] for p in self.profiles], axis=0)
-        return drho[::-1] if self.backrefl else drho
+        return drho
     def _get_Q(self):
+        """Inverted profile calculation points"""
         return self.signals[0][0]
     def _get_RealR(self):
+        """Average inversion free film reflectivity input"""
         return mean([p[1] for p in self.signals], axis=0)
     def _get_dRealR(self):
+        """Free film reflectivity input uncertainty"""
         return std([p[1] for p in self.signals], axis=0)
     z = property(_get_z)
     rho = property(_get_rho)
@@ -455,17 +499,23 @@ class Inversion:
         for the inversion.
 
         If *surround* is provided, compute the reflectivity for the
-        free film in the context of the substrate and the surround, otherwise
-        compute the reflectivity of the reversed free film to match against
-        the real portion of the reflectivity amplitude supplied as input.
+        free film in the context of the substrate and the surround,
+        otherwise compute the reflectivity of the reversed free film
+        embedded in the substrate to match against the reflectivity
+        amplitude supplied as input.
         """
-        if Q is None: Q == self.Q
+        if Q is None:
+            Q == self.Q
+        if self.backrefl:
+            # Back reflectivity is equivalent to -Q inputs
+            Q = -Q
         if surround is None:
-            dz = hstack((0,diff(self.z)))
-            rho = self.rho[::-1]-self.substrate
-        else:
-            dz = hstack((0,diff(self.z[::-1]),0))
-            rho = hstack((surround,self.rho,self.substrate))
+            # Phase reconstructed free film reflectivty is reversed,
+            # and has an implicit substrate in front and behind.
+            surround = self.substrate
+            Q = -Q
+        dz = hstack((0,diff(self.z),0))
+        rho = hstack((surround,self.rho[1:],self.substrate))
         r = refl(Q,dz,rho)
         return  r
 
@@ -510,6 +560,10 @@ class Inversion:
             Rinverted = real(self.refl(self.Qinput))
             realplot(self.Qinput, Rinverted, label="inverted", color="red")
             pylab.legend()
+            chisq = self.chisq() # Note: cache calculated profile?
+            pylab.text(0.01,0.99, "chisq=%.1f"%chisq,fontsize="10",
+                       transform=pylab.gca().transAxes,
+                       ha='left', va='top')
 
             if lowQ_inset==True:
                 # Low Q inset
@@ -923,13 +977,13 @@ class SurroundVariation:
         Q,re,im = self.Qin,self.RealR,self.ImagR
         if self.dRealR is not None:
             dre,dim = self.dRealR,self.dImagR
-            keep = ~reduce(lambda y,x: isinf(x)|isnan(x)|y,
-                           [re,im], False)
+            keep = reduce(lambda y,x: isfinite(x)&y,
+                           [re,im], True)
             self.Q,self.RealR,self.dRealR,self.ImagR,self.dImagR \
                 = [v[keep] for v in (Q,re,dre,im,dim)]
         else:
-            keep = ~reduce(lambda y,x: isinf(x)|isnan(x)|y,
-                           [re,im], False)
+            keep = reduce(lambda y,x: isfinite(x)&y,
+                           [re,im], True)
             self.Q,self.RealR,self.ImagR \
                 = [v[keep] for v in (Q,re,im)]
 
@@ -1007,20 +1061,32 @@ class SurroundVariation:
         self.Q = self.Qin
 
     def _calc_err(self, stages):
-        if self.dR1in is None:
-            dRealR = dImagR = None
-        else:
-            runs = []
-            for i in range(stages):
-                R1 = normal(self.R1in,self.dR1in)
-                R2 = normal(self.R2in,self.dR2in)
-                RealR,ImagR = _phase_reconstruction(self.Qin, R1, R2,
-                                                    self.u, self.v1, self.v2)
-                runs.append((RealR,ImagR))
-            dRealR = std([r[0] for r in runs],axis=0)
-            dImagR = std([r[1] for r in runs],axis=0)
-        self.dRealR, self.dImagR = dRealR, dImagR
+        if self.dR1in is None: return
 
+        runs = []
+        for i in range(stages):
+            R1 = normal(self.R1in,self.dR1in)
+            R2 = normal(self.R2in,self.dR2in)
+            rer,imr = _phase_reconstruction(self.Qin, R1, R2,
+                                            self.u, self.v1, self.v2)
+            runs.append((rer,imr))
+        rers, rims = zip(*runs)
+        self.RealR = valid_f(mean, rers)
+        self.ImagR = valid_f(mean, rims)
+        self.dRealR = valid_f(std, rers)
+        self.dImagR = valid_f(std, rims)
+
+def valid_f(f,A,axis=0):
+    """
+    Calculate vector function f using only the finite elements of the
+    array *A*.
+
+    *axis* is the axis over which the calculation should be performed,
+    or None if the calculation should summarize the entire array.
+    """
+    A = numpy.asarray(A)
+    A = numpy.ma.masked_array(A, mask=~isfinite(A))
+    return numpy.asarray(f(A,axis=axis))
 
 def _phase_reconstruction(Q, R1sq, R2sq, rho_u, rho_v1, rho_v2):
     """

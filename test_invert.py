@@ -1,26 +1,34 @@
 from simulate import Simulation
 from numpy import linspace
 
-# Fake class to make it easy to turn off tests
-class NoSimulation:
-    def __init__(self, **kw): pass
-    def check(self): pass
-    def plot(self): pass
-
 def test():
-    ro = 5
-    t = Simulation(q = linspace(0,0.4,200),
-                   sample = ([(5,100,ro),(1,200,ro),(3,50,ro),(-1,25,ro)]),
-                   u=2, urough=0, v1=0, v2=4.3, noise=0.05,
-                   inversion_args=dict(showiters=False, stages=10),
-                   )
+    ## Roughness parameters (surface, sample, substrate)
+    sv,s,su = 3,5,2
+    ## Surround parameters
+    u,v1,v2 = 2.1, 0, 4.5
+    ## Default sample
+    sample = ([5,100,s],(1,123,s),(3,47,s),[-1,25,s])
+    ## Reversed normal sample
+    #sample = list(reversed(sample))
+    ## Thick sample
+    #sample = ([3,1000,s],[2,200,s],[3,50,s],[-1,25,s])
+    ## No bound states
+    #sample = ([u+3,100,s],(u+1,123,s),[u+2,47,s])
+
+    ## Bound state energy is sometimes necessary to get good results
+    #bse = max(0,u-sample[-1][0])
+    bse = 0
+
+    ## Run the simulation
+    sample[0][2] = sv
+    inv = dict(showiters=False, monitor=None, bse=bse,
+               noise=1, stages=10, calcpoints=4,rhopoints=128)
+    t = Simulation(q = linspace(0,0.4,150), sample=sample,
+                   u=u, urough=su, v1=v1, v2=v2, noise=0.08,
+                   invert_args=inv, phase_args=dict(stages=100),
+                   perfect_reconstruction=True)
     #t.check()
-    # Inversion fails if the layers get too thick.
-    t_ = NoSimulation(q = linspace(0,0.4,400),
-                   sample = ([(3,1000),(2,200),(3,50),(-1,25)]),
-                   u=4.5, v1=2, v2=-0.53, noise=0,
-                   inversion_args=dict(rhopoints=128,calcpoints=4,
-                                       showiters=True))
+
     t.plot()
     import pylab; pylab.show()
 
