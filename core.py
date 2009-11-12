@@ -825,7 +825,8 @@ def remesh(data, xmin, xmax, npts, left=None, right=None):
     Resample the data on a fixed grid.
     """
     x,y = data
-    x,y = x[isfinite(x)], y[isfinite(x)]
+    x,y = x[isfinite(x)], y[isfinite(y)]
+    if npts > len(x): npts = len(x)
     newx = linspace(xmin, xmax, npts)
     newy = interp(newx, x, y, left=left, right=right)
     return array((newx,newy))
