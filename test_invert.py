@@ -26,7 +26,7 @@ def test():
     t = Simulation(q = linspace(0,0.4,150), sample=sample,
                    u=u, urough=su, v1=v1, v2=v2, noise=0.08,
                    invert_args=inv, phase_args=dict(stages=100),
-                   perfect_reconstruction=True)
+                   perfect_reconstruction=False)
     #t.check()
 
     t.plot()
