@@ -536,16 +536,16 @@ class Inversion:
         original measurements.
         """
         import pylab
-        pylab.subplot(211 if not phase else 311)
-        self.plotdata(details=details)
-        pylab.subplot(212 if not phase else 312)
-        self.plotprofile(details=details)
         if phase:
-            pylab.subplot(313)
+            pylab.subplot(311)
             self.plot_measurement((phase.Qin,phase.R1in,phase.dR1in),
                                   phase.v1, phase.name1,
                                   (phase.Qin,phase.R2in,phase.dR2in),
                                   phase.v2, phase.name2)
+        pylab.subplot(312 if phase else 211)
+        self.plotdata(details=details)
+        pylab.subplot(313 if phase else 212)
+        self.plotprofile(details=details)
 
     def plot_measurement(self, data1, surround1, label1,
                          data2, surround2, label2):
