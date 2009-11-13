@@ -946,15 +946,24 @@ def reconstruct(file1,file2,u,v1,v2,stages=100):
 
     We have to be careful about terminology.  We will use the term
     substrate to mean the base on which we deposit our film of interest,
-    and surround to be the material we put on the other side.  We are
-    using u for the uniform substrate and v for the varying surround.
+    and surface to be the material we put on the other side.  The
+    fronting or incident medium is the material through which the beam
+    enters the sample.  The backing material is the material on the other
+    side.  In back reflectivity, the fronting material is the substrate
+    and the backing material is the surface.  We are using u for the 
+    uniform substrate and v for the varying surface material.
 
     In the experimental setup at the NCNR, we have a liquid resevoir which
     we can place above the film.  We measure first with one liquid in the
-    resevoir such as water and again with a contrasting liquid such as
-    heavy water (D2O).  We measure the film through the substrate (either
-    silicon or sapphire) since they are more transparent to neutrons
-    than water.
+    resevoir such as heavy water (D2O) and again with air or a contrasting 
+    liquid such as water (H2O).  At approximately 100 um, the resevoir depth 
+    is much thicker than the effective coherence length of the neutron in the
+    z direction, and so can be treated as a semi-infinite substrate, even when 
+    it is empty.  [Note that you cannot simulate a semi-infinite substrate 
+    using a large but finitely thick material using the reflectometry 
+    calculation; at best the resulting reflection will be a high frequency
+    signal which smooths after applying the resolution correction to a 
+    magnitude that is twice the reflection from a semi-infinite substrate.]
 
     .. figure:: backrefl_setup.png
        :alt: experimental setup for back reflectivity
