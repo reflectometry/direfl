@@ -22,14 +22,13 @@ Phase reconstruction and inversion for reflectometry data.
 
 Command line phase reconstruction + phase inversion::
 
-    invert -u 2.1 -v 6.34 0 --Qmin 0.014 \
+    invert -u 2.1 -v 6.33 0 --Qmin 0.014 \
        --thickness 1000 qrd1.refl qrd2.refl
 
 
 Command line phase inversion only::
 
     invert --thickness=150 --Qmax 0.35 wsh02_re.dat
-
 
 
 Scripts can use :func:`reconstruct` and :func:`invert`.  For example::
@@ -335,7 +334,7 @@ class Inversion:
 
     def _loaddata(self, file):
         """
-        Load data from a file of q,real(r),dreal(r)
+        Load data from a file of q,real(r),dreal(r).
         """
         data = numpy.loadtxt(file).T
         self._setdata(data, name=file)
@@ -451,23 +450,29 @@ class Inversion:
     def _get_z(self):
         """Inverted SLD profile depth in Angstroms"""
         return self.profiles[0][0]
+
     def _get_rho(self):
         """Inverted SLD profile in 10^-6 * inv A^2 units"""
         rho = mean([p[1] for p in self.profiles], axis=0) + self.substrate
         return rho
+
     def _get_drho(self):
         """Inverted SLD profile uncertainty"""
         drho = std([p[1] for p in self.profiles], axis=0)
         return drho
+
     def _get_Q(self):
         """Inverted profile calculation points"""
         return self.signals[0][0]
+
     def _get_RealR(self):
         """Average inversion free film reflectivity input"""
         return mean([p[1] for p in self.signals], axis=0)
+
     def _get_dRealR(self):
         """Free film reflectivity input uncertainty"""
         return std([p[1] for p in self.signals], axis=0)
+
     z = property(_get_z)
     rho = property(_get_rho)
     drho = property(_get_drho)
@@ -584,7 +589,7 @@ class Inversion:
                    transform=pylab.gca().transAxes,
                    ha='left', va='bottom')
 
-        plottitle('Measured data')
+        plottitle('Measured Data')
         pylab.ylabel('R/R_F')
         pylab.xlabel('Q (inv A)')
 
@@ -635,7 +640,7 @@ class Inversion:
                 pylab.setp(ax, xticks=[], yticks=[],
                            xlim=[0,qmax], ylim=[-1,1.1*(ymax+1)-1])
                 pylab.axes(orig)
-        plottitle('Reconstructed phase')
+        plottitle('Reconstructed Phase')
 
 
     def plotprofile(self, details=False):
@@ -659,7 +664,7 @@ class Inversion:
                                color=h.get_color(),alpha=0.3)
             #pylab.plot(z, rho+drho, '--', color=h.get_color())
             #pylab.plot(z, rho-drho, '--', color=h.get_color())
-        plottitle('Depth profile')
+        plottitle('Depth Profile')
         pylab.text(0.01,0.01,'surface',
                    transform=pylab.gca().transAxes,
                    ha='left', va='bottom')
@@ -679,7 +684,7 @@ class Inversion:
         pylab.plot(Q, Q**2*(real(r)-RealR))
         pylab.ylabel('residuals [Q**2 * (Re r - input)]')
         pylab.xlabel("Q (inv A)")
-        plottitle('Phase residuals')
+        plottitle('Phase Residuals')
 
     def _set(self, **kw):
         """
@@ -950,19 +955,19 @@ def reconstruct(file1,file2,u,v1,v2,stages=100):
     fronting or incident medium is the material through which the beam
     enters the sample.  The backing material is the material on the other
     side.  In back reflectivity, the fronting material is the substrate
-    and the backing material is the surface.  We are using u for the 
+    and the backing material is the surface.  We are using u for the
     uniform substrate and v for the varying surface material.
 
     In the experimental setup at the NCNR, we have a liquid resevoir which
     we can place above the film.  We measure first with one liquid in the
-    resevoir such as heavy water (D2O) and again with air or a contrasting 
-    liquid such as water (H2O).  At approximately 100 um, the resevoir depth 
+    resevoir such as heavy water (D2O) and again with air or a contrasting
+    liquid such as water (H2O).  At approximately 100 um, the resevoir depth
     is much thicker than the effective coherence length of the neutron in the
-    z direction, and so can be treated as a semi-infinite substrate, even when 
-    it is empty.  [Note that you cannot simulate a semi-infinite substrate 
-    using a large but finitely thick material using the reflectometry 
+    z direction, and so can be treated as a semi-infinite substrate, even when
+    it is empty.  [Note that you cannot simulate a semi-infinite substrate
+    using a large but finitely thick material using the reflectometry
     calculation; at best the resulting reflection will be a high frequency
-    signal which smooths after applying the resolution correction to a 
+    signal which smooths after applying the resolution correction to a
     magnitude that is twice the reflection from a semi-infinite substrate.]
 
     .. figure:: backrefl_setup.png
@@ -1179,7 +1184,6 @@ def _phase_reconstruction(Q, R1sq, R2sq, rho_u, rho_v1, rho_v2):
 
     Returns RealR, ImagR
     """
-
     Qsq = Q**2 + 16.*pi*rho_u*1e-6
     usq,v1sq,v2sq = [(1-16*pi*rho*1e-6/Qsq) for rho in (rho_u,rho_v1,rho_v2)]
 
@@ -1277,10 +1281,9 @@ The measurement is assumed to come through the substrate."""
     inversion_keys += ['rhopoints','calcpoints','stages']
     parser.add_option_group(group)
 
-
     (options, args) = parser.parse_args()
     if len(args) < 1 or len(args) > 2:
-         parser.error("need real R data file or pair of reflectivities")
+         parser.error("Need real R data file or pair of reflectivities")
 
     basefile = os.path.splitext(os.path.basename(args[0]))[0]
     if len(args) == 1:
@@ -1288,7 +1291,7 @@ The measurement is assumed to come through the substrate."""
         data = args[0]
     elif len(args) == 2:
         if not options.surround or not options.substrate:
-            parser.error("need fronting and backing for phase inversion")
+            parser.error("Need fronting and backing for phase inversion")
         v1,v2 = options.surround
         u = options.substrate
         phase = SurroundVariation(args[0],args[1],u=u,v1=v1,v2=v2)
