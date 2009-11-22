@@ -90,8 +90,8 @@ def invert(**kw):
 
     If plot=True, show a plot before returning
     """
-    doplot = kw.pop('plot',True)
-    outfile = kw.pop('outfile',None)
+    doplot = kw.pop('plot', True)
+    outfile = kw.pop('outfile', None)
     inverter = Inversion(**kw)
     inverter.run()
     if outfile is not None:
@@ -408,7 +408,7 @@ class Inversion:
             elif self.monitor is not None:
                 # Use incident beam as noise source
                 pnoise = poisson(self.monitor*abs(rer))/self.monitor - abs(rer)
-                unoise = uniform(-1,1,rer.shape)
+                unoise = uniform(-1, 1, rer.shape)
                 noisyR = rer + self.noise*unoise*pnoise
             elif drer is not None:
                 # Use gaussian uncertainty estimate as noise source
@@ -424,10 +424,10 @@ class Inversion:
                 import pylab
                 hold = False
                 for qpi in qp:
-                    pylab.plot(qpi[0],qpi[1],hold=hold)
+                    pylab.plot(qpi[0], qpi[1], hold=hold)
                     hold = True
                 pylab.ginput(show_clicks=False)
-            z,rho = remesh(qp[-1],0,self.thickness,self.rhopoints)
+            z,rho = remesh(qp[-1], 0, self.thickness, self.rhopoints)
             if not self.backrefl:
                 z,rho = z[::-1],rho[::-1]
             signals.append((q,noisyR))
@@ -441,7 +441,7 @@ class Inversion:
         """
         idx = self.dRealR > 1e-15
         #print "min dR",min(self.dRealR[self.dRealR>1e-15])
-        q,rer,drer = self.Q[idx],self.RealR[idx],self.dRealR[idx]
+        q,rer,drer = self.Q[idx], self.RealR[idx], self.dRealR[idx]
         rerinv = real(self.refl(q))
         chisq = numpy.sum(((rer - rerinv)/drer)**2)/len(q)
         return chisq
@@ -481,10 +481,8 @@ class Inversion:
     dRealR = property(_get_dRealR)
 
     def show(self):
-        """
-        Print z,rho,drho to the screen
-        """
-        print "# %9s %11s %11s"%("z","rho","drho")
+        """Print z,rho,drho to the screen."""
+        print "# %9s %11s %11s"%("z", "rho", "drho")
         for point in zip(self.z, self.rho, self.drho):
             print "%11.4f %11.4f %11.4f"%point
 
@@ -497,8 +495,8 @@ class Inversion:
         if outfile is None:
             basefile = os.path.splitext(os.path.basename(self.name))[0]
             outfile = basefile+os.extsep+"amp"
-        fid = open(outfile,"w")
-        fid.write("# %13s %15s %15s\n"%("z","rho","drho"))
+        fid = open(outfile, "w")
+        fid.write("# %13s %15s %15s\n"%("z", "rho", "drho"))
         numpy.savetxt(fid, array([self.z,self.rho,self.drho]).T)
         fid.close()
 
@@ -543,9 +541,9 @@ class Inversion:
         import pylab
         if phase:
             pylab.subplot(311)
-            self.plot_measurement((phase.Qin,phase.R1in,phase.dR1in),
+            self.plot_measurement((phase.Qin,phase.R1in, phase.dR1in),
                                   phase.v1, phase.name1,
-                                  (phase.Qin,phase.R2in,phase.dR2in),
+                                  (phase.Qin, phase.R2in, phase.dR2in),
                                   phase.v2, phase.name2)
         pylab.subplot(312 if phase else 211)
         self.plotdata(details=details)
@@ -554,7 +552,7 @@ class Inversion:
 
     def plot_measurement(self, data1, surround1, label1,
                          data2, surround2, label2):
-        """Plot the data against the inversion"""
+        """Plot the data against the inversion."""
         import pylab
 
         def plot1(data, surround, label, color, hold=True):
@@ -566,32 +564,30 @@ class Inversion:
             r = self.refl(q, surround=surround)
             # Fresnel reflectivity
             if self.backrefl:
-                F = abs(refl(q,[0,0],[self.substrate,surround]))**2
+                F = abs(refl(q,[0,0], [self.substrate,surround]))**2
             else:
-                F = abs(refl(q,[0,0],[surround,self.substrate]))**2
-            pylab.plot(q,R/F, '.', label=label,
-                           color=color, hold=hold)
-            pylab.plot(q,abs(r)**2/F,'-',label=None,
-                           color=color, hold=True)
+                F = abs(refl(q,[0,0], [surround,self.substrate]))**2
+            pylab.plot(q,R/F, '.', label=label, color=color, hold=hold)
+            pylab.plot(q,abs(r)**2/F,'-',label=None, color=color, hold=True)
             if dR is not None:
                 pylab.fill_between(q,(R-dR)/F,(R+dR)/F,
                                    color=color,alpha=0.3, hold=True)
                 chisq = sum(((abs(r)**2-R)/dR)**2)
                 return chisq,len(q)
             else:
-                return 0,1
+                return 0, 1
 
         chisq1,n1 = plot1(data1, surround1, label1, 'green', hold=False)
         chisq2,n2 = plot1(data2, surround2, label2, 'blue')
         pylab.legend()
         chisq = (chisq1+chisq2)/(n1+n2)
-        pylab.text(0.01,0.01, "chisq=%.1f"%chisq,
+        pylab.text(0.01, 0.01, "chisq=%.1f"%chisq,
                    transform=pylab.gca().transAxes,
                    ha='left', va='bottom')
 
-        plottitle('Measured Data')
         pylab.ylabel('R/R_F')
         pylab.xlabel('Q (inv A)')
+        self.plottitle('Measured Data')
 
     def plotdata(self, details=False, lowQ_inset=0):
         """
@@ -612,10 +608,10 @@ class Inversion:
         else:
             realplot(self.Q, self.RealR, dRealR=self.dRealR, label=None,
                      linestyle='', color="blue")
-            realplot(self.Qinput, self.RealRinput, label="original",
+            realplot(self.Qinput, self.RealRinput, label="Original",
                      color="blue")
             Rinverted = real(self.refl(self.Qinput))
-            realplot(self.Qinput, Rinverted, label="inverted", color="red")
+            realplot(self.Qinput, Rinverted, label="Inverted", color="red")
             pylab.legend()
             chisq = self.chisq() # Note: cache calculated profile?
             pylab.text(0.01,0.01, "chisq=%.1f"%chisq,
@@ -628,11 +624,11 @@ class Inversion:
                 box = orig.get_position()
                 ax = pylab.axes([box.xmin+0.02, box.ymin+0.02,
                                  box.width/4, box.height/4],
-                                 axisbg=[0.95,0.95,0.65,0.85])
+                                 axisbg=[0.95, 0.95, 0.65, 0.85])
                 ax.plot(self.Qinput, self.RealRinput, color="blue")
                 ax.plot(self.Qinput, Rinverted, color="red")
-                ax.text(0.99,0.01,"Q,Re r for Q<%g"%lowQ_inset,
-                        fontsize="10",transform=ax.transAxes,
+                ax.text(0.99,0.01, "Q,Re r for Q<%g"%lowQ_inset,
+                        fontsize="10", transform=ax.transAxes,
                         ha='right', va='bottom')
                 qmax = lowQ_inset
                 ymax = max(max(self.RealRinput[self.Qinput<qmax]),
@@ -640,7 +636,7 @@ class Inversion:
                 pylab.setp(ax, xticks=[], yticks=[],
                            xlim=[0,qmax], ylim=[-1,1.1*(ymax+1)-1])
                 pylab.axes(orig)
-        plottitle('Reconstructed Phase')
+        self.plottitle('Reconstructed Phase')
 
 
     def plotprofile(self, details=False):
@@ -660,31 +656,31 @@ class Inversion:
         else:
             z,rho,drho = self.z, self.rho, self.drho
             [h] = pylab.plot(z, rho)
-            pylab.fill_between(z,rho-drho,rho+drho,
-                               color=h.get_color(),alpha=0.3)
+            pylab.fill_between(z,rho-drho, rho+drho,
+                               color=h.get_color(), alpha=0.3)
             #pylab.plot(z, rho+drho, '--', color=h.get_color())
             #pylab.plot(z, rho-drho, '--', color=h.get_color())
-        plottitle('Depth Profile')
-        pylab.text(0.01,0.01,'surface',
+        pylab.text(0.01, 0.01, 'surface',
                    transform=pylab.gca().transAxes,
                    ha='left', va='bottom')
-        pylab.text(0.99,0.01,'substrate',
+        pylab.text(0.99, 0.01, 'substrate',
                    transform=pylab.gca().transAxes,
                    ha='right', va='bottom')
         pylab.ylabel('SLD (inv A^2)')
         pylab.xlabel('depth (A)')
+        self.plottitle('Depth Profile')
 
     def plotresid(self, details=False):
         """
         Plot the residuals for inversion-input.
         """
         import pylab
-        Q,RealR = self.Qinput,self.RealRinput
+        Q,RealR = self.Qinput, self.RealRinput
         r = self.refl(Q)
         pylab.plot(Q, Q**2*(real(r)-RealR))
         pylab.ylabel('residuals [Q**2 * (Re r - input)]')
         pylab.xlabel("Q (inv A)")
-        plottitle('Phase Residuals')
+        self.plottitle('Phase Residuals')
 
     def _set(self, **kw):
         """
@@ -751,19 +747,19 @@ class Inversion:
         Perform the inversion.
         """
         dz = 2/(self.calcpoints*self.rhopoints)
-        x = arange(0,ceil(2/dz))*dz
+        x = arange(0, ceil(2/dz))*dz
         maxm = len(x)
         if maxm%2 == 0: maxm += 1
         mx = int(maxm/2+0.5)
         h = 2/(2*mx-3)
-        g = numpy.hstack((ctf(x[:-1]*self.thickness), 0,0,0))
+        g = numpy.hstack((ctf(x[:-1]*self.thickness), 0, 0, 0))
         q = 2 * diff(g[:-2])/h
         q[-1] = 0
         ut = arange(2*mx-2)*h*self.thickness/2
         if self.ctf_window > 0:
             # Smooth ctf with 3-sample approximation
             du = self.ctf_window*h*self.thickness/2
-            qinter = Interpolator(ut,q,porder=1)
+            qinter = Interpolator(ut, q, porder=1)
             q = (qinter(ut - du) + qinter(ut) + qinter(ut + du))/3
         q = hstack((q,0))
         qp = [(ut, -2*q*self.rhoscale)]
@@ -771,7 +767,7 @@ class Inversion:
         Delta = zeros((mx,2*mx),'d')
         for iter in range(iters):
             for m in range(2,mx):
-                n = array(range(m,2*mx-(m+1)))
+                n = array(range(m, 2*mx-(m+1)))
                 Delta[m,n] = (h**2 * q[m-1] * (g[m+n] + Delta[m-1,n])
                         + Delta[m-1,n+1] + Delta[m-1,n-1] - Delta[m-2,n])
             udiag = -g[:2*mx-2:2] - diag(Delta)[:mx-1]
@@ -780,14 +776,14 @@ class Inversion:
             ut = arange(mup)*h*self.thickness
             q = 2 * diff(udiag[:-1])/h
             qp.append((ut, self.rhoscale*q))
-            q = hstack((q,0,0))
+            q = hstack((q, 0, 0))
         return qp
 
-def plottitle(t):
-    import pylab
-    pylab.text(0.5,0.99,t,
-               transform=pylab.gca().transAxes,
-               ha='center', va='top', backgroundcolor=(0.9,0.9,0.6))
+    def plottitle(self, t):
+        import pylab
+        pylab.text(0.5, 0.99, t,
+                   transform=pylab.gca().transAxes,
+                   ha='center', va='top', backgroundcolor=(0.9, 0.9, 0.6))
 
 def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
     """
@@ -797,8 +793,8 @@ def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
     scale = 1e4*Q**2 if scaled else 1
     [h] = pylab.plot(Q, scale*RealR,**kw)
     if dRealR is not None:
-        pylab.fill_between(Q,scale*(RealR-dRealR),scale*(RealR+dRealR),
-                           color=h.get_color(),alpha=0.3)
+        pylab.fill_between(Q, scale*(RealR-dRealR), scale*(RealR+dRealR),
+                           color=h.get_color(), alpha=0.3)
         #pylab.plot(Q, scale*(R-dR), '--', color=h.get_color())
         #pylab.plot(Q, scale*(R+dR), '--', color=h.get_color())
 
@@ -814,7 +810,7 @@ class Interpolator:
     def __init__(self, xi, yi, porder=1):
         if len(xi) != len(yi):
             raise ValueError("xi:%d and yi:%d must have the same length"
-                             %(len(xi),len(yi)))
+                             %(len(xi), len(yi)))
         self.xi,self.yi = xi, yi
         self.porder = porder
         if porder != 1:
@@ -847,26 +843,26 @@ O.S. Heavens, Optical Properties of Thin Solid Films
 from numpy import isscalar, asarray, zeros, ones, empty
 from numpy import exp, sqrt
 
-def refl(Qz,depth,rho,mu=0,wavelength=1,sigma=0):
+def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     """
-    Reflectometry as a function of Qz,wavelength.
+    Reflectometry as a function of Qz and wavelength.
 
     Qz (inv angstrom)
         Scattering vector 4*pi*sin(theta)/wavelength. This is an array.
-    wavelenth (angstrom)
+    wavelength (angstrom)
         Incident wavelength. If present this is a
-    rho,mu (uNb)
-        scattering length density and absorption of each layer
+    rho, mu (uNb)
+        Scattering length density and absorption of each layer.
     depth (angstrom)
-        thickness of each layer.  The thickness of the incident medium
+        Thickness of each layer.  The thickness of the incident medium
         and substrate are ignored.
     sigma (angstrom)
-        interfacial roughness.  This is the roughness between a layer
+        Interfacial roughness.  This is the roughness between a layer
         and the subsequent layer.  There is no interface associated
         with the substrate.  The sigma array should have at least n-1
         entries, though it may have n with the last entry ignored.
     method (parratt | abeles | opticalmatrix)
-        method used to compute the reflectivity
+        Method used to compute the reflectivity.
     """
     if isscalar(Qz): Qz = array([Qz], 'd')
     n = len(rho)
@@ -876,10 +872,10 @@ def refl(Qz,depth,rho,mu=0,wavelength=1,sigma=0):
     kz = asarray(Qz,'d')/2
     depth = asarray(depth,'d')
     rho = asarray(rho,'d')
-    mu = mu*ones(n,'d') if isscalar(mu) else asarray(mu,'d')
-    wavelength = wavelength*ones(nQ,'d') \
-        if isscalar(wavelength) else asarray(wavelength,'d')
-    sigma = sigma*ones(n-1,'d') if isscalar(sigma) else asarray(sigma,'d')
+    mu = mu*ones(n, 'd') if isscalar(mu) else asarray(mu, 'd')
+    wavelength = wavelength*ones(nQ, 'd') \
+        if isscalar(wavelength) else asarray(wavelength, 'd')
+    sigma = sigma*ones(n-1, 'd') if isscalar(sigma) else asarray(sigma,'d')
 
     # Scale units
     rho *= 1e-6
@@ -900,12 +896,12 @@ def refl(Qz,depth,rho,mu=0,wavelength=1,sigma=0):
 
 
 def _refl_calc(kz,wavelength,depth,rho,mu,sigma):
-    """Parratt recursion"""
+    """Parratt recursion."""
     if len(kz) == 0: return kz
 
     ## Complex index of refraction is relative to the incident medium.
     ## We can get the same effect using kz_rel^2 = kz^2 + 4*pi*rho_o
-    ## in place of kz^2, and ignoring rho_o
+    ## in place of kz^2, and ignoring rho_o.
     kz_sq = kz**2 + 4*pi*rho[0]
     k = kz
 
@@ -937,7 +933,7 @@ def _refl_calc(kz,wavelength,depth,rho,mu,sigma):
     r = B12/B11
     return r
 
-def reconstruct(file1,file2,u,v1,v2,stages=100):
+def reconstruct(file1, file2, u, v1, v2, stages=100):
     """
     Phase reconstruction by surround variation magic.
 
@@ -1023,8 +1019,8 @@ def reconstruct(file1,file2,u,v1,v2,stages=100):
     datasets, then an uncertainty estimate will be calculated for the
     reconstructed phase.
     """
-    print "reconstructing"
-    return SurroundVariation(file1,file2,u,v1,v2,stages=stages)
+    return SurroundVariation(file1, file2, u, v1 ,v2, stages=stages)
+
 
 class SurroundVariation:
     """
@@ -1056,18 +1052,15 @@ class SurroundVariation:
         Remove points which are NaN or Inf from the computed phase.
         """
         # Toss invalid values
-        Q,re,im = self.Qin,self.RealR,self.ImagR
+        Q, re, im = self.Qin, self.RealR, self.ImagR
         if self.dRealR is not None:
-            dre,dim = self.dRealR,self.dImagR
-            keep = reduce(lambda y,x: isfinite(x)&y,
-                           [re,im], True)
-            self.Q,self.RealR,self.dRealR,self.ImagR,self.dImagR \
-                = [v[keep] for v in (Q,re,dre,im,dim)]
+            dre, dim = self.dRealR, self.dImagR
+            keep = reduce(lambda y, x: isfinite(x)&y, [re,im], True)
+            self.Q,self.RealR, self.dRealR, self.ImagR, self.dImagR \
+                = [v[keep] for v in (Q, re, dre, im, dim)]
         else:
-            keep = reduce(lambda y,x: isfinite(x)&y,
-                           [re,im], True)
-            self.Q,self.RealR,self.ImagR \
-                = [v[keep] for v in (Q,re,im)]
+            keep = reduce(lambda y, x: isfinite(x)&y, [re,im], True)
+            self.Q, self.RealR, self.ImagR = [v[keep] for v in (Q,re,im)]
 
     def save(self, outfile=None, uncertainty=True):
         """
@@ -1079,22 +1072,20 @@ class SurroundVariation:
             basefile = os.path.splitext(os.path.basename(self.name1))[0]
             outfile = basefile+os.extsep+"amp"
 
-        header = "# %13s %15s %15s"%("Q","RealR","ImagR")
+        header = "# %13s %15s %15s"%("Q", "RealR", "ImagR")
         v = [self.Q, self.RealR, self.ImagR]
         if self.dRealR is not None and uncertainty:
             header += " %15s %15s"%("dRealR","dImagR")
-            v += [self.dRealR,self.dImagR]
+            v += [self.dRealR, self.dImagR]
 
-        fid = open(outfile,"w")
+        fid = open(outfile, "w")
         fid.write(header+"\n")
         numpy.savetxt(fid, array(v).T)
         fid.close()
 
     def show(self):
-        """
-        Print Q,RealR, ImagR to the screen
-        """
-        print "# %9s %11s %11s"%("Q","RealR","ImagR")
+        """Print Q,RealR, ImagR to the screen."""
+        print "# %9s %11s %11s"%("Q","RealR", "ImagR")
         for point in zip(self.Q, self.RealR, self.ImagR):
             print "%11.4g %11.4g %11.4g"%point
 
@@ -1185,7 +1176,7 @@ def _phase_reconstruction(Q, R1sq, R2sq, rho_u, rho_v1, rho_v2):
     Returns RealR, ImagR
     """
     Qsq = Q**2 + 16.*pi*rho_u*1e-6
-    usq,v1sq,v2sq = [(1-16*pi*rho*1e-6/Qsq) for rho in (rho_u,rho_v1,rho_v2)]
+    usq,v1sq,v2sq = [(1-16*pi*rho*1e-6/Qsq) for rho in (rho_u, rho_v1, rho_v2)]
 
     sigma1 = 2 * sqrt(v1sq*usq) * (1+R1sq) / (1-R1sq)
     sigma2 = 2 * sqrt(v2sq*usq) * (1+R2sq) / (1-R2sq)
@@ -1196,7 +1187,7 @@ def _phase_reconstruction(Q, R1sq, R2sq, rho_u, rho_v1, rho_v2):
     Rre = (alpha-beta) / (2*usq+alpha+beta)
     Rim = -2*gamma / (2*usq+alpha+beta)
 
-    return Rre,Rim
+    return Rre, Rim
 
 
 def main():
@@ -1219,13 +1210,13 @@ The measurement is assumed to come through the substrate."""
     inversion_keys = [] # Collect the keywords we are using
 
     group = OptionGroup(parser, "Sample description", description=None)
-    group.add_option("-t","--thickness",dest="thickness",
-                      default=Inversion.thickness,type="float",
+    group.add_option("-t","--thickness", dest="thickness",
+                      default=Inversion.thickness, type="float",
                       help="sample thickness (A)")
-    group.add_option("-u","--substrate",dest="substrate",
+    group.add_option("-u","--substrate", dest="substrate",
                       default=Inversion.substrate, type="float",
                       help="sample substrate material (10^6 * SLD)")
-    group.add_option("-v","--surround",dest="surround",
+    group.add_option("-v","--surround", dest="surround",
                       type="float", nargs=2,
                       help="varying materials v1 v2 (10^6 * SLD) [for phase]")
     # fronting is not an inversion key
@@ -1233,52 +1224,52 @@ The measurement is assumed to come through the substrate."""
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Data description", description=None)
-    group.add_option("--Qmin",dest="Qmin",
+    group.add_option("--Qmin", dest="Qmin",
                       default=Inversion.Qmin, type="float",
                       help="minimum Q value to use from the data")
     group.add_option("--Qmax",dest="Qmax",
                       default=Inversion.Qmax, type="float",
                       help="maximum Q value to use from the data")
-    group.add_option("-n","--noise",dest="noise",
+    group.add_option("-n","--noise", dest="noise",
                       default=Inversion.noise, type="float",
                       help="noise scaling")
-    group.add_option("-M","--monitor",dest="monitor",
+    group.add_option("-M","--monitor", dest="monitor",
                       default=Inversion.monitor, type="int",
                       help="monitor counts used for measurement")
-    inversion_keys += ['Qmin','Qmax','noise','monitor']
+    inversion_keys += ['Qmin', 'Qmax', 'noise', 'monitor']
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Outputs", description=None)
-    group.add_option("-o","--outfile",dest="outfile", default=None,
+    group.add_option("-o","--outfile", dest="outfile", default=None,
                       help="profile file (infile.prf), use '-' for console")
-    group.add_option("--ampfile",dest="ampfile", default=None,
+    group.add_option("--ampfile", dest="ampfile", default=None,
                       help="amplitude file (infile.amp)")
-    group.add_option("-p","--plot",dest="doplot",
+    group.add_option("-p", "--plot", dest="doplot",
                       action="store_true",
                       help="show plot of result")
-    group.add_option("-q","--quiet",dest="doplot",
-                      action="store_false",default=True,
+    group.add_option("-q", "--quiet",dest="doplot",
+                      action="store_false", default=True,
                       help="don't show output plot")
     # doplot is a post inversion options
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Calculation controls", description=None)
-    group.add_option("--rhopoints",dest="rhopoints",
+    group.add_option("--rhopoints", dest="rhopoints",
                       default=Inversion.rhopoints, type="int",
                       help="number of profile steps [dz=thickness/rhopoints]")
-    group.add_option("-z","--dz",dest="dz",
+    group.add_option("-z", "--dz", dest="dz",
                       default=None, type="float",
                       help="max profile step size (A) [rhopoints=thickness/dz]")
-    group.add_option("--calcpoints",dest="calcpoints",
+    group.add_option("--calcpoints", dest="calcpoints",
                       default=Inversion.calcpoints, type="int",
                       help="number of calculation points per profile step")
-    group.add_option("--stages",dest="stages",
+    group.add_option("--stages", dest="stages",
                       default=Inversion.stages, type="int",
                       help="number of inversions to average over")
-    group.add_option("-a",dest="amp_only", default=False,
+    group.add_option("-a", dest="amp_only", default=False,
                       action="store_true",
                       help="calculate amplitude and stop")
-    inversion_keys += ['rhopoints','calcpoints','stages']
+    inversion_keys += ['rhopoints', 'calcpoints', 'stages']
     parser.add_option_group(group)
 
     (options, args) = parser.parse_args()
@@ -1294,7 +1285,7 @@ The measurement is assumed to come through the substrate."""
             parser.error("Need fronting and backing for phase inversion")
         v1,v2 = options.surround
         u = options.substrate
-        phase = SurroundVariation(args[0],args[1],u=u,v1=v1,v2=v2)
+        phase = SurroundVariation(args[0], args[1], u=u, v1=v1, v2=v2)
         data = phase.Q, phase.RealR, phase.dRealR
         if options.ampfile:
             phase.save(options.ampfile)
