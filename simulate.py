@@ -94,7 +94,7 @@ class Simulation():
 
     def sample_profile(self):
         """Generate the sample profile."""
-        z,rho_u = self.invert.z, self.invert.substrate
+        z, rho_u = self.invert.z, self.invert.substrate
         rhos, widths, sigmas = zip(*self.sample)
         substrate_width = self.invert.thickness - numpy.sum(widths)
         widths = numpy.hstack((0, widths, substrate_width))
@@ -119,7 +119,7 @@ class Simulation():
         self.plot_measurement(221)
         self.plot_inversion(222)
         self.plot_real(223)
-        #self.plot_imag(223)
+        #self.plot_imaginary(223)
         self.plot_profile(224)
         pylab.rcdefaults()
 
@@ -156,7 +156,7 @@ class Simulation():
         pylab.ylabel('(100 q)^2 Re r')
         pylab.title('Phase Reconstruction Real Part')
 
-    def plot_imag(self, subplot=111):
+    def plot_imaginary(self, subplot=111):
         """Plot the simulated phase (imaginary part)."""
         import pylab
 
@@ -186,7 +186,7 @@ class Simulation():
         import pylab
 
         pylab.subplot(subplot)
-        self.invert.plotprofile()
+        self.invert.plot_profile()
 
         z, rho = self.sample_profile()
         [h] = pylab.plot(z, rho, hold=True)
@@ -200,7 +200,7 @@ class Simulation():
         import pylab
 
         pylab.subplot(subplot)
-        self.invert.plotdata()
+        self.invert.plot_data()
         pylab.title('Phase Inversion')
 
     def check_phase(self):

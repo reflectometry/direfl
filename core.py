@@ -43,7 +43,7 @@ Scripts can use :func:`reconstruct` and :func:`invert`.  For example::
 
 The resulting profile has attributes for the input (*Q*, *RealR*) and the
 output (*z*, *rho*, *drho*).  There are methods for plotting  (*plot*,
-*plotresid*) and storing (*save*).  The analysis can be rerun with
+*plot_resid*) and storing (*save*).  The analysis can be rerun with
 different attributes (*run(key=val,...)*).
 
 See :func:`reconstruct` and :class:`Inversion` for details.
@@ -104,7 +104,7 @@ def invert(**kw):
 
 class Inversion():
     """
-    Inversion calculator.
+    Class that implements the inversion calculator.
 
     This object holds the data and results associated with the direct inversion
     of the real value of the phase from a reflected signal.
@@ -301,25 +301,26 @@ class Inversion():
 
     Additional methods for finer control of plots::
 
-        *plotdata*     plot just the data
-        *plotprofile*  plot just the profile
-        *plotresid*    plot data minus theory
+        *plot_data*    plot just the data
+        *plot_profile* plot just the profile
+        *plot_resid*   plot data minus theory
     """
 
+    # Global parameters for the class and their default values
+    substrate = 0
+    thickness = 400
+    calcpoints = 4
+    rhopoints = 128
     Qmin = 0
     Qmax = None
-    bse = 0
-    thickness = 400
-    rhopoints = 128
-    calcpoints = 4
-    monitor = None
-    noise = 1
-    substrate = 0
-    ctf_window = 0
-    stages = 10
     iters = 6
-    showiters = False
+    stages = 10
+    ctf_window = 0
     backrefl = True
+    noise = 1
+    bse = 0
+    showiters = False
+    monitor = None
 
     def __init__(self, data=None, **kw):
         # Load the data
@@ -439,7 +440,7 @@ class Inversion():
         the real r for the inverted profile.
         """
         idx = self.dRealR > 1e-15
-        #print "min dR",min(self.dRealR[self.dRealR>1e-15])
+        #print "min dR", min(self.dRealR[self.dRealR>1e-15])
         q,rer,drer = self.Q[idx], self.RealR[idx], self.dRealR[idx]
         rerinv = real(self.refl(q))
         chisq = numpy.sum(((rer - rerinv)/drer)**2)/len(q)
@@ -480,7 +481,7 @@ class Inversion():
     dRealR = property(_get_dRealR)
 
     def show(self):
-        """Print z,rho,drho to the screen."""
+        """Print z, rho, drho to the screen."""
         print "# %9s %11s %11s"%("z", "rho", "drho")
         for point in zip(self.z, self.rho, self.drho):
             print "%11.4f %11.4f %11.4f"%point
@@ -540,44 +541,44 @@ class Inversion():
         import pylab
         if phase:
             pylab.subplot(311)
-            self.plot_measurement((phase.Qin,phase.R1in, phase.dR1in),
+            self.plot_measurement((phase.Qin, phase.R1in, phase.dR1in),
                                   phase.v1, phase.name1,
                                   (phase.Qin, phase.R2in, phase.dR2in),
                                   phase.v2, phase.name2)
         pylab.subplot(312 if phase else 211)
-        self.plotdata(details=details)
+        self.plot_data(details=details)
         pylab.subplot(313 if phase else 212)
-        self.plotprofile(details=details)
+        self.plot_profile(details=details)
 
     def plot_measurement(self, data1, surround1, label1,
-                         data2, surround2, label2):
+                               data2, surround2, label2):
         """Plot the data against the inversion."""
         import pylab
 
         def plot1(data, surround, label, color, hold=True):
             if len(data) == 2:
-                q,R = data
+                q, R = data
                 dR = None
             else:
-                q,R,dR = data
+                q, R, dR = data
             r = self.refl(q, surround=surround)
             # Fresnel reflectivity
             if self.backrefl:
-                F = abs(refl(q,[0,0], [self.substrate,surround]))**2
+                F = abs(refl(q, [0, 0], [self.substrate, surround]))**2
             else:
-                F = abs(refl(q,[0,0], [surround,self.substrate]))**2
-            pylab.plot(q,R/F, '.', label=label, color=color, hold=hold)
-            pylab.plot(q,abs(r)**2/F,'-',label=None, color=color, hold=True)
+                F = abs(refl(q, [0, 0], [surround, self.substrate]))**2
+            pylab.plot(q, R/F, '.', label=label, color=color, hold=hold)
+            pylab.plot(q, abs(r)**2/F, '-', label=None, color=color, hold=True)
             if dR is not None:
-                pylab.fill_between(q,(R-dR)/F,(R+dR)/F,
-                                   color=color,alpha=0.3, hold=True)
+                pylab.fill_between(q, (R-dR)/F, (R+dR)/F,
+                                   color=color, alpha=0.3, hold=True)
                 chisq = sum(((abs(r)**2-R)/dR)**2)
-                return chisq,len(q)
+                return chisq, len(q)
             else:
                 return 0, 1
 
-        chisq1,n1 = plot1(data1, surround1, label1, 'green', hold=False)
-        chisq2,n2 = plot1(data2, surround2, label2, 'blue')
+        chisq1, n1 = plot1(data1, surround1, label1, 'green', hold=False)
+        chisq2, n2 = plot1(data2, surround2, label2, 'blue')
         pylab.legend()
         chisq = (chisq1+chisq2)/(n1+n2)
         pylab.text(0.01, 0.01, "chisq=%.1f"%chisq,
@@ -588,7 +589,7 @@ class Inversion():
         pylab.xlabel('Q (inv A)')
         self.plottitle('Measured Data')
 
-    def plotdata(self, details=False, lowQ_inset=0):
+    def plot_data(self, details=False, lowQ_inset=0):
         """
         Plot the input data.
 
@@ -638,7 +639,7 @@ class Inversion():
         self.plottitle('Reconstructed Phase')
 
 
-    def plotprofile(self, details=False):
+    def plot_profile(self, details=False):
         """
         Plot the computed profiles.
 
@@ -669,7 +670,7 @@ class Inversion():
         pylab.xlabel('depth (A)')
         self.plottitle('Depth Profile')
 
-    def plotresid(self, details=False):
+    def plot_resid(self, details=False):
         """
         Plot the residuals for inversion-input.
         """
@@ -689,8 +690,8 @@ class Inversion():
             if hasattr(self, k):
                 setattr(self, k, v)
             else:
-                raise ValueError("No attribute "+k+" in inversion")
-        self.rhoscale =  1e6 / (4 * pi * self.thickness**2)
+                raise ValueError("Invalid keyword argument for Inversion class")
+        self.rhoscale = 1e6 / (4 * pi * self.thickness**2)
 
     def _transform(self, RealR, Qmax=None, bse=0, porder=1):
         """
@@ -704,7 +705,7 @@ class Inversion():
         must be 1 for the current interpolation class.
         """
         if not 0 <= porder <= 6:
-            raise ValueError("porder must be between 0 and 6")
+            raise ValueError("Polynomial order must be between 0 and 6")
         npts = len(RealR)
         dK = 0.5 * Qmax / npts
         kappa = sqrt(bse*1e-6)
@@ -789,8 +790,9 @@ def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
     Plot Q,Re(r) data.
     """
     import pylab
-    scale = 1e4*Q**2 if scaled else 1
-    [h] = pylab.plot(Q, scale*RealR,**kw)
+
+    scale = 1e4*Q**2 if scaled else 1.0
+    [h] = pylab.plot(Q, scale*RealR, **kw)
     if dRealR is not None:
         pylab.fill_between(Q, scale*(RealR-dRealR), scale*(RealR+dRealR),
                            color=h.get_color(), alpha=0.3)
@@ -800,9 +802,10 @@ def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
     pylab.ylabel("10^4 Q**2 Re r" if scaled else "Re r")
     pylab.xlabel("Q (inv A)")
 
+
 class Interpolator():
     """
-    Data interpolator.
+    Class that peforms data interpolation.
 
     Construct an interpolation function from pairs xi,yi.
     """
@@ -813,7 +816,7 @@ class Interpolator():
         self.xi,self.yi = xi, yi
         self.porder = porder
         if porder != 1:
-            raise NotImplementedError("interp does not support order")
+            raise NotImplementedError("Interpolator only supports polynomial order of 1")
     def __call__(self, x):
         return interp(x, self.xi, self.yi)
 
@@ -863,6 +866,7 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     method (parratt | abeles | opticalmatrix)
         Method used to compute the reflectivity.
     """
+
     if isscalar(Qz): Qz = array([Qz], 'd')
     n = len(rho)
     nQ = len(Qz)
@@ -894,7 +898,7 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     return r
 
 
-def _refl_calc(kz,wavelength,depth,rho,mu,sigma):
+def _refl_calc(kz, wavelength, depth, rho, mu, sigma):
     """Parratt recursion."""
     if len(kz) == 0: return kz
 
@@ -1018,12 +1022,13 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
     datasets, then an uncertainty estimate will be calculated for the
     reconstructed phase.
     """
+
     return SurroundVariation(file1, file2, u, v1 ,v2, stages=stages)
 
 
 class SurroundVariation():
     """
-    Surround variation calculation.
+    Class that performs the surround variation calculation.
 
     See :func:`reconstruction` for details.
 
@@ -1036,7 +1041,6 @@ class SurroundVariation():
         *name1*, *name2*       input file names
         *save(file)*           save output
         *show()*,*plot()*      show Q, RealR, ImagR
-
     """
     def __init__(self, file1, file2, u, v1, v2, stages=100):
         self.u = u
@@ -1110,8 +1114,8 @@ class SurroundVariation():
         else:
             d2 = file2
             name2 = "data2"
-        q1,r1 = d1[0:2]
-        q2,r2 = d2[0:2]
+        q1, r1 = d1[0:2]
+        q2, r2 = d2[0:2]
         # Check if we have uncertainty
         try:
             dr1,dr2 = d1[2],d2[2]
@@ -1127,7 +1131,7 @@ class SurroundVariation():
         """
         Call the phase reconstruction calculator.
         """
-        re,im = _phase_reconstruction(self.Qin, self.R1in, self.R2in,
+        re, im = _phase_reconstruction(self.Qin, self.R1in, self.R2in,
                                       self.u, self.v1, self.v2)
         self.RealR, self.ImagR = re,im
         self.Q = self.Qin
@@ -1139,8 +1143,8 @@ class SurroundVariation():
         for i in range(stages):
             R1 = normal(self.R1in,self.dR1in)
             R2 = normal(self.R2in,self.dR2in)
-            rer,imr = _phase_reconstruction(self.Qin, R1, R2,
-                                            self.u, self.v1, self.v2)
+            rer, imr = _phase_reconstruction(self.Qin, R1, R2,
+                                             self.u, self.v1, self.v2)
             runs.append((rer,imr))
         rers, rims = zip(*runs)
         self.RealR = valid_f(mean, rers)
@@ -1196,6 +1200,7 @@ def main():
     import sys
     import os
     from optparse import OptionParser, OptionGroup
+
     description="""\
 Compute the scattering length density profile from the real portion
 of the phase reconstructed reflectivity.  Call with a phase reconstructed
@@ -1203,6 +1208,7 @@ reflectivity dataset AMP, or with a pair of reduced reflectivity
 datasets RF1 and RF2 for complete phase inversion.   Phase inversion
 requires two surrounding materials and one substrate material to be specified.
 The measurement is assumed to come through the substrate."""
+
     parser = OptionParser(usage="%prog [options] AMP or RF1 RF2",
                           description=description,
                           version="%prog 1.0")
