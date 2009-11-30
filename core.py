@@ -16,14 +16,13 @@
 #
 # This disclaimer must accompany any public distribution of this software.
 
-# Note: save this file as invert to run as a stand-alone program
+# Note: save this file as invert to run as a stand-alone program.
 """
 Phase reconstruction and inversion for reflectometry data.
 
 Command line phase reconstruction + phase inversion::
 
-    invert -u 2.1 -v 6.33 0 --Qmin 0.014 \
-       --thickness 1000 qrd1.refl qrd2.refl
+    invert -u 2.07 -v 6.33 0 --Qmin 0.014 --thickness 1000 qrd1.refl qrd2.refl
 
 
 Command line phase inversion only::
@@ -35,10 +34,10 @@ Scripts can use :func:`reconstruct` and :func:`invert`.  For example::
 
     from reflectometry import
     import invert
-    substrate = 2.1
+    substrate = 2.07
     f1, f2 = 0, -0.53
     phase = reflectometry.reconstruct("file1", "file2", substrate, f1, f2)
-    inversion = invert.invert(data=(phase.Q,phase.RealR), thickness=200)
+    inversion = invert.invert(data=(phase.Q, phase.RealR), thickness=200)
     inversion.plot()
     inversion.save("profile.dat")
 
@@ -76,7 +75,7 @@ from numpy.fft import fft
 from numpy.random import uniform, poisson, normal
 
 # Common SLDs
-silicon = Si = 2.1
+silicon = Si = 2.07
 sapphire = Al2O3 = 5.0
 water = H2O = -0.56
 heavywater = D2O = 6.33
@@ -103,7 +102,7 @@ def invert(**kw):
     return inverter
 
 
-class Inversion:
+class Inversion():
     """
     Inversion calculator.
 
@@ -801,7 +800,7 @@ def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
     pylab.ylabel("10^4 Q**2 Re r" if scaled else "Re r")
     pylab.xlabel("Q (inv A)")
 
-class Interpolator:
+class Interpolator():
     """
     Data interpolator.
 
@@ -1022,7 +1021,7 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
     return SurroundVariation(file1, file2, u, v1 ,v2, stages=stages)
 
 
-class SurroundVariation:
+class SurroundVariation():
     """
     Surround variation calculation.
 
@@ -1283,7 +1282,7 @@ The measurement is assumed to come through the substrate."""
     elif len(args) == 2:
         if not options.surround or not options.substrate:
             parser.error("Need fronting and backing for phase inversion")
-        v1,v2 = options.surround
+        v1, v2 = options.surround
         u = options.substrate
         phase = SurroundVariation(args[0], args[1], u=u, v1=v1, v2=v2)
         data = phase.Q, phase.RealR, phase.dRealR

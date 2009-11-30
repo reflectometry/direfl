@@ -3,19 +3,23 @@
 """
 Phase reconstruction and direct inversion simulation code.
 
-Use this as part of you experiment proposal to check that you will be
-able to see the features of interest in your sample if you measure it
-by direct inversion.
+This code is intended to be used during your experimental proposal phase to
+check that you will be able to see the features of interest in your sample
+if you measure it by direct inversion.
 """
 #TODO: allow sample to be a full reflectivity model
 #TODO: include resolution in the simulation
+
 from __future__ import division
 import numpy
 from numpy import linspace, real
 
 from core import refl, SurroundVariation, Inversion
 
-class Simulation:
+# Note that for efficiency, pylab is only imported if plotting is requested.
+
+
+class Simulation():
     """
     Simulate phase-reconstruction and inversion.
 
@@ -31,13 +35,14 @@ class Simulation:
         *phase_args*    keyword arguments for reconstruction calculation
         *invert_args*   keyword arguments for inversion calculation
 
-    The defaults are set to u=Si (2.1), v1=Air (0) and v2=D2O (6.33).
-    Noise and roughness are set to 0.
+    The default values for the surround are set to u=Si (2.07), v1=Air (0),
+    and v2=D2O (6.33).  Noise and roughness are set to 0.
 
     TODO: Resolution and roughness are not yet supported.
     """
+
     def __init__(self, sample=None, q=None, dq=None, urough=0,
-                 u=2.1, v1=0, v2=6.33, noise=0,
+                 u=2.07, v1=0, v2=6.33, noise=0,
                  phase_args={}, invert_args={},
                  perfect_reconstruction=False):
         self.q, self.dq = q, dq
@@ -68,9 +73,8 @@ class Simulation:
         r1 = refl(-q, d, [v1]+rho, sigma=sigma)
         r2 = refl(-q, d, [v2]+rho, sigma=sigma)
 
-        # Phase reconstruction returns the phase for the reversed free
-        # film relative to the substrate, so use +q reflectivity in
-        # u surround.
+        # Phase reconstruction returns the phase for the reversed free film
+        # relative to the substrate, so use +q reflectivity in u surround.
         rfree = refl(q, d, [u]+rho, sigma=sigma)
 
         self.rfree, self.r1, self.r2 = rfree, r1, r2
@@ -110,17 +114,19 @@ class Simulation:
     def plot(self):
         """Plot summary data."""
         import pylab
+
         pylab.rc('font', size=8)
         self.plot_measurement(221)
-        #self.plot_imag(223)
-        self.plot_real(223)
         self.plot_inversion(222)
+        self.plot_real(223)
+        #self.plot_imag(223)
         self.plot_profile(224)
         pylab.rcdefaults()
 
     def plot_measurement(self, subplot=111):
         """Plot the simulated data."""
         import pylab
+
         pylab.subplot(subplot)
         self.invert.plot_measurement((self.q, self.R1, self.dR1),
                                      self.v1, "v1",
@@ -130,15 +136,15 @@ class Simulation:
     def plot_real(self, subplot=111):
         """Plot the simulated phase and the reconstructed phase (real)."""
         import pylab
-        pylab.subplot(subplot)
 
         # Plot reconstructed phase with uncertainty
+        pylab.subplot(subplot)
         q,re,dre = self.phase.Q, self.phase.RealR, self.phase.dRealR
         scale = 1e4*q**2
         [h] = pylab.plot(q, scale*re, '.', hold=False, label="Measured")
         if dre is not None:
             pylab.fill_between(q, scale*(re-dre), scale*(re+dre),
-                               color=h.get_color(),alpha=0.3)
+                               color=h.get_color(), alpha=0.3)
 
         # Plot free film phase for comparison
         q_free,re_free = self.q, real(self.rfree)
@@ -153,6 +159,7 @@ class Simulation:
     def plot_imag(self, subplot=111):
         """Plot the simulated phase (imaginary part)."""
         import pylab
+
         pylab.subplot(subplot)
         pylab.plot(self.phase.Q, 1e4*self.phase.Q**2*self.phase.ImagR,
                    hold=True, label="Im r+")
@@ -167,6 +174,7 @@ class Simulation:
     def plot_phase_resid(self, subplot=111):
         """Plot the reconstructed phase residual."""
         import pylab
+
         pylab.subplot(subplot)
         pylab.plot(self.q, self.phase_resid())
         pylab.xlabel('q')
@@ -176,6 +184,7 @@ class Simulation:
     def plot_profile(self, subplot=111):
         """Plot the inverted profile."""
         import pylab
+
         pylab.subplot(subplot)
         self.invert.plotprofile()
 
@@ -189,6 +198,7 @@ class Simulation:
     def plot_inversion(self, subplot=111):
         """Plot the phase of the inverted profile."""
         import pylab
+
         pylab.subplot(subplot)
         self.invert.plotdata()
         pylab.title('Phase Inversion')
@@ -232,15 +242,16 @@ class Simulation:
 
     def _swfvarnexdum(self):
         """Run phase reconstruction converted from code by Majkrzak."""
-        data1 = self.q, self.R1,0*self.q
-        data2 = self.q, self.R2,0*self.q
-        numpy.savetxt('qrd1.',numpy.array(data1).T)
-        numpy.savetxt('qrd2.',numpy.array(data2).T)
+        import os
+
+        data1 = self.q, self.R1, 0*self.q
+        data2 = self.q, self.R2, 0*self.q
+        numpy.savetxt('qrd1.' ,numpy.array(data1).T)
+        numpy.savetxt('qrd2.' ,numpy.array(data2).T)
         fid = open('varin.', 'w')
         fid.write("%d %g %g %g\n"%(len(self.q),
                                    self.u*1e-6, self.v1*1e-6, self.v2*1e-6))
         fid.close()
-        import os
         os.system('swfvarnexdum')
         q, realR = numpy.loadtxt('qrreun.').T
         self.chuckr = realR
@@ -248,11 +259,11 @@ class Simulation:
 
 def wait(msg=None):
     """Wait for the user to acknowledge the plot."""
-    if msg: print msg
-
     import pylab
     #from matplotlib.blocking_input import BlockingInput
+
+    if msg: print msg
+
     #block = BlockingInput(fig=pylab.gcf(), eventslist=('key_press_event',))
     #block(n=1, timeout=-1)
     pylab.ginput()
-
