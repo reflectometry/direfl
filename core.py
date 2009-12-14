@@ -345,9 +345,9 @@ class Inversion():
         """
         self.name = name
         if len(data) == 3:
-            q,rer,drer = data
+            q, rer, drer = data
         else:
-            q,rer = data
+            q, rer = data
             drer = None
         # Force equal spacing by interpolation
         self.Qinput,self.RealRinput = asarray(q),asarray(rer)
@@ -368,10 +368,10 @@ class Inversion():
         # Trim from Qmin to Qmax
         if self.Qmin is not None:
             idx = q >= self.Qmin
-            q,rer,drer = q[idx], rer[idx], drer[idx]
+            q, rer, drer = q[idx], rer[idx], drer[idx]
         if self.Qmax is not None:
             idx = q <= self.Qmax
-            q,rer,drer = q[idx], rer[idx], drer[idx]
+            q, rer, drer = q[idx], rer[idx], drer[idx]
 
         # Resample on even spaced grid, preserving approximately the
         # points between Qmin and Qmax
@@ -380,11 +380,11 @@ class Inversion():
         q,rer = remesh([q,rer], 0, q[-1], npts, left=0, right=0)
         # Process uncertainty
         if self.dRealRinput is not None:
-            q,drer = remesh([q,drer], 0, q[-1], npts, left=0, right=0)
+            q, drer = remesh([q,drer], 0, q[-1], npts, left=0, right=0)
         else:
             drer = None
 
-        return q,rer,drer
+        return q, rer, drer
 
     def run(self, **kw):
         """
@@ -397,7 +397,7 @@ class Inversion():
         sets *profiles* to the list of generated (z,rho) profiles.
         """
         self._set(**kw)
-        q,rer,drer = self._remesh()
+        q, rer, drer = self._remesh()
         signals = []
         profiles = []
         stages = self.stages if self.noise > 0 else 1
@@ -427,9 +427,9 @@ class Inversion():
                     pylab.plot(qpi[0], qpi[1], hold=hold)
                     hold = True
                 pylab.ginput(show_clicks=False)
-            z,rho = remesh(qp[-1], 0, self.thickness, self.rhopoints)
+            z, rho = remesh(qp[-1], 0, self.thickness, self.rhopoints)
             if not self.backrefl:
-                z,rho = z[::-1],rho[::-1]
+                z, rho = z[::-1], rho[::-1]
             signals.append((q,noisyR))
             profiles.append((z,rho))
         self.signals, self.profiles = signals, profiles
@@ -441,7 +441,7 @@ class Inversion():
         """
         idx = self.dRealR > 1e-15
         #print "min dR", min(self.dRealR[self.dRealR>1e-15])
-        q,rer,drer = self.Q[idx], self.RealR[idx], self.dRealR[idx]
+        q, rer, drer = self.Q[idx], self.RealR[idx], self.dRealR[idx]
         rerinv = real(self.refl(q))
         chisq = numpy.sum(((rer - rerinv)/drer)**2)/len(q)
         return chisq
@@ -514,7 +514,7 @@ class Inversion():
         amplitude supplied as input.
         """
         if Q is None:
-            Q == self.Q
+            Q = self.Q
         if self.backrefl:
             # Back reflectivity is equivalent to -Q inputs
             Q = -Q
@@ -523,9 +523,9 @@ class Inversion():
             # and has an implicit substrate in front and behind.
             surround = self.substrate
             Q = -Q
-        dz = hstack((0,diff(self.z),0))
-        rho = hstack((surround,self.rho[1:],self.substrate))
-        r = refl(Q,dz,rho)
+        dz = hstack((0, diff(self.z), 0))
+        rho = hstack((surround, self.rho[1:], self.substrate))
+        r = refl(Q, dz, rho)
         return  r
 
     def plot(self, details=False, phase=None):
@@ -538,6 +538,8 @@ class Inversion():
         If *phase* is a phase reconstruction object, plot the
         original measurements.
         """
+
+        ''' # Original 3 graph format
         import pylab
         if phase:
             pylab.subplot(311)
@@ -548,6 +550,20 @@ class Inversion():
         pylab.subplot(312 if phase else 211)
         self.plot_data(details=details)
         pylab.subplot(313 if phase else 212)
+        self.plot_profile(details=details)
+        '''
+
+        import pylab
+        if phase:
+            pylab.subplot(221)
+            self.plot_measurement((phase.Qin, phase.R1in, phase.dR1in),
+                                  phase.v1, phase.name1,
+                                  (phase.Qin, phase.R2in, phase.dR2in),
+                                  phase.v2, phase.name2)
+        pylab.subplot(222 if phase else 211)
+        self.plot_data(details=details)
+        pylab.subplot(223)
+        pylab.subplot(224 if phase else 212)
         self.plot_profile(details=details)
 
     def plot_measurement(self, data1, surround1, label1,
@@ -667,7 +683,7 @@ class Inversion():
                    transform=pylab.gca().transAxes,
                    ha='right', va='bottom')
         pylab.ylabel('SLD (inv A^2)')
-        pylab.xlabel('depth (A)')
+        pylab.xlabel('Depth (A)')
         self.plottitle('Depth Profile')
 
     def plot_resid(self, details=False):
@@ -813,7 +829,7 @@ class Interpolator():
         if len(xi) != len(yi):
             raise ValueError("xi:%d and yi:%d must have the same length"
                              %(len(xi), len(yi)))
-        self.xi,self.yi = xi, yi
+        self.xi, self.yi = xi, yi
         self.porder = porder
         if porder != 1:
             raise NotImplementedError("Interpolator only supports polynomial order of 1")
@@ -827,8 +843,8 @@ def remesh(data, xmin, xmax, npts, left=None, right=None):
     """
     Resample the data on a fixed grid.
     """
-    x,y = data
-    x,y = x[isfinite(x)], y[isfinite(y)]
+    x, y = data
+    x, y = x[isfinite(x)], y[isfinite(y)]
     if npts > len(x): npts = len(x)
     newx = linspace(xmin, xmax, npts)
     newy = interp(newx, x, y, left=left, right=right)
@@ -1040,7 +1056,7 @@ class SurroundVariation():
         *dR1*, *dR2*           input uncertainty or None
         *name1*, *name2*       input file names
         *save(file)*           save output
-        *show()*,*plot()*      show Q, RealR, ImagR
+        *show()*, *plot()*     show Q, RealR, ImagR
     """
     def __init__(self, file1, file2, u, v1, v2, stages=100):
         self.u = u
@@ -1118,12 +1134,12 @@ class SurroundVariation():
         q2, r2 = d2[0:2]
         # Check if we have uncertainty
         try:
-            dr1,dr2 = d1[2],d2[2]
+            dr1, dr2 = d1[2],d2[2]
         except:
             dr1 = dr2 = None
         if not q1.shape == q2.shape or not all(q1==q2):
             raise ValueError("Q points do not match in data files")
-        self.name1,self.name2 = name1,name2
+        self.name1, self.name2 = name1, name2
         self.Qin, self.R1in, self.R2in = q1, r1, r2
         self.dR1in, self.dR2in = dr1, dr2
 
@@ -1133,7 +1149,7 @@ class SurroundVariation():
         """
         re, im = _phase_reconstruction(self.Qin, self.R1in, self.R2in,
                                       self.u, self.v1, self.v2)
-        self.RealR, self.ImagR = re,im
+        self.RealR, self.ImagR = re, im
         self.Q = self.Qin
 
     def _calc_err(self, stages):
@@ -1152,7 +1168,7 @@ class SurroundVariation():
         self.dRealR = valid_f(std, rers)
         self.dImagR = valid_f(std, rims)
 
-def valid_f(f,A,axis=0):
+def valid_f(f, A,axis=0):
     """
     Calculate vector function f using only the finite elements of the
     array *A*.
@@ -1232,10 +1248,10 @@ The measurement is assumed to come through the substrate."""
     group.add_option("--Qmin", dest="Qmin",
                       default=Inversion.Qmin, type="float",
                       help="minimum Q value to use from the data")
-    group.add_option("--Qmax",dest="Qmax",
+    group.add_option("--Qmax", dest="Qmax",
                       default=Inversion.Qmax, type="float",
                       help="maximum Q value to use from the data")
-    group.add_option("-n","--noise", dest="noise",
+    group.add_option("-n", "--noise", dest="noise",
                       default=Inversion.noise, type="float",
                       help="noise scaling")
     group.add_option("-M","--monitor", dest="monitor",
@@ -1252,7 +1268,7 @@ The measurement is assumed to come through the substrate."""
     group.add_option("-p", "--plot", dest="doplot",
                       action="store_true",
                       help="show plot of result")
-    group.add_option("-q", "--quiet",dest="doplot",
+    group.add_option("-q", "--quiet", dest="doplot",
                       action="store_false", default=True,
                       help="don't show output plot")
     # doplot is a post inversion options
