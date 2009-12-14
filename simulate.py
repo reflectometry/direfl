@@ -15,6 +15,12 @@ import numpy
 from numpy import linspace, real
 
 from core import refl, SurroundVariation, Inversion
+try:
+    from reflectometry.model1d.model.calcRefl import convolve
+except:
+    print "WARNING: faking convolution with linear interpolation"
+    def convolve(Qin,Rin,Q,dQ): 
+        return numpy.interp1(Qin,Rin,Q)
 import profile
 
 # Note that for efficiency, pylab is only imported if plotting is requested.
@@ -46,6 +52,8 @@ class Simulation():
                  u=2.07, v1=0, v2=6.33, noise=0,
                  phase_args={}, invert_args={},
                  perfect_reconstruction=False):
+        if numpy.isscalar(dq): 
+            dq = dq*numpy.ones_like(q)
         self.q, self.dq = q, dq
         self.sample, self.urough = sample, urough
         self.u, self.v1, self.v2 = u, v1, v2
@@ -82,6 +90,8 @@ class Simulation():
 
         # Generate noisy measurements
         R1, R2 = abs(r1)**2, abs(r2)**2
+        if self.dq is not None:
+            R1, R2 = [convolve(q,R,q,self.dq) for R in (R1,R2)]
         if self.noise:
             self.dR1, self.dR2 = self.noise*R1, self.noise*R2
             self.R1 = numpy.random.normal(R1, self.dR1)
