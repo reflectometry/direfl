@@ -15,6 +15,7 @@ import numpy
 from numpy import linspace, real
 
 from core import refl, SurroundVariation, Inversion
+import profile
 
 # Note that for efficiency, pylab is only imported if plotting is requested.
 
@@ -92,19 +93,36 @@ class Simulation():
         self._reconstruct()
         self._invert()
 
-    def sample_profile(self):
+    def slab_profile(self):
         """Generate the sample profile."""
         z, rho_u = self.invert.z, self.invert.substrate
         rhos, widths, sigmas = zip(*self.sample)
         substrate_width = self.invert.thickness - numpy.sum(widths)
         widths = numpy.hstack((0, widths, substrate_width))
-        rhos = numpy.hstack((0, rhos,rho_u))
+        rhos = numpy.hstack((0, rhos, rho_u))
+
         interface_z = numpy.cumsum(widths)
         rho_idx = numpy.searchsorted(interface_z, z)
         rho = rhos[rho_idx]
         #print rho,z
         #print rhos,interface_z
+
         return z,rho
+
+    def sample_profile(self):
+        z,rho_u,sigma_u = self.invert.z, self.invert.substrate, self.urough
+        rhos, widths, sigmas = zip(*self.sample)
+        substrate_width = self.invert.thickness - numpy.sum(widths)
+        widths = numpy.hstack((0, widths, substrate_width))
+        rhos = numpy.hstack((0, rhos, rho_u))
+        sigmas = numpy.hstack((sigmas, sigma_u))
+
+        #rhos,widths,sigmas = rhos[::-1],widths[::-1],sigmas[::-1]
+        rho = profile.build_profile(z,value=rhos,
+                                    thickness=widths,roughness=sigmas)
+
+        return z,rho
+
 
     def phase_resid(self):
         """Return normalized residual from phase reconstruction."""
@@ -149,10 +167,10 @@ class Simulation():
         # Plot free film phase for comparison
         q_free,re_free = self.q, real(self.rfree)
         scale = 1e4*q_free**2
-        pylab.plot(q_free, scale*re_free, hold=True, label="ideal")
+        pylab.plot(q_free, scale*re_free, hold=True, label="Ideal")
 
         pylab.legend()
-        pylab.xlabel('q')
+        pylab.xlabel('Q (inv A)')
         pylab.ylabel('(100 q)^2 Re r')
         pylab.title('Phase Reconstruction Real Part')
 
@@ -237,7 +255,7 @@ class Simulation():
         substrate = self.phase.u
         thickness = numpy.sum(L[1] for L in self.sample) + 50
         self.invert = Inversion(data=data, thickness=thickness,
-                                substrate=substrate,**self.invert_args)
+                                substrate=substrate, **self.invert_args)
         self.invert.run()
 
     def _swfvarnexdum(self):
