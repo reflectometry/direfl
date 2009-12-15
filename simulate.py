@@ -14,7 +14,7 @@ from __future__ import division
 import numpy
 from numpy import linspace, real
 
-from core import refl, SurroundVariation, Inversion
+from core import refl, SurroundVariation, Inversion, plottitle
 try:
     from reflectometry.model1d.model.calcRefl import convolve
 except:
@@ -36,6 +36,7 @@ class Simulation():
         *q*, *dq*       measurement points
         *u*, *v1*, *v2* uniform and varying SLDs for surround variation
         *noise*         percentage noise in the measurement
+        *seed*          random number generator seed
         *perfect_reconstruction*
                         use real(r) from free film rather than simulated
                         reflectivity
@@ -49,7 +50,7 @@ class Simulation():
     """
 
     def __init__(self, sample=None, q=None, dq=None, urough=0,
-                 u=2.07, v1=0, v2=6.33, noise=0,
+                 u=2.07, v1=0, v2=6.33, noise=0, seed=None,
                  phase_args={}, invert_args={},
                  perfect_reconstruction=False):
         if numpy.isscalar(dq): 
@@ -60,6 +61,7 @@ class Simulation():
         self.noise = noise
         self.phase_args, self.invert_args = phase_args, invert_args
         self.perfect_reconstruction = perfect_reconstruction
+        self.seed = seed
         self.set()
 
     def set(self, **kw):
@@ -92,16 +94,23 @@ class Simulation():
         R1, R2 = abs(r1)**2, abs(r2)**2
         if self.dq is not None:
             R1, R2 = [convolve(q,R,q,self.dq) for R in (R1,R2)]
-        if self.noise:
+        if self.noise > 0:
             self.dR1, self.dR2 = self.noise*R1, self.noise*R2
-            self.R1 = numpy.random.normal(R1, self.dR1)
-            self.R2 = numpy.random.normal(R2, self.dR2)
+            rng = numpy.random.RandomState(seed=self.seed)
+            self.R1 = rng.normal(R1, self.dR1)
+            self.R2 = rng.normal(R2, self.dR2)
         else:
             self.dR1 = self.dR2 = None
             self.R1, self.R2 = R1, R2
 
+        self.fitz = self.fitrho = None  # Clear optimize
+        self.run()
+
+    def run(self):
+        """Reconstruct phase, invert and optimize profile."""
         self._reconstruct()
         self._invert()
+        if 0: self._optimize()
 
     def slab_profile(self):
         """Generate the sample profile."""
@@ -156,10 +165,12 @@ class Simulation():
         import pylab
 
         pylab.subplot(subplot)
-        self.invert.plot_measurement((self.q, self.R1, self.dR1),
-                                     self.v1, "v1",
-                                     (self.q, self.R2, self.dR2),
-                                     self.v2, "v2")
+        if self.fitz is not None:
+            z,rho = self.fitz, self.fitrho
+        else:
+            z,rho = self.invert.z, self.invert.rho
+
+        self.phase.plot_measurement(profile=(z,rho))
 
     def plot_real(self, subplot=111):
         """Plot the simulated phase and the reconstructed phase (real)."""
@@ -182,9 +193,9 @@ class Simulation():
         pylab.legend()
         pylab.xlabel('Q (inv A)')
         pylab.ylabel('(100 q)^2 Re r')
-        pylab.title('Phase Reconstruction Real Part')
+        plottitle('Phase Reconstruction Real Part')
 
-    def plot_imaginary(self, subplot=111):
+    def plot_imag(self, subplot=111):
         """Plot the simulated phase (imaginary part)."""
         import pylab
 
@@ -196,7 +207,7 @@ class Simulation():
         pylab.legend()
         pylab.xlabel('q')
         pylab.ylabel('(100 q)^2 Im r')
-        pylab.title('Phase Reconstruction Imaginary')
+        plottitle('Phase Reconstruction Imaginary')
 
 
     def plot_phase_resid(self, subplot=111):
@@ -207,29 +218,33 @@ class Simulation():
         pylab.plot(self.q, self.phase_resid())
         pylab.xlabel('q')
         pylab.ylabel('(Re r - calc Re r) / |r|')
-        pylab.title('Phase Inversion Residual')
+        plottitle('Phase Inversion Residual')
 
     def plot_profile(self, subplot=111):
         """Plot the inverted profile."""
         import pylab
 
         pylab.subplot(subplot)
-        self.invert.plot_profile()
-
+        
         z, rho = self.sample_profile()
-        [h] = pylab.plot(z, rho, hold=True)
+        [h] = pylab.plot(z, rho, hold=False)
+        self.invert.plot_profile(hold=True)
         pylab.fill_between(z, numpy.zeros_like(rho), rho,
                            color=h.get_color(), alpha=0.3)
-        pylab.legend(['Inverted', 'Ideal'])
-        pylab.title('SLD Profile')
+        legend = ['Original', 'Inverted']
+                
+        if self.fitz is not None: # plot fitted
+            pylab.plot(self.fitz, self.fitrho, hold=True)
+            legend.append('Fitted')
+
+        pylab.legend(legend)
 
     def plot_inversion(self, subplot=111):
         """Plot the phase of the inverted profile."""
         import pylab
 
         pylab.subplot(subplot)
-        self.invert.plot_data()
-        pylab.title('Phase Inversion')
+        self.invert.plot_input()
 
     def check_phase(self):
         """Check that the reconstructed phase is correct within noise."""
@@ -267,6 +282,11 @@ class Simulation():
         self.invert = Inversion(data=data, thickness=thickness,
                                 substrate=substrate, **self.invert_args)
         self.invert.run()
+
+    def _optimize(self):
+        """Drive final optimization on inverted profile"""
+        z,rho = self.phase.optimize(self.invert.z, self.invert.rho)
+        self.fitz, self.fitrho = z,rho
 
     def _swfvarnexdum(self):
         """Run phase reconstruction converted from code by Majkrzak."""

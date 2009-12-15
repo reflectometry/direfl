@@ -428,6 +428,7 @@ class Inversion():
                     hold = True
                 pylab.ginput(show_clicks=False)
             z, rho = remesh(qp[-1], 0, self.thickness, self.rhopoints)
+            
             if not self.backrefl:
                 z, rho = z[::-1], rho[::-1]
             signals.append((q,noisyR))
@@ -538,76 +539,20 @@ class Inversion():
         If *phase* is a phase reconstruction object, plot the
         original measurements.
         """
-
-        ''' # Original 3 graph format
-        import pylab
-        if phase:
-            pylab.subplot(311)
-            self.plot_measurement((phase.Qin, phase.R1in, phase.dR1in),
-                                  phase.v1, phase.name1,
-                                  (phase.Qin, phase.R2in, phase.dR2in),
-                                  phase.v2, phase.name2)
-        pylab.subplot(312 if phase else 211)
-        self.plot_data(details=details)
-        pylab.subplot(313 if phase else 212)
-        self.plot_profile(details=details)
-        '''
-
         import pylab
         if phase:
             pylab.subplot(221)
-            self.plot_measurement((phase.Qin, phase.R1in, phase.dR1in),
-                                  phase.v1, phase.name1,
-                                  (phase.Qin, phase.R2in, phase.dR2in),
-                                  phase.v2, phase.name2)
+            phase.plot_measurement(profile=(self.z,self.rho))
+            pylab.subplot(223)
+            phase.plot_imag()
         pylab.subplot(222 if phase else 211)
-        self.plot_data(details=details)
-        pylab.subplot(223)
+        self.plot_input(details=details)
         pylab.subplot(224 if phase else 212)
         self.plot_profile(details=details)
 
-    def plot_measurement(self, data1, surround1, label1,
-                               data2, surround2, label2):
-        """Plot the data against the inversion."""
-        import pylab
-
-        def plot1(data, surround, label, color, hold=True):
-            if len(data) == 2:
-                q, R = data
-                dR = None
-            else:
-                q, R, dR = data
-            r = self.refl(q, surround=surround)
-            # Fresnel reflectivity
-            if self.backrefl:
-                F = abs(refl(q, [0, 0], [self.substrate, surround]))**2
-            else:
-                F = abs(refl(q, [0, 0], [surround, self.substrate]))**2
-            pylab.plot(q, R/F, '.', label=label, color=color, hold=hold)
-            pylab.plot(q, abs(r)**2/F, '-', label=None, color=color, hold=True)
-            if dR is not None:
-                pylab.fill_between(q, (R-dR)/F, (R+dR)/F,
-                                   color=color, alpha=0.3, hold=True)
-                chisq = sum(((abs(r)**2-R)/dR)**2)
-                return chisq, len(q)
-            else:
-                return 0, 1
-
-        chisq1, n1 = plot1(data1, surround1, label1, 'green', hold=False)
-        chisq2, n2 = plot1(data2, surround2, label2, 'blue')
-        pylab.legend()
-        chisq = (chisq1+chisq2)/(n1+n2)
-        pylab.text(0.01, 0.01, "chisq=%.1f"%chisq,
-                   transform=pylab.gca().transAxes,
-                   ha='left', va='bottom')
-
-        pylab.ylabel('R/R_F')
-        pylab.xlabel('Q (inv A)')
-        self.plottitle('Measured Data')
-
-    def plot_data(self, details=False, lowQ_inset=0):
+    def plot_input(self, details=False, lowQ_inset=0):
         """
-        Plot the input data.
+        Plot the real R vs. the real R computed from inversion.
 
         If *details* is True, then plot the individual stages used
         to calculate the average, otherwise just plot the envelope.
@@ -618,16 +563,16 @@ class Inversion():
         import pylab
 
         if details:
-            realplot(self.Qinput, self.RealRinput)
+            plotamp(self.Qinput, self.RealRinput)
             for p in self.signals:
-                realplot(self.Q, p[1], hold=True)
+                plotamp(self.Q, p[1], hold=True)
         else:
-            realplot(self.Q, self.RealR, dRealR=self.dRealR, label=None,
-                     linestyle='', color="blue")
-            realplot(self.Qinput, self.RealRinput, label="Original",
-                     color="blue")
+            plotamp(self.Q, self.RealR, dr=self.dRealR, label=None,
+                    linestyle='', color="blue")
+            plotamp(self.Qinput, self.RealRinput, label="Original",
+                    color="blue")
             Rinverted = real(self.refl(self.Qinput))
-            realplot(self.Qinput, Rinverted, label="Inverted", color="red")
+            plotamp(self.Qinput, Rinverted, label="Inverted")
             pylab.legend()
             chisq = self.chisq() # Note: cache calculated profile?
             pylab.text(0.01,0.01, "chisq=%.1f"%chisq,
@@ -642,7 +587,7 @@ class Inversion():
                                  box.width/4, box.height/4],
                                  axisbg=[0.95, 0.95, 0.65, 0.85])
                 ax.plot(self.Qinput, self.RealRinput, color="blue")
-                ax.plot(self.Qinput, Rinverted, color="red")
+                ax.plot(self.Qinput, Rinverted)
                 ax.text(0.99,0.01, "Q,Re r for Q<%g"%lowQ_inset,
                         fontsize="10", transform=ax.transAxes,
                         ha='right', va='bottom')
@@ -652,10 +597,10 @@ class Inversion():
                 pylab.setp(ax, xticks=[], yticks=[],
                            xlim=[0,qmax], ylim=[-1,1.1*(ymax+1)-1])
                 pylab.axes(orig)
-        self.plottitle('Reconstructed Phase')
+        plottitle('Reconstructed Phase')
 
 
-    def plot_profile(self, details=False):
+    def plot_profile(self, details=False, **kw):
         """
         Plot the computed profiles.
 
@@ -671,7 +616,7 @@ class Inversion():
                 hold=True
         else:
             z,rho,drho = self.z, self.rho, self.drho
-            [h] = pylab.plot(z, rho)
+            [h] = pylab.plot(z, rho, **kw)
             pylab.fill_between(z,rho-drho, rho+drho,
                                color=h.get_color(), alpha=0.3)
             #pylab.plot(z, rho+drho, '--', color=h.get_color())
@@ -684,11 +629,11 @@ class Inversion():
                    ha='right', va='bottom')
         pylab.ylabel('SLD (inv A^2)')
         pylab.xlabel('Depth (A)')
-        self.plottitle('Depth Profile')
+        plottitle('Depth Profile')
 
     def plot_resid(self, details=False):
         """
-        Plot the residuals for inversion-input.
+        Plot the residuals (inversion minus input).
         """
         import pylab
         Q,RealR = self.Qinput, self.RealRinput
@@ -696,7 +641,7 @@ class Inversion():
         pylab.plot(Q, Q**2*(real(r)-RealR))
         pylab.ylabel('residuals [Q**2 * (Re r - input)]')
         pylab.xlabel("Q (inv A)")
-        self.plottitle('Phase Residuals')
+        plottitle('Phase Residuals')
 
     def _set(self, **kw):
         """
@@ -795,27 +740,25 @@ class Inversion():
             q = hstack((q, 0, 0))
         return qp
 
-    def plottitle(self, t):
-        import pylab
-        pylab.text(0.5, 0.99, t,
-                   transform=pylab.gca().transAxes,
-                   ha='center', va='top', backgroundcolor=(0.9, 0.9, 0.6))
+def plottitle(t):
+    import pylab
+    pylab.text(0.5, 0.99, t,
+               transform=pylab.gca().transAxes,
+               ha='center', va='top', backgroundcolor=(0.9, 0.9, 0.6))
 
-def realplot(Q, RealR, dRealR=None, scaled=True, **kw):
+def plotamp(Q, r, dr=None, scaled=True, ylabel="Re r", **kw):
     """
     Plot Q,Re(r) data.
     """
     import pylab
 
-    scale = 1e4*Q**2 if scaled else 1.0
-    [h] = pylab.plot(Q, scale*RealR, **kw)
-    if dRealR is not None:
-        pylab.fill_between(Q, scale*(RealR-dRealR), scale*(RealR+dRealR),
+    scale = 1e4*Q**2 if scaled else 1
+    if scaled: ylabel = "(100 Q)^2 "+ylabel
+    [h] = pylab.plot(Q, scale*r, **kw)
+    if dr is not None:
+        pylab.fill_between(Q, scale*(r-dr), scale*(r+dr),
                            color=h.get_color(), alpha=0.3)
-        #pylab.plot(Q, scale*(R-dR), '--', color=h.get_color())
-        #pylab.plot(Q, scale*(R+dR), '--', color=h.get_color())
-
-    pylab.ylabel("10^4 Q**2 Re r" if scaled else "Re r")
+    pylab.ylabel(ylabel)
     pylab.xlabel("Q (inv A)")
 
 
@@ -897,8 +840,8 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     sigma = sigma*ones(n-1, 'd') if isscalar(sigma) else asarray(sigma,'d')
 
     # Scale units
-    rho *= 1e-6
-    mu *= 1e-6
+    rho = rho*1e-6
+    mu = mu*1e-6
 
     ## For kz < 0 we need to reverse the order of the layers
     ## Note that the interface array sigma is conceptually one
@@ -1058,6 +1001,7 @@ class SurroundVariation():
         *save(file)*           save output
         *show()*, *plot()*     show Q, RealR, ImagR
     """
+    backrefl = True
     def __init__(self, file1, file2, u, v1, v2, stages=100):
         self.u = u
         self.v1, self.v2 = v1, v2
@@ -1065,6 +1009,55 @@ class SurroundVariation():
         self._calc()
         self._calc_err(stages=stages)
         self.clean()
+
+    def optimize(self, z, rho_initial):
+        """
+        Run a quasi-Newton optimizer on a discretized profile.
+
+        The profile steps *z* are not changed.  The initial profile
+        *rho_initial* should come from direct inversion.  Returns the
+        final profile rho which minimizes chisq.
+        """
+        from scipy.optimize import fmin_l_bfgs_b as fmin
+
+        def cost(rho):
+            R1,R2 = self.refl(z, rho, resid=True)
+            return numpy.sum(R1**2) + numpy.sum(R2**2)
+
+        rho_final=rho_initial
+        rho_final,f,d = fmin(cost,rho_initial,approx_grad=True,maxfun=20)
+        return z,rho_final
+
+    def refl(self, z, rho, resid=False):
+        """
+        Return the reflectivities R1 and R2 for the film *z*,*rho* in the 
+        context of the substrate and surround variation.
+        
+        If the resolution is known, then return the convolved theory function.
+
+        If *resid* is True, then return the weighted residuals vector.
+        """
+        w = numpy.hstack((0, numpy.diff(z), 0))
+        rho = numpy.hstack((0, rho[1:], self.u))
+        rho[0] = self.v1
+        R1 = self._calc_refl(w, rho)
+        rho[0] = self.v2
+        R2 = self._calc_refl(w, rho)
+        if resid:
+            R1 = (self.R1in-R1)/self.dR1in
+            R2 = (self.R2in-R2)/self.dR2in
+        return R1,R2
+            
+    def _calc_refl(self, w, rho):
+        Q,dQ = self.Qin,self.dQin
+        # Back reflectivity is equivalent to -Q inputs
+        if self.backrefl: Q = -Q
+        r = refl(Q, w, rho)
+        if dQ is not None:
+            R = convolve(Q,abs(r)**2,Q,dQ)
+        else:
+            R = abs(r)**2
+        return R
 
     def clean(self):
         """
@@ -1108,11 +1101,64 @@ class SurroundVariation():
         for point in zip(self.Q, self.RealR, self.ImagR):
             print "%11.4g %11.4g %11.4g"%point
 
-    def plot(self):
+    def plot_measurement(self, profile=None):
+        """Plot the data, and if available, the inverted theory."""
         import pylab
-        realplot(self.Q, self.RealR, dRealR=self.dRealR, label="Re r")
-        realplot(self.Q, self.ImagR, dRealR=self.dImagR, label="Im r")
+
+        def plot1(Q, R, dR, Rth, surround, label, color, hold=True):
+            # Fresnel reflectivity
+            if self.backrefl:
+                F = abs(refl(Q, [0, 0], [self.u, surround]))**2
+            else:
+                F = abs(refl(Q, [0, 0], [surround, self.u]))**2
+            pylab.plot(Q, R/F, '.', label=label, color=color, hold=hold)
+            if Rth is not None:
+                pylab.plot(Q, Rth/F, '-', label=None, color=color, hold=True)
+            if dR is not None:
+                pylab.fill_between(Q, (R-dR)/F, (R+dR)/F,
+                                   color=color, alpha=0.3, hold=True)
+                if Rth is not None:
+                    chisq = sum(((R-Rth)/dR)**2)
+                else:
+                    chisq = 0
+                return chisq, len(Q)
+            else:
+                # Doesn't make sense to compute chisq for unweighted
+                # reflectivity since there are several orders of magnitude
+                # differences between the data points.
+                return 0,1
+
+        if profile is not None:
+            R1,R2 = self.refl(*profile)
+        else:
+            R1,R2 = None,None
+        chisq1, n1 = plot1(self.Qin, self.R1in, self.dR1in, R1, 
+                           self.v1, self.name1, 'green', hold=False)
+        chisq2, n2 = plot1(self.Qin, self.R2in, self.dR2in, R2, 
+                           self.v2, self.name2, 'blue', hold=True)
         pylab.legend()
+        chisq = (chisq1+chisq2)/(n1+n2)
+        if chisq != 0:
+            pylab.text(0.01, 0.01, "chisq=%.1f"%chisq,
+                       transform=pylab.gca().transAxes,
+                       ha='left', va='bottom')
+
+        pylab.ylabel('R/R_F')
+        pylab.xlabel('Q (inv A)')
+        plottitle('Measured Data')
+
+    def plot_phase(self):
+        import pylab
+        plotamp(self.Q, self.ImagR, dr=self.dImagR)
+        plotamp(self.Q, self.RealR, dr=self.dRealR)
+        pylab.legend()
+        plottitle('Reconstructed phase')
+
+    def plot_imag(self):
+        import pylab
+        plotamp(self.Q, -self.ImagR, dr=self.dImagR)
+        plotamp(self.Q, self.ImagR, dr=self.dImagR, ylabel="Im r")
+        plottitle('Reconstructed phase (+/- Im R)')
 
     def _load(self, file1, file2):
         """
@@ -1140,7 +1186,8 @@ class SurroundVariation():
         if not q1.shape == q2.shape or not all(q1==q2):
             raise ValueError("Q points do not match in data files")
         self.name1, self.name2 = name1, name2
-        self.Qin, self.R1in, self.R2in = q1, r1, r2
+        self.Qin, self.dQin = q1, None
+        self.R1in, self.R2in = r1, r2
         self.dR1in, self.dR2in = dr1, dr2
 
     def _calc(self):

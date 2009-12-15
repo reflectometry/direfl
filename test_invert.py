@@ -23,7 +23,7 @@ def test():
     sample[0][2] = sv
     inv = dict(showiters=False, monitor=None, bse=bse,
                noise=1, iters=6, stages=10, calcpoints=4, rhopoints=128)
-    t = Simulation(q = linspace(0, 0.4, 150), sample=sample,
+    t = Simulation(q = linspace(0, 0.4, 150), dq=0.001, sample=sample,
                    u=u, urough=su, v1=v1, v2=v2, noise=0.08,
                    invert_args=inv, phase_args=dict(stages=100),
                    perfect_reconstruction=False)
