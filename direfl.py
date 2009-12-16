@@ -31,31 +31,26 @@ import matplotlib
 # or importing pyplot, otherwise it will have no effect.
 matplotlib.interactive(False)
 
+# Specify the backend to use for plotting and import backend dependent classes.
+# Note that this must be done before importing pyplot to have an effect.
+matplotlib.use('WXAgg')
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as Toolbar
+
 # The Figure object is used to create backend-independent plot representations.
 from matplotlib.figure import Figure
 
-# The FigureCanvas and Toolbar objects inherit from wx.Panel.
-# FigureCanvas binds a Figure to a specific backend for rendering plots.
-# Choose whether to use wx or wxagg for the backend; wxagg appears to be run
-# significantly faster on Windows and many people recommend wxagg over wx.
-matplotlib.use('WXAgg')  # must call before importing pyplot to have an effect
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as Toolbar
-#matplotlib.use('WX')  # must call before importing pyplot to have an effect
-#from matplotlib.backends.backend_wx import FigureCanvasWx as FigureCanvas
-#from matplotlib.backends.backend_wx import NavigationToolbar2Wx as Toolbar
-
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
-
-from wx.lib.wordwrap import wordwrap
-from images import getOpenBitmap
 
 # Wx-Pylab magic ...
 from matplotlib import _pylab_helpers
 from matplotlib.backend_bases import FigureManagerBase
 
-from itemListInput import ItemListInput
+from wx.lib.wordwrap import wordwrap
+from images import getOpenBitmap
+
+from input_list import ItemListInput
 
 # Specify desired initial window size (if physical screen size permits)
 DISPLAY_WIDTH = 1200
@@ -108,7 +103,7 @@ class AppFrame(wx.Frame):
         """Display the splash screen.  It will exactly cover the main frame."""
 
         x, y = self.GetSizeTuple()
-        image = wx.Image("Vippi.png", wx.BITMAP_TYPE_PNG)
+        image = wx.Image("vippi.png", wx.BITMAP_TYPE_PNG)
         image.Rescale(x, y, wx.IMAGE_QUALITY_HIGH)
         bm = image.ConvertToBitmap()
         # bug? - wx.SPLASH_NO_CENTRE seems to ignore pos parameter; uses (0, 0)
