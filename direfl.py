@@ -104,14 +104,16 @@ class AppFrame(wx.Frame):
 
         x, y = self.GetSizeTuple()
         curdir = os.path.dirname(os.path.realpath(__file__))
-        image = wx.Image(os.path.join(curdir, "vippi.png"), wx.BITMAP_TYPE_PNG)
+
+        image = wx.Image(os.path.join(curdir, "splash.png"),
+                         wx.BITMAP_TYPE_PNG)
         image.Rescale(x, y, wx.IMAGE_QUALITY_HIGH)
         bm = image.ConvertToBitmap()
         # bug? - wx.SPLASH_NO_CENTRE seems to ignore pos parameter; uses (0, 0)
         wx.SplashScreen(bitmap=bm,
                         #splashStyle=wx.SPLASH_NO_CENTRE|wx.SPLASH_TIMEOUT,
                         splashStyle=wx.SPLASH_CENTRE_ON_SCREEN|wx.SPLASH_TIMEOUT,
-                        milliseconds=1000,
+                        milliseconds=5000,
                         pos=self.GetPosition(),
                         parent=None, id=wx.ID_ANY)
         wx.Yield()
@@ -222,7 +224,7 @@ class AppFrame(wx.Frame):
 
         info = wx.AboutDialogInfo()
         info.Name = "DiRefl"
-        info.Version = "0.1.0"
+        info.Version = "0.2.0"
         info.Copyright = "(C) 2009 University of Maryland and NIST"
         info.WebSite = ("http://reflectometry.org/danse",
                         "DANSE/Reflectometry home page")
