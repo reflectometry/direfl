@@ -26,7 +26,6 @@ validating user input.
 """
 
 import wx
-import wx.aui
 from wx.lib.scrolledpanel import ScrolledPanel
 
 
@@ -165,7 +164,7 @@ class ItemListInput(ScrolledPanel):
         # The main_sizer is the top-level sizer that manages everything.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        sbox = wx.StaticBox(self, -1, "Parameters")
+        sbox = wx.StaticBox(self, wx.ID_ANY, "Parameters")
         sbox_sizer = wx.StaticBoxSizer(sbox, wx.VERTICAL)
 
         # Create the text controls for labels and associated input fields.
@@ -198,15 +197,15 @@ class ItemListInput(ScrolledPanel):
         for x in xrange(len(self.itemlist)):
             text, default, datatype, combolist, editable = self.itemlist[x]
 
-            self.labels.append(wx.StaticText(self, -1, label=text))
+            self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text))
 
             if combolist is None:  # it is a simple data entry field
-                self.inputs.append(wx.TextCtrl(self, -1,
+                self.inputs.append(wx.TextCtrl(self, wx.ID_ANY,
                                    value=str(default),
                                    validator=ItemListValidator(self.itemlist[x])))
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
             else:                  # it is a drop down combo box list
-                self.inputs.append(wx.ComboBox(self, -1,
+                self.inputs.append(wx.ComboBox(self, wx.ID_ANY,
                                    value=str(default),
                                    validator=ItemListValidator(self.itemlist[x]),
                                    choices=combolist,

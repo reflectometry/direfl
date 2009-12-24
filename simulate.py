@@ -19,8 +19,8 @@ try:
     from reflectometry.model1d.model.calcRefl import convolve
 except:
     print "WARNING: faking convolution with linear interpolation"
-    def convolve(Qin,Rin,Q,dQ): 
-        return numpy.interp1(Qin,Rin,Q)
+    def convolve(Qin, Rin, Q, dQ):
+        return numpy.interp1(Qin, Rin, Q)
 import profile
 
 # Note that for efficiency, pylab is only imported if plotting is requested.
@@ -53,7 +53,7 @@ class Simulation():
                  u=2.07, v1=0, v2=6.33, noise=0, seed=None,
                  phase_args={}, invert_args={},
                  perfect_reconstruction=False):
-        if numpy.isscalar(dq): 
+        if numpy.isscalar(dq):
             dq = dq*numpy.ones_like(q)
         self.q, self.dq = q, dq
         self.sample, self.urough = sample, urough
@@ -93,7 +93,7 @@ class Simulation():
         # Generate noisy measurements
         R1, R2 = abs(r1)**2, abs(r2)**2
         if self.dq is not None:
-            R1, R2 = [convolve(q,R,q,self.dq) for R in (R1,R2)]
+            R1, R2 = [convolve(q, R, q, self.dq) for R in (R1, R2)]
         if self.noise > 0:
             self.dR1, self.dR2 = self.noise*R1, self.noise*R2
             rng = numpy.random.RandomState(seed=self.seed)
@@ -138,7 +138,7 @@ class Simulation():
 
         #rhos,widths,sigmas = rhos[::-1],widths[::-1],sigmas[::-1]
         rho = profile.build_profile(z,value=rhos,
-                                    thickness=widths,roughness=sigmas)
+                                    thickness=widths, roughness=sigmas)
 
         return z,rho
 
@@ -225,14 +225,14 @@ class Simulation():
         import pylab
 
         pylab.subplot(subplot)
-        
+
         z, rho = self.sample_profile()
         [h] = pylab.plot(z, rho, hold=False)
         self.invert.plot_profile(hold=True)
         pylab.fill_between(z, numpy.zeros_like(rho), rho,
                            color=h.get_color(), alpha=0.3)
         legend = ['Original', 'Inverted']
-                
+
         if self.fitz is not None: # plot fitted
             pylab.plot(self.fitz, self.fitrho, hold=True)
             legend.append('Fitted')

@@ -428,7 +428,7 @@ class Inversion():
                     hold = True
                 pylab.ginput(show_clicks=False)
             z, rho = remesh(qp[-1], 0, self.thickness, self.rhopoints)
-            
+
             if not self.backrefl:
                 z, rho = z[::-1], rho[::-1]
             signals.append((q,noisyR))
@@ -575,7 +575,7 @@ class Inversion():
             plotamp(self.Qinput, Rinverted, label="Inverted")
             pylab.legend()
             chisq = self.chisq() # Note: cache calculated profile?
-            pylab.text(0.01,0.01, "chisq=%.1f"%chisq,
+            pylab.text(0.01, 0.01, "chisq=%.1f"%chisq,
                        transform=pylab.gca().transAxes,
                        ha='left', va='bottom')
 
@@ -588,14 +588,14 @@ class Inversion():
                                  axisbg=[0.95, 0.95, 0.65, 0.85])
                 ax.plot(self.Qinput, self.RealRinput, color="blue")
                 ax.plot(self.Qinput, Rinverted)
-                ax.text(0.99,0.01, "Q,Re r for Q<%g"%lowQ_inset,
+                ax.text(0.99, 0.01, "Q,Re R for Q<%g"%lowQ_inset,
                         fontsize="10", transform=ax.transAxes,
                         ha='right', va='bottom')
                 qmax = lowQ_inset
                 ymax = max(max(self.RealRinput[self.Qinput<qmax]),
                            max(Rinverted[self.Qinput<qmax]))
                 pylab.setp(ax, xticks=[], yticks=[],
-                           xlim=[0,qmax], ylim=[-1,1.1*(ymax+1)-1])
+                           xlim=[0,qmax], ylim=[-1, 1.1*(ymax+1)-1])
                 pylab.axes(orig)
         plottitle('Reconstructed Phase')
 
@@ -639,7 +639,7 @@ class Inversion():
         Q,RealR = self.Qinput, self.RealRinput
         r = self.refl(Q)
         pylab.plot(Q, Q**2*(real(r)-RealR))
-        pylab.ylabel('residuals [Q**2 * (Re r - input)]')
+        pylab.ylabel('Residuals [Q^2 * (Re R - input)]')
         pylab.xlabel("Q (inv A)")
         plottitle('Phase Residuals')
 
@@ -746,7 +746,7 @@ def plottitle(t):
                transform=pylab.gca().transAxes,
                ha='center', va='top', backgroundcolor=(0.9, 0.9, 0.6))
 
-def plotamp(Q, r, dr=None, scaled=True, ylabel="Re r", **kw):
+def plotamp(Q, r, dr=None, scaled=True, ylabel="Re R", **kw):
     """
     Plot Q,Re(r) data.
     """
@@ -1030,9 +1030,9 @@ class SurroundVariation():
 
     def refl(self, z, rho, resid=False):
         """
-        Return the reflectivities R1 and R2 for the film *z*,*rho* in the 
+        Return the reflectivities R1 and R2 for the film *z*,*rho* in the
         context of the substrate and surround variation.
-        
+
         If the resolution is known, then return the convolved theory function.
 
         If *resid* is True, then return the weighted residuals vector.
@@ -1047,7 +1047,7 @@ class SurroundVariation():
             R1 = (self.R1in-R1)/self.dR1in
             R2 = (self.R2in-R2)/self.dR2in
         return R1,R2
-            
+
     def _calc_refl(self, w, rho):
         Q,dQ = self.Qin,self.dQin
         # Back reflectivity is equivalent to -Q inputs
@@ -1132,9 +1132,9 @@ class SurroundVariation():
             R1,R2 = self.refl(*profile)
         else:
             R1,R2 = None,None
-        chisq1, n1 = plot1(self.Qin, self.R1in, self.dR1in, R1, 
+        chisq1, n1 = plot1(self.Qin, self.R1in, self.dR1in, R1,
                            self.v1, self.name1, 'green', hold=False)
-        chisq2, n2 = plot1(self.Qin, self.R2in, self.dR2in, R2, 
+        chisq2, n2 = plot1(self.Qin, self.R2in, self.dR2in, R2,
                            self.v2, self.name2, 'blue', hold=True)
         pylab.legend()
         chisq = (chisq1+chisq2)/(n1+n2)
@@ -1152,13 +1152,13 @@ class SurroundVariation():
         plotamp(self.Q, self.ImagR, dr=self.dImagR)
         plotamp(self.Q, self.RealR, dr=self.dRealR)
         pylab.legend()
-        plottitle('Reconstructed phase')
+        plottitle('Reconstructed Phase')
 
     def plot_imag(self):
         import pylab
         plotamp(self.Q, -self.ImagR, dr=self.dImagR)
-        plotamp(self.Q, self.ImagR, dr=self.dImagR, ylabel="Im r")
-        plottitle('Reconstructed phase (+/- Im R)')
+        plotamp(self.Q, self.ImagR, dr=self.dImagR, ylabel="Im R")
+        plottitle('Reconstructed Phase (+/- Im R)')
 
     def _load(self, file1, file2):
         """

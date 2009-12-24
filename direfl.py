@@ -48,8 +48,8 @@ from matplotlib import _pylab_helpers
 from matplotlib.backend_bases import FigureManagerBase
 
 from wx.lib.wordwrap import wordwrap
-from images import getOpenBitmap
 
+from images import getOpenBitmap
 from input_list import ItemListInput
 
 # Specify desired initial window size (if physical screen size permits)
@@ -225,7 +225,7 @@ class AppFrame(wx.Frame):
         info = wx.AboutDialogInfo()
         info.Name = "DiRefl"
         info.Version = "0.2.0"
-        info.Copyright = "(C) 2009 University of Maryland and NIST"
+        info.Copyright = "(C) 2010 University of Maryland and NIST"
         info.WebSite = ("http://reflectometry.org/danse",
                         "DANSE/Reflectometry home page")
         info.License = wordwrap("BSD License", 100, wx.ClientDC(self))
@@ -588,12 +588,15 @@ your model."""
                             style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
         intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
-        sbox = wx.StaticBox(self.pan1, -1, "Model Parameters")
+        sbox = wx.StaticBox(self.pan1, wx.ID_ANY, "Model Parameters")
         sbox_sizer = wx.StaticBoxSizer(sbox, wx.VERTICAL)
 
-        stxt1 = wx.StaticText(self, -1, label="Define the Surface, Sample Layers, and Substrate")
-        stxt2 = wx.StaticText(self, -1, label="    components of your model (one layer per line):")
-        #stxt3 = wx.StaticText(self, -1, label="    as shown below (roughness defaults to 0):")
+        stxt1 = wx.StaticText(self, wx.ID_ANY,
+                    label="Define the Surface, Sample Layers, and Substrate")
+        stxt2 = wx.StaticText(self, wx.ID_ANY,
+                    label="    components of your model (one layer per line):")
+        #stxt3 = wx.StaticText(self, wx.ID_ANY,
+        #           label="    as shown below (roughness defaults to 0):")
 
         # Read in demo model parameters.
         # Note that the number of lines determines the height of the box.
