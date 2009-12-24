@@ -74,6 +74,8 @@ from numpy import (interp, diff, sum, mean, std,
 from numpy.fft import fft
 from numpy.random import uniform, poisson, normal
 
+import os
+
 # Common SLDs
 silicon = Si = 2.07
 sapphire = Al2O3 = 5.0
@@ -1129,13 +1131,16 @@ class SurroundVariation():
                 return 0,1
 
         if profile is not None:
-            R1,R2 = self.refl(*profile)
+            R1, R2 = self.refl(*profile)
         else:
-            R1,R2 = None,None
+            R1, R2 = None, None
+        # Only show file.ext portion of the file specification
+        name1 = os.path.basename(self.name1)
+        name2 = os.path.basename(self.name2)
         chisq1, n1 = plot1(self.Qin, self.R1in, self.dR1in, R1,
-                           self.v1, self.name1, 'green', hold=False)
+                           self.v1, name1, 'green', hold=False)
         chisq2, n2 = plot1(self.Qin, self.R2in, self.dR2in, R2,
-                           self.v2, self.name2, 'blue', hold=True)
+                           self.v2, name2, 'blue', hold=True)
         pylab.legend()
         chisq = (chisq1+chisq2)/(n1+n2)
         if chisq != 0:
