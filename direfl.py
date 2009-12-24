@@ -186,22 +186,22 @@ class AppFrame(wx.Frame):
                                          style=wx.NB_TOP|wx.NB_FIXEDWIDTH)
 
         # Create page windows as children of the notebook.
-        #self.page0 = CollectedDataPage(nb, colour="", fignum=0)
-        self.page0 = CollectedDataPage(nb, colour="#B0FFB0", fignum=0)  # pale green
-        #self.page1 = SimulatedDataPage(nb, colour="", fignum=1)
-        self.page1 = SimulatedDataPage(nb, colour="#FFFFB0", fignum=1)  # pale yellow
-        self.page2 = TestPlotPage(nb, colour="GREEN", fignum=2)
-        self.page3 = TestPlotPage(nb, colour="BLUE", fignum=3)
-        self.page4 = TestPlotPage(nb, colour="YELLOW", fignum=4)
-        self.page5 = TestPlotPage(nb, colour="RED", fignum=5)
+        #self.page0 = SimulatedDataPage(nb, colour="", fignum=1)
+        self.page0 = SimulatedDataPage(nb, colour="#FFFFB0", fignum=1)  # pale yellow
+        #self.page1 = CollectedDataPage(nb, colour="", fignum=0)
+        self.page1 = CollectedDataPage(nb, colour="#B0FFB0", fignum=0)  # pale green
+        #self.page2 = TestPlotPage(nb, colour="GREEN", fignum=2)
+        #self.page3 = TestPlotPage(nb, colour="BLUE", fignum=3)
+        #self.page4 = TestPlotPage(nb, colour="YELLOW", fignum=4)
+        #self.page5 = TestPlotPage(nb, colour="RED", fignum=5)
 
         # Add the pages to the notebook with a label to show on the tab.
-        nb.AddPage(self.page0, "Collected Data")
-        nb.AddPage(self.page1, "Simulated Data")
-        nb.AddPage(self.page2, "Test 1")
-        nb.AddPage(self.page3, "Test 2")
-        nb.AddPage(self.page4, "Test 3")
-        nb.AddPage(self.page5, "Test 4")
+        nb.AddPage(self.page0, "Simulated Data")
+        nb.AddPage(self.page1, "Collected Data")
+        #nb.AddPage(self.page2, "Test 1")
+        #nb.AddPage(self.page3, "Test 2")
+        #nb.AddPage(self.page4, "Test 3")
+        #nb.AddPage(self.page5, "Test 4")
 
         # Put the notebook in a sizer attached to the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -246,19 +246,19 @@ profile of the sample.", 500, wx.ClientDC(self))
     def OnLoadData(self, event):
         """Load reflectometry data files for measurement 1 and 2."""
 
-        self.page0.col_tab_OnLoadData(event)  # TODO: create menu in dest class
+        self.page1.col_tab_OnLoadData(event)  # TODO: create menu in dest class
 
 
     def OnLoadModel(self, event):
         """Load Model from a file."""
 
-        self.page1.sim_tab_OnLoadModel(event)  # TODO: create menu in dest class
+        self.page0.sim_tab_OnLoadModel(event)  # TODO: create menu in dest class
 
 
     def OnSaveModel(self, event):
         """Save Model to a file."""
 
-        self.page1.sim_tab_OnSaveModel(event)  # TODO: create menu in dest class
+        self.page0.sim_tab_OnSaveModel(event)  # TODO: create menu in dest class
 
 
     def OnTutorial(self, event):
