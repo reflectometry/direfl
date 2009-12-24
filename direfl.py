@@ -103,7 +103,8 @@ class AppFrame(wx.Frame):
         """Display the splash screen.  It will exactly cover the main frame."""
 
         x, y = self.GetSizeTuple()
-        image = wx.Image("vippi.png", wx.BITMAP_TYPE_PNG)
+        curdir = os.path.dirname(os.path.realpath(__file__))
+        image = wx.Image(os.path.join(curdir, "vippi.png"), wx.BITMAP_TYPE_PNG)
         image.Rescale(x, y, wx.IMAGE_QUALITY_HIGH)
         bm = image.ConvertToBitmap()
         # bug? - wx.SPLASH_NO_CENTRE seems to ignore pos parameter; uses (0, 0)
@@ -409,8 +410,9 @@ the data files."""
         self.pan2.SetSizer(box)
         box.Fit(self.pan2)
 
-        self.data_file_1 = "qrd1.refl"
-        self.data_file_2 = "qrd2.refl"
+        curdir = os.path.dirname(os.path.realpath(__file__))
+        self.data_file_1 = os.path.join(curdir, "qrd1.refl")
+        self.data_file_2 = os.path.join(curdir, "qrd2.refl")
 
         #self.pan2.Bind(wx.EVT_MOTION, self.OnPan2Motion)
 
@@ -490,7 +492,7 @@ the data files."""
         if sts == wx.ID_CANCEL:
             return  # Do nothing
 
-        self.data_file_1 = filename
+        self.data_file_1 = filespec
 
         dlg = wx.FileDialog(self,
                             message="Load Data for Measurement 2",
@@ -508,7 +510,7 @@ the data files."""
         if sts == wx.ID_CANCEL:
             return  # Do nothing
 
-        self.data_file_2 = filename
+        self.data_file_2 = filespec
 
 #==============================================================================
 
@@ -595,7 +597,8 @@ your model."""
         # Note that the number of lines determines the height of the box.
         # TODO: create a model edit box with a min-max height.
         demoname = "demo_model_1.dat"
-        filespec = os.path.join(os.getcwd(), demoname)
+        curdir = os.path.dirname(os.path.realpath(__file__))
+        filespec = os.path.join(curdir, demoname)
 
         try:
             fd = open(filespec, 'rU')
@@ -780,7 +783,6 @@ your model."""
             pathname  = dlg.GetDirectory()
             filename = dlg.GetFilename()
             filespec = os.path.join(pathname, filename)
-            #filespec = os.path.join(dlg.GetDirectory(), dlg.GetFilename())
         dlg.Destroy()
         if sts == wx.ID_CANCEL:
             return  # Do nothing
@@ -955,9 +957,6 @@ def perform_recon_inver(args, params):
     import os
     import pylab
 
-    if args is None:
-        args = ['qrd1.refl', 'qrd2.refl']
-    basefile = os.path.splitext(os.path.basename(args[0]))[0]
     u = params[0]
     v1 = params[1]
     v2 = params[2]
@@ -1058,8 +1057,9 @@ def test1():
     import pylab
 
     #args = ['wsh02_re.dat']
-    args = ['qrd1.refl', 'qrd2.refl']
-    basefile = os.path.splitext(os.path.basename(args[0]))[0]
+    curdir = os.path.dirname(os.path.realpath(__file__))
+    args = [os.path.join(curdir, "qrd1.refl"),
+            os.path.join(curdir, "qrd2.refl")]
     if len(args) == 1:
         phase = None
         data = args[0]
