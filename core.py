@@ -618,7 +618,7 @@ class Inversion():
             z,rho,drho = self.z, self.rho, self.drho
             [h] = pylab.plot(z, rho, **kw)
             pylab.fill_between(z,rho-drho, rho+drho,
-                               color=h.get_color(), alpha=0.3)
+                               color=h.get_color(), alpha=0.2)
             #pylab.plot(z, rho+drho, '--', color=h.get_color())
             #pylab.plot(z, rho-drho, '--', color=h.get_color())
         pylab.text(0.01, 0.01, 'surface',
@@ -757,7 +757,7 @@ def plotamp(Q, r, dr=None, scaled=True, ylabel="Re R", **kw):
     [h] = pylab.plot(Q, scale*r, **kw)
     if dr is not None:
         pylab.fill_between(Q, scale*(r-dr), scale*(r+dr),
-                           color=h.get_color(), alpha=0.3)
+                           color=h.get_color(), alpha=0.2)
     pylab.ylabel(ylabel)
     pylab.xlabel("Q (inv A)")
 
@@ -1116,7 +1116,7 @@ class SurroundVariation():
                 pylab.plot(Q, Rth/F, '-', label=None, color=color, hold=True)
             if dR is not None:
                 pylab.fill_between(Q, (R-dR)/F, (R+dR)/F,
-                                   color=color, alpha=0.3, hold=True)
+                                   color=color, alpha=0.2, hold=True)
                 if Rth is not None:
                     chisq = sum(((R-Rth)/dR)**2)
                 else:

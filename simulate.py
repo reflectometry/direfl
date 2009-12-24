@@ -183,7 +183,7 @@ class Simulation():
         [h] = pylab.plot(q, scale*re, '.', hold=False, label="Measured")
         if dre is not None:
             pylab.fill_between(q, scale*(re-dre), scale*(re+dre),
-                               color=h.get_color(), alpha=0.3)
+                               color=h.get_color(), alpha=0.2)
 
         # Plot free film phase for comparison
         q_free,re_free = self.q, real(self.rfree)
@@ -230,7 +230,7 @@ class Simulation():
         [h] = pylab.plot(z, rho, hold=False)
         self.invert.plot_profile(hold=True)
         pylab.fill_between(z, numpy.zeros_like(rho), rho,
-                           color=h.get_color(), alpha=0.3)
+                           color=h.get_color(), alpha=0.2)
         legend = ['Original', 'Inverted']
 
         if self.fitz is not None: # plot fitted
