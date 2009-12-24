@@ -569,7 +569,7 @@ class SimulatedDataPage(wx.Panel):
                 ###["Cosine Transform Smoothing:", 0.0, "float", None, True],
                 ###["Back Reflectivity:", "True", "str", ("True", "False"), True],
                 ###["Inversion Noise Factor:", 1, "int", None, True],
-                   ["Simulated Noise:", 0.08, "float", None, True],
+                   ["Simulated Noise (as %):", 8.0, "float", None, True],
                    ["Bound State Energy:", 0.0, "float", None, True],
                    ["Perfect Reconstruction:", "False", "str", ("True", "False"), True],
                 ###["Show Iterations:", "False", "str", ("True", "False"), True]
@@ -1020,7 +1020,8 @@ def perform_simulation(sample, params):
     #_showiters = True if params[99] == "True" else False
     _showiters = False
     _noise = params[8]
-    if _noise < 0.001: _noise = 0.001
+    if _noise < 0.01: _noise = 0.01
+    _noise /= 100.0  # convert percent value to hundreths value
 
     inv = dict(showiters=_showiters,
                monitor=None,
