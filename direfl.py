@@ -103,9 +103,7 @@ class AppFrame(wx.Frame):
         """Display the splash screen.  It will exactly cover the main frame."""
 
         x, y = self.GetSizeTuple()
-        curdir = os.path.dirname(os.path.realpath(__file__))
-
-        image = wx.Image(os.path.join(curdir, "splash.png"),
+        image = wx.Image(os.path.join(get_locdir(), "splash.png"),
                          wx.BITMAP_TYPE_PNG)
         image.Rescale(x, y, wx.IMAGE_QUALITY_HIGH)
         bm = image.ConvertToBitmap()
@@ -412,9 +410,9 @@ the data files."""
         self.pan2.SetSizer(box)
         box.Fit(self.pan2)
 
-        curdir = os.path.dirname(os.path.realpath(__file__))
-        self.data_file_1 = os.path.join(curdir, "qrd1.refl")
-        self.data_file_2 = os.path.join(curdir, "qrd2.refl")
+        local = get_locdir()
+        self.data_file_1 = os.path.join(local, "qrd1.refl")
+        self.data_file_2 = os.path.join(local, "qrd2.refl")
 
         #self.pan2.Bind(wx.EVT_MOTION, self.OnPan2Motion)
 
@@ -602,8 +600,7 @@ your model."""
         # Note that the number of lines determines the height of the box.
         # TODO: create a model edit box with a min-max height.
         demoname = "demo_model_1.dat"
-        curdir = os.path.dirname(os.path.realpath(__file__))
-        filespec = os.path.join(curdir, demoname)
+        filespec = os.path.join(get_locdir(), demoname)
 
         try:
             fd = open(filespec, 'rU')
@@ -952,6 +949,15 @@ def display_warning_message(win, title, msg):
     msg.Destroy()
 
 
+def get_locdir():
+    """
+    Return the local directory of the file being executed -- this is the
+    directory path of the script or module being executed, not the current
+    working directory.
+    """
+    return os.path.dirname(os.path.realpath(__file__))
+
+
 def perform_recon_inver(args, params):
     """
     Perform phase reconstruction and direct inversion on two reflectometry data
@@ -1063,9 +1069,9 @@ def test1():
     import pylab
 
     #args = ['wsh02_re.dat']
-    curdir = os.path.dirname(os.path.realpath(__file__))
-    args = [os.path.join(curdir, "qrd1.refl"),
-            os.path.join(curdir, "qrd2.refl")]
+    local = os.path.dirname(os.path.realpath(__file__))
+    args = [os.path.join(local, "qrd1.refl"),
+            os.path.join(local, "qrd2.refl")]
     if len(args) == 1:
         phase = None
         data = args[0]
