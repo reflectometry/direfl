@@ -79,6 +79,11 @@ class AppFrame(wx.Frame):
         #self.panel = wx.Panel(self, wx.ID_ANY, style=wx.SUNKEN_BORDER)
         self.panel.SetBackgroundColour("WHITE")
 
+        # Display the DiRefl icon in the title bar.
+        _icon = wx.Icon(os.path.join(get_appdir(), "direfl.ico"),
+                        wx.BITMAP_TYPE_ICO)
+        self.SetIcon(_icon)
+
         # Display a splash screen.
         self.display_splash_screen()
 
@@ -103,7 +108,7 @@ class AppFrame(wx.Frame):
         """Display the splash screen.  It will exactly cover the main frame."""
 
         x, y = self.GetSizeTuple()
-        image = wx.Image(os.path.join(get_locdir(), "splash.png"),
+        image = wx.Image(os.path.join(get_appdir(), "splash.png"),
                          wx.BITMAP_TYPE_PNG)
         image.Rescale(x, y, wx.IMAGE_QUALITY_HIGH)
         bm = image.ConvertToBitmap()
@@ -222,7 +227,7 @@ class AppFrame(wx.Frame):
 
         info = wx.AboutDialogInfo()
         info.Name = "DiRefl"
-        info.Version = "0.2.0"
+        info.Version = "0.3.0"
         info.Copyright = "(C) 2010 University of Maryland and NIST"
         info.WebSite = ("http://reflectometry.org/danse",
                         "DANSE/Reflectometry home page")
@@ -410,9 +415,9 @@ the data files."""
         self.pan2.SetSizer(box)
         box.Fit(self.pan2)
 
-        local = get_locdir()
-        self.data_file_1 = os.path.join(local, "qrd1.refl")
-        self.data_file_2 = os.path.join(local, "qrd2.refl")
+        root = get_appdir()
+        self.data_file_1 = os.path.join(root, "qrd1.refl")
+        self.data_file_2 = os.path.join(root, "qrd2.refl")
 
         #self.pan2.Bind(wx.EVT_MOTION, self.OnPan2Motion)
 
@@ -600,7 +605,7 @@ your model."""
         # Note that the number of lines determines the height of the box.
         # TODO: create a model edit box with a min-max height.
         demoname = "demo_model_1.dat"
-        filespec = os.path.join(get_locdir(), demoname)
+        filespec = os.path.join(get_appdir(), demoname)
 
         try:
             fd = open(filespec, 'rU')
@@ -949,13 +954,20 @@ def display_warning_message(win, title, msg):
     msg.Destroy()
 
 
-def get_locdir():
+def get_appdir():
     """
-    Return the local directory of the file being executed -- this is the
-    directory path of the script or module being executed, not the current
-    working directory.
+    Return the directory path of the main module of the application, i.e, the
+    root directory from which the application was started.  Note that this may
+    be different than the current working directory.
     """
-    return os.path.dirname(os.path.realpath(__file__))
+    import sys
+    import os
+
+    if hasattr(sys, "frozen"):  # check for py2exe image
+        appdir = os.path.dirname(sys.executable)
+    else:
+        appdir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    return appdir
 
 
 def perform_recon_inver(args, params):
@@ -965,7 +977,6 @@ def perform_recon_inver(args, params):
     """
 
     from core import refl, SurroundVariation, Inversion
-    import os
     import pylab
 
     u = params[0]
