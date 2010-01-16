@@ -10,7 +10,6 @@ import os
 import sys
 import glob
 from distutils.core import setup
-from distutils.filelist import findall
 
 import matplotlib
 import py2exe
@@ -29,7 +28,7 @@ class Target:
         self.__dict__.update(kw)
         # for the version info resources
         self.version = version
-        self.company_name = "NIST"
+        self.company_name = "University of Maryland"
         self.copyright = "BSD style copyright"
         self.name = "DIREFL"
 
@@ -78,7 +77,7 @@ data_files.append( ('.', [os.path.join('.','README-direfl.txt')]) )
 data_files.append( ('.', [os.path.join('.','splash.png')]) )
 
 # Add required packages.
-packages = ['numpy', 'scipy', 'matplotlib', 'pytz', 'xml', 'asynchat']
+packages = ['numpy', 'scipy', 'matplotlib', 'pytz']
 
 # Specify include and exclude files.
 includes = []
