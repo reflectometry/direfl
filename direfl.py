@@ -49,13 +49,24 @@ from matplotlib.backend_bases import FigureManagerBase
 
 from wx.lib.wordwrap import wordwrap
 
+# Note that relative imports cannot be performed by this module because it is
+# not run in the context of a package.
 from images import getOpenBitmap
 from input_list import ItemListInput
+
+from about import APP_NAME, APP_VERSION
+from about import APP_COPYRIGHT
+from about import APP_DESCRIPTION
+from about import APP_LICENSE
+from about import APP_PROJECT_URL, APP_PROJECT_TAG
+from about import APP_TUTORIAL_URL, APP_TUTORIAL_TXT
 
 # Specify desired initial window size (if physical screen size permits)
 DISPLAY_WIDTH = 1200
 DISPLAY_HEIGHT = 900
 TASKBAR_HEIGHT = 32
+
+BLANK_LINE = "\n"
 
 REFL_FILES = "Refl files (*.refl)|*.refl"
 DATA_FILES = "Data files (*.dat)|*.dat"
@@ -80,9 +91,9 @@ class AppFrame(wx.Frame):
         self.panel.SetBackgroundColour("WHITE")
 
         # Display the DiRefl icon in the title bar.
-        _icon = wx.Icon(os.path.join(get_appdir(), "direfl.ico"),
+        icon = wx.Icon(os.path.join(get_appdir(), "direfl.ico"),
                         wx.BITMAP_TYPE_ICO)
-        self.SetIcon(_icon)
+        self.SetIcon(icon)
 
         # Display a splash screen.
         self.display_splash_screen()
@@ -99,8 +110,8 @@ class AppFrame(wx.Frame):
         # Initialize the notebook bar.
         self.add_notebookbar()
 
-        # Uncomment call to Fit() to reduce the frame to minimum required size.
-        # Comment out the call to keep the frame at its initial size.
+        # Comment out the call to Fit() to keep the frame at its initial size.
+        # Uncomment the call to reduce the frame to its minimum required size.
         #self.Fit()
 
 
@@ -116,14 +127,14 @@ class AppFrame(wx.Frame):
         wx.SplashScreen(bitmap=bm,
                         #splashStyle=wx.SPLASH_NO_CENTRE|wx.SPLASH_TIMEOUT,
                         splashStyle=wx.SPLASH_CENTRE_ON_SCREEN|wx.SPLASH_TIMEOUT,
-                        milliseconds=5000,
+                        milliseconds=3000,
                         pos=self.GetPosition(),
                         parent=None, id=wx.ID_ANY)
         wx.Yield()
 
 
     def add_menubar(self):
-        """Create a menu bar, menus, and menu options. """
+        """Create a menu bar, menus, and menu options."""
 
         # Create the menubar.
         mb = wx.MenuBar()
@@ -153,6 +164,8 @@ class AppFrame(wx.Frame):
 
         tutorial_id = menu2.Append(wx.ID_ANY, "&Tutorial")
         self.Bind(wx.EVT_MENU, self.OnTutorial, tutorial_id)
+        license_id = menu2.Append(wx.ID_ANY, "&License")
+        self.Bind(wx.EVT_MENU, self.OnLicense, license_id)
         about_id = menu2.Append(wx.ID_ANY, "&About")
         self.Bind(wx.EVT_MENU, self.OnAbout, about_id)
 
@@ -191,9 +204,7 @@ class AppFrame(wx.Frame):
                                          style=wx.NB_TOP|wx.NB_FIXEDWIDTH)
 
         # Create page windows as children of the notebook.
-        #self.page0 = SimulatedDataPage(nb, colour="", fignum=1)
         self.page0 = SimulatedDataPage(nb, colour="#FFFFB0", fignum=1)  # pale yellow
-        #self.page1 = CollectedDataPage(nb, colour="", fignum=0)
         self.page1 = CollectedDataPage(nb, colour="#B0FFB0", fignum=0)  # pale green
         #self.page2 = TestPlotPage(nb, colour="GREEN", fignum=2)
         #self.page3 = TestPlotPage(nb, colour="BLUE", fignum=3)
@@ -222,30 +233,48 @@ class AppFrame(wx.Frame):
         nb.InsertPage(1, self.page0, "Replace 0")
         '''
 
+
     def OnAbout(self, evt):
-        """ Show the About dialog. """
+        """
+        Show the About dialog box.
+
+        Note that use of Website or License information causes wx to default
+        to the generic About Box implementation instead of the native one.
+        In addition, the generic form centers each line of the license text
+        which is undesirable (and there is no way to disable centering).  The
+        workaround is to use About Box with parameters that cause the native
+        mode to be used, and to display the other info as separate menu items
+        (this is the wx recommended approach to handle the shortcoming).
+        """
 
         info = wx.AboutDialogInfo()
-        info.Name = "DiRefl"
-        info.Version = "0.3.0"
-        info.Copyright = "(C) 2010 University of Maryland and NIST"
-        info.WebSite = ("http://reflectometry.org/danse",
-                        "DANSE/Reflectometry home page")
-        info.License = wordwrap("BSD License", 100, wx.ClientDC(self))
-        info.Description = wordwrap("DiRefl is a reflectometry application \
-that computes the scattering length density profile of a thin film or free \
-form sample from two experimental (or simulated) reflectometry datasets.  The \
-neutron scattering data represent two runs where only one of the surround \
-layers (either incident or substrate) was changed and they have sufficient \
-contrast via their scattering length densities.  Phase reconstruction and \
-direct inversion techniques are used to analyze the data and generate a \
-profile of the sample.", 500, wx.ClientDC(self))
+        info.Name = APP_NAME
+        info.Version = APP_VERSION + BLANK_LINE
+        info.Copyright = APP_COPYRIGHT + BLANK_LINE
+        info.Description = wordwrap(APP_DESCRIPTION, 500, wx.ClientDC(self))
+        #info.WebSite = (APP_PROJECT_URL, APP_PROJECT_TAG)
         wx.AboutBox(info)
 
 
     def OnExit(self, event):
         """Terminate the program."""
         self.Close()
+
+
+    def OnLicense(self, evt):
+        """
+        Show the License dialog box.
+
+        See the comments in OnAbout for explanation why this is not part of the
+        About dialog box as 'info.License' item.
+        """
+
+        info = wx.AboutDialogInfo()
+        info.Name = APP_NAME
+        info.Version = APP_VERSION + BLANK_LINE
+        info.Copyright = APP_COPYRIGHT + BLANK_LINE
+        info.Description = wordwrap(APP_LICENSE, 500, wx.ClientDC(self))
+        wx.AboutBox(info)
 
 
     def OnLoadData(self, event):
@@ -267,13 +296,13 @@ profile of the sample.", 500, wx.ClientDC(self))
 
 
     def OnTutorial(self, event):
-        """ Show tutorial information. """
+        """Show the Tutorial dialog box."""
 
         dlg =wx.MessageDialog(self,
-                              message = """\
-For a tutorial on how to use DiRefl with sample datasets,\n\
-please go to the following webpage:\n\n\
-http://www.reflectometry.org/danse/packages.html""",
+                              message = wordwrap(APP_TUTORIAL_TXT +
+                                                 BLANK_LINE + BLANK_LINE +
+                                                 APP_TUTORIAL_URL,
+                                                 500, wx.ClientDC(self)),
                               caption = 'Tutorial',
                               style=wx.OK | wx.CENTRE)
         dlg.ShowModal()
@@ -964,10 +993,10 @@ def get_appdir():
     import os
 
     if hasattr(sys, "frozen"):  # check for py2exe image
-        appdir = os.path.dirname(sys.executable)
+        path = sys.executable
     else:
-        appdir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    return appdir
+        path = sys.argv[0]
+    return os.path.dirname(os.path.abspath(path))
 
 
 def perform_recon_inver(args, params):
