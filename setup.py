@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import numpy
 from numpy.distutils.core import setup
@@ -24,9 +25,25 @@ def configuration(parent_package='', top_path=None):
     config.add_data_files('*.refl')
     config.add_data_files('*.txt')
 
+    config.get_version(os.path.join('version.py'))   # sets config.version
+
     return config
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 1: sys.argv.append('install')
-    setup(**configuration(top_path='').todict() )
+
+    # When this file is run as a script, Inversion will be installed as its
+    # own package and an .egg-info file will be created.
+    # Note that the name parameter is given as a null string which will be
+    # concatenated with the name parameter from Configuration.  This allows
+    # Inversion to be installed as a standalone package when this setup is run
+    # as a script, or installed as a subpackage of Reflectometry when its setup
+    # is run.
+    setup(name='',  # set to null so that name from Configuration prevails
+          maintainer='DANSE Reflectometry Group',
+          maintainer_email='UNKNOWN',
+          description='DiRefl - Direct Inversion Reflectometry',
+          url='http://www.reflectometry.org/danse',
+          license='BSD',
+          configuration=configuration)
