@@ -1152,6 +1152,7 @@ class SurroundVariation():
             R1, R2 = self.refl(*profile)
         else:
             R1, R2 = None, None
+
         # Only show file.ext portion of the file specification
         name1 = os.path.basename(self.name1)
         name2 = os.path.basename(self.name2)
@@ -1191,25 +1192,38 @@ class SurroundVariation():
         Load the data from files or from tuples of (Q,R) or (Q,R,dR).
         """
 
+        # This code assumes the following data file formats:
+        # 2-column data: Q, R
+        # 3-column data: Q, R, dR
+        # 4-column data: Q, dQ, R, dR
+        # 5-column data: Q, dQ, R, dR, Lambda
         if isinstance(file1, basestring):
             d1 = numpy.loadtxt(file1).T
+            if len(d1) > 3:
+                d1 = numpy.loadtxt(file1, usecols=(0, 2, 3)).T
             name1 = file1
         else:
             d1 = file1
             name1 = "data1"
+
         if isinstance(file2, basestring):
             d2 = numpy.loadtxt(file2).T
+            if len(d2) > 3:
+                d2 = numpy.loadtxt(file1, usecols=(0, 2, 3)).T
             name2 = file2
         else:
             d2 = file2
             name2 = "data2"
+
         q1, r1 = d1[0:2]
         q2, r2 = d2[0:2]
+
         # Check if we have uncertainty
         try:
             dr1, dr2 = d1[2], d2[2]
         except:
             dr1 = dr2 = None
+
         if not q1.shape == q2.shape or not all(q1==q2):
             raise ValueError("Q points do not match in data files")
         self.name1, self.name2 = name1, name2
