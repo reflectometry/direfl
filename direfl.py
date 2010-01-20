@@ -204,8 +204,8 @@ class AppFrame(wx.Frame):
                                          style=wx.NB_TOP|wx.NB_FIXEDWIDTH)
 
         # Create page windows as children of the notebook.
-        self.page0 = SimulatedDataPage(nb, colour="#FFFFB0", fignum=1)  # pale yellow
-        self.page1 = CollectedDataPage(nb, colour="#B0FFB0", fignum=0)  # pale green
+        self.page0 = SimulatedDataPage(nb, colour="#FFFFB0", fignum=0)  # pale yellow
+        self.page1 = CollectedDataPage(nb, colour="#B0FFB0", fignum=1)  # pale green
         #self.page2 = TestPlotPage(nb, colour="GREEN", fignum=2)
         #self.page3 = TestPlotPage(nb, colour="BLUE", fignum=3)
         #self.page4 = TestPlotPage(nb, colour="YELLOW", fignum=4)
@@ -320,7 +320,7 @@ class CollectedDataPage(wx.Panel):
     def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
         self.fignum=fignum
-        self.SetBackgroundColour("")  #default colour
+        self.SetBackgroundColour("")  # default colour
 
         # Split the panel to separate the input fields from the plots.
         # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
@@ -371,11 +371,12 @@ class CollectedDataPage(wx.Panel):
 
         self.pan3 = ItemListInput(parent=self.pan1, itemlist=fields)
 
-        # Create an introductory section for the panel.
-        intro_text = """\
+        INTRO_TEXT = """\
 Edit parameters then press Compute button to generate a density profile from \
 the data files."""
-        intro = wx.TextCtrl(self.pan1, wx.ID_ANY, value=intro_text,
+
+        # Create an introductory section for the panel.
+        intro = wx.TextCtrl(self.pan1, wx.ID_ANY, value=INTRO_TEXT,
                             style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
         intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
@@ -408,6 +409,10 @@ the data files."""
     def init_panel_2(self):
         """Initialize the right panel."""
 
+        INTRO_TEXT = """\
+Results of phase reconstruction and direct inversion using reflectometry data \
+files from two surround measurements:"""
+
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
 
@@ -430,8 +435,7 @@ the data files."""
         mpl_toolbar.Realize()
 
         # Create a placeholder for text displayed above the plots.
-        intro_text = "Results of phase reconstruction and direct inversion using reflectometry files from two surround measurements."
-        intro = wx.StaticText(self.pan2, wx.ID_ANY, label=intro_text)
+        intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
         intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         # Create a vertical box sizer for the panel to layout its widgets.
@@ -452,13 +456,13 @@ the data files."""
 
 
     def OnPan2Motion(self, event):
-        """ Display cursor position in status bar."""
+        """Display cursor position in status bar."""
 
         write_to_statusbar("%s" % str(event.GetPositionTuple()), 4)
 
 
     def OnCompute(self, event):
-        """Execute the operation."""
+        """Perform the operation."""
 
         import pylab
         import time
@@ -491,7 +495,8 @@ the data files."""
         pylab.clf()
         pylab.draw()
 
-        # Perform the phase inversion and direct inversion using new parameters.
+        # Apply phase reconstruction and direct inversion techniques on the
+        # experimental reflectivity datasets.
         t0 = time.time()
         perform_recon_inver(self.args, self.params)
         pylab.draw()
@@ -530,7 +535,7 @@ the data files."""
 
         dlg = wx.FileDialog(self,
                             message="Load Data for Measurement 2",
-                            defaultDir=os.getcwd(),
+                            defaultDir=pathname,  # directory of 1st file
                             defaultFile="",
                             wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
                             style=wx.OPEN)
@@ -589,6 +594,10 @@ class SimulatedDataPage(wx.Panel):
     def init_panel_1(self):
         """Initialize the left panel."""
 
+        INTRO_TEXT = """\
+Edit parameters then press Compute button to generate a density profile from \
+your model."""
+
         fields = [
                 ###["SLD of Substrate:", 2.07, "float", None, True],
                    ["SLD of Surface 1:", 0.0, "float", None, True],
@@ -613,10 +622,7 @@ class SimulatedDataPage(wx.Panel):
         self.pan3 = ItemListInput(parent=self.pan1, itemlist=fields)
 
         # Create an introductory section for the panel.
-        intro_text = """\
-Edit parameters then press Compute button to generate a density profile from \
-your model."""
-        intro = wx.TextCtrl(self.pan1, wx.ID_ANY, value=intro_text,
+        intro = wx.TextCtrl(self.pan1, wx.ID_ANY, value=INTRO_TEXT,
                             style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
         intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
@@ -688,6 +694,10 @@ your model."""
     def init_panel_2(self):
         """Initialize the right panel."""
 
+        INTRO_TEXT = """\
+Results of phase reconstruction and direct inversion using simulated data \
+files generated from model parameters:"""
+
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
 
@@ -710,8 +720,7 @@ your model."""
         mpl_toolbar.Realize()
 
         # Create a placeholder for text displayed above the plots.
-        intro_text = "Results of phase reconstruction and direct inversion using simulated data files generated from model parameters"
-        intro = wx.StaticText(self.pan2, wx.ID_ANY, label=intro_text)
+        intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
         intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         # Create a vertical box sizer for the panel to layout its widgets.
@@ -726,7 +735,7 @@ your model."""
 
 
     def OnCompute(self, event):
-        """Execute the operation."""
+        """Perform the operation."""
 
         import pylab
         import time
@@ -768,7 +777,7 @@ your model."""
             layers.append(temp)
 
         if len(layers) < 3:
-            display_error_message(self, "Less Than 3 Layer Defined",
+            display_error_message(self, "Less Than 3 Layers Defined",
                 "You must specify at least one Surface, Sample, and Substrate layer.")
             return
 
@@ -788,7 +797,8 @@ your model."""
         pylab.clf()
         pylab.draw()
 
-        # Perform the phase inversion and direct inversion using new parameters.
+        # Apply phase reconstruction and direct inversion techniques on the
+        # simulated reflectivity datasets.
         t0 = time.time()
         perform_simulation(sample, self.params)
         pylab.draw()
@@ -876,9 +886,9 @@ your model."""
 #==============================================================================
 
 class TestPlotPage(wx.Panel):
-    """This class implements a page of the notebook."""
+    """This class implements adds a page to the notebook."""
 
-    def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=1, **kwargs):
+    def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
         self.fignum=fignum
         self.SetBackgroundColour(colour)
@@ -927,6 +937,7 @@ class TestPlotPage(wx.Panel):
         self.pan1.SetSizer(box)
         box.Fit(self.pan1)
 
+        # Execute tests associated with the test tab.
         if self.fignum==4: test3()
         if self.fignum==5: test4(figure)
         import sys
@@ -942,7 +953,8 @@ class InversionApp(wx.App):
     def OnInit(self):
         # Compute the size of the application frame such that it fits on the
         # user's screen without obstructing (or being obstructed by) the
-        # Windows launch bar and has a miximum initial size of DISPLAY_WIDTHxDISPLAY_HEIGTH pixels.
+        # Windows launch bar.  The maximum initial size in pixels is bounded by
+        # DISPLAY_WIDTH x DISPLAY_HEIGTH.
         xpos = ypos = 0
         x, y = wx.DisplaySize()
         y -= TASKBAR_HEIGHT  # avoid obscuring the Windows task bar
@@ -968,8 +980,7 @@ def write_to_statusbar(text, index):
 def display_error_message(win, title, msg):
     """Display an error message in a pop-up dialog box with an OK button."""
 
-    # Display message with padding at end for better appearance.
-    msg = wx.MessageDialog(win, msg+'     ', title, wx.ICON_ERROR|wx.OK)
+    msg = wx.MessageDialog(win, msg, title, wx.ICON_ERROR|wx.OK)
     msg.ShowModal()
     msg.Destroy()
 
@@ -977,8 +988,23 @@ def display_error_message(win, title, msg):
 def display_warning_message(win, title, msg):
     """Display a warning message in a pop-up dialog box with an OK button."""
 
-    # Display message with padding at end for better appearance.
-    msg = wx.MessageDialog(win, msg+'     ', title, wx.ICON_WARNING|wx.OK)
+    msg = wx.MessageDialog(win, msg, title, wx.ICON_WARNING|wx.OK)
+    msg.ShowModal()
+    msg.Destroy()
+
+
+def display_information_message(win, title, msg):
+    """Display an informational message in a pop-up dialog box with an OK button."""
+
+    msg = wx.MessageDialog(win, msg, title, wx.ICON_INFORMATION|wx.OK)
+    msg.ShowModal()
+    msg.Destroy()
+
+
+def display_question(win, title, msg):
+    """Display a question in a pop-up dialog box with YES and NO buttons."""
+
+    msg = wx.MessageDialog(win, msg, title, wx.ICON_QUESTION|wx.YES_NO)
     msg.ShowModal()
     msg.Destroy()
 

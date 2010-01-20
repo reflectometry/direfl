@@ -31,8 +31,8 @@ The Direct Inversion Reflectometry (DiRefl) application generates a scattering \
 length density (SLD) profile of a thin film or free form sample using two \
 neutron scattering datasets without the need to perform a fit of the data.  \
 DiRefl also has a simulation capability for creating datasets from a simple \
-model description of the sample material.\
-\n\n\
+model description of the sample material.
+
 DiRefl applies phase reconstruction and direct inversion techniques to analyze \
 the reflectivity datasets produced by the two neutron scattering experiments \
 performed on a single or multi-layer sample sandwiched between incident and \
@@ -50,22 +50,23 @@ of this software and associated documentation files (the "Software"), to deal \
 in the Software without restriction, including without limitation the rights \
 to use, copy, modify, merge, publish, distribute, sublicense, and/ or sell \
 copies of the Software, and to permit persons to whom the Software is \
-furnished to do so, subject to the following conditions:\
-\n\n\
+furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in \
-all copies or substantial portions of the Software.\
-\n\n\
+all copies or substantial portions of the Software.
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR \
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, \
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE \
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER \
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, \
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN \
-THE SOFTWARE."""
+THE SOFTWARE.
+"""
 
 APP_PROJECT_URL = "http://reflectometry.org/danse"
 APP_PROJECT_TAG = "DANSE/Reflectometry home page"
 
-APP_TUTORIAL_URL = """http://www.reflectometry.org/danse/packages.html"""
+APP_TUTORIAL_URL = "http://www.reflectometry.org/danse/packages.html"
 APP_TUTORIAL_TXT = \
 """For a tutorial and other documentation on DiRefl, please visit:"""
