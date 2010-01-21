@@ -1209,7 +1209,7 @@ class SurroundVariation():
         if isinstance(file2, basestring):
             d2 = numpy.loadtxt(file2).T
             if len(d2) > 3:
-                d2 = numpy.loadtxt(file1, usecols=(0, 2, 3)).T
+                d2 = numpy.loadtxt(file2, usecols=(0, 2, 3)).T
             name2 = file2
         else:
             d2 = file2
