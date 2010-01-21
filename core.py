@@ -767,9 +767,14 @@ class Inversion():
         return qp
 
 
-def plottitle(t):
+def plottitle(title):
     import pylab
-    pylab.text(0.5, 0.99, t,
+
+    # Place title above the plot so that it is not overlapped by the legend.
+    # Note that the title is drawn as text rather than as a title object so
+    # that it will be kept as close as possible to the plot when the window is
+    # resized to a smaller size.
+    pylab.text(0.5, 1.07, title, fontsize='small',
                transform=pylab.gca().transAxes,
                ha='center', va='top', backgroundcolor=(0.9, 0.9, 0.6))
 
