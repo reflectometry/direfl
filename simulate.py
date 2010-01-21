@@ -14,6 +14,8 @@ from __future__ import division
 import numpy
 from numpy import linspace, real
 
+from matplotlib.font_manager import FontProperties
+
 from core import refl, SurroundVariation, Inversion, plottitle
 try:
     from reflectometry.model1d.model.calcRefl import convolve
@@ -64,6 +66,7 @@ class Simulation():
         self.seed = seed
         self.set()
 
+
     def set(self, **kw):
         """
         Reset or adjust input parameters, generating new sample data.
@@ -106,11 +109,13 @@ class Simulation():
         self.fitz = self.fitrho = None  # Clear optimize
         self.run()
 
+
     def run(self):
         """Reconstruct phase, invert and optimize profile."""
         self._reconstruct()
         self._invert()
         if 0: self._optimize()
+
 
     def slab_profile(self):
         """Generate the sample profile."""
@@ -128,6 +133,7 @@ class Simulation():
 
         return z,rho
 
+
     def sample_profile(self):
         z,rho_u,sigma_u = self.invert.z, self.invert.substrate, self.urough
         rhos, widths, sigmas = zip(*self.sample)
@@ -143,10 +149,11 @@ class Simulation():
         return z,rho
 
 
-    def phase_resid(self):
+    def phase_residual(self):
         """Return normalized residual from phase reconstruction."""
         resid = (self.phase.RealR - real(self.rfree))/abs(self.rfree)
         return resid
+
 
     def plot(self):
         """Plot summary data."""
@@ -160,6 +167,7 @@ class Simulation():
         self.plot_profile(224)
         pylab.rcdefaults()
 
+
     def plot_measurement(self, subplot=111):
         """Plot the simulated data."""
         import pylab
@@ -171,6 +179,7 @@ class Simulation():
             z,rho = self.invert.z, self.invert.rho
 
         self.phase.plot_measurement(profile=(z,rho))
+
 
     def plot_real(self, subplot=111):
         """Plot the simulated phase and the reconstructed phase (real)."""
@@ -190,35 +199,37 @@ class Simulation():
         scale = 1e4*q_free**2
         pylab.plot(q_free, scale*re_free, hold=True, label="Ideal")
 
-        pylab.legend()
+        pylab.legend(prop=FontProperties(size='medium'))
         pylab.xlabel('Q (inv A)')
-        pylab.ylabel('(100 q)^2 Re r')
+        pylab.ylabel('(100 Q)^2 Re R')
         plottitle('Phase Reconstruction Real Part')
 
-    def plot_imag(self, subplot=111):
+
+    def plot_imaginary(self, subplot=111):
         """Plot the simulated phase (imaginary part)."""
         import pylab
 
         pylab.subplot(subplot)
         pylab.plot(self.phase.Q, 1e4*self.phase.Q**2*self.phase.ImagR,
-                   hold=True, label="Im r+")
+                   hold=True, label="Im R+")
         pylab.plot(self.phase.Q, -1e4*self.phase.Q**2*self.phase.ImagR,
-                   hold=True, label="Im r-")
-        pylab.legend()
-        pylab.xlabel('q')
-        pylab.ylabel('(100 q)^2 Im r')
+                   hold=True, label="Im R-")
+        pylab.legend(prop=FontProperties(size='medium'))
+        pylab.xlabel('Q')
+        pylab.ylabel('(100 Q)^2 Im R')
         plottitle('Phase Reconstruction Imaginary')
 
 
-    def plot_phase_resid(self, subplot=111):
+    def plot_phase_residual(self, subplot=111):
         """Plot the reconstructed phase residual."""
         import pylab
 
         pylab.subplot(subplot)
-        pylab.plot(self.q, self.phase_resid())
-        pylab.xlabel('q')
-        pylab.ylabel('(Re r - calc Re r) / |r|')
+        pylab.plot(self.q, self.phase_residual())
+        pylab.xlabel('Q')
+        pylab.ylabel('(Re R - calc Re R) / |R|')
         plottitle('Phase Inversion Residual')
+
 
     def plot_profile(self, subplot=111):
         """Plot the inverted profile."""
@@ -237,7 +248,8 @@ class Simulation():
             pylab.plot(self.fitz, self.fitrho, hold=True)
             legend.append('Fitted')
 
-        pylab.legend(legend)
+        pylab.legend(legend, prop=FontProperties(size='medium'))
+
 
     def plot_inversion(self, subplot=111):
         """Plot the phase of the inverted profile."""
@@ -246,22 +258,26 @@ class Simulation():
         pylab.subplot(subplot)
         self.invert.plot_input()
 
+
     def check_phase(self):
         """Check that the reconstructed phase is correct within noise."""
-        resid = self.phase_resid()
+        resid = self.phase_residual()
         if (resid<1e-12).any():
-            self.plot_phase_resid()
+            self.plot_phase_residual()
             wait("phase inversion error")
         assert (resid<1e-12).all()
+
 
     def check_inversion(self):
         """Check that the reconstructed profile matches the sample."""
         pass
 
+
     def check(self):
         """Check phase and inversion."""
         self.check_phase()
         self.check_inversion()
+
 
     def _reconstruct(self):
         """Drive phase reconstruction."""
@@ -270,6 +286,7 @@ class Simulation():
         u, v1, v2 = self.u, self.v1, self.v2
         self.phase = SurroundVariation(data1, data2, u=u, v1=v1, v2=v2,
                                        **self.phase_args)
+
 
     def _invert(self):
         """Drive direct inversion."""
@@ -283,10 +300,12 @@ class Simulation():
                                 substrate=substrate, **self.invert_args)
         self.invert.run()
 
+
     def _optimize(self):
         """Drive final optimization on inverted profile"""
         z,rho = self.phase.optimize(self.invert.z, self.invert.rho)
         self.fitz, self.fitrho = z,rho
+
 
     def _swfvarnexdum(self):
         """Run phase reconstruction converted from code by Majkrzak."""

@@ -44,7 +44,7 @@ Scripts can use :func:`reconstruct` and :func:`invert`.  For example::
 
 The resulting profile has attributes for the input (*Q*, *RealR*) and the
 output (*z*, *rho*, *drho*).  There are methods for plotting  (*plot*,
-*plot_resid*) and storing (*save*).  The analysis can be rerun with
+*plot_residual*) and storing (*save*).  The analysis can be rerun with
 different attributes (*run(key=val,...)*).
 
 See :func:`reconstruct` and :class:`Inversion` for details.
@@ -67,6 +67,8 @@ phase-inversion neutron specular reflectivity", *Langmuir* 25, 4132-4144 (2009)
 """
 
 from __future__ import division
+import os
+
 import numpy
 from numpy import pi, inf, nan, sqrt, exp, sin, cos, tan, log
 from numpy import ceil, floor, real, imag, sign, isinf, isnan, isfinite
@@ -75,7 +77,7 @@ from numpy import (interp, diff, sum, mean, std,
 from numpy.fft import fft
 from numpy.random import uniform, poisson, normal
 
-import os
+from matplotlib.font_manager import FontProperties
 
 # Common SLDs
 silicon = Si = 2.07
@@ -302,9 +304,9 @@ class Inversion():
 
     Additional methods for finer control of plots::
 
-        *plot_data*    plot just the data
-        *plot_profile* plot just the profile
-        *plot_resid*   plot data minus theory
+        *plot_data*      plot just the data
+        *plot_profile*   plot just the profile
+        *plot_residual*  plot data minus theory
     """
 
     # Global parameters for the class and their default values
@@ -333,12 +335,14 @@ class Inversion():
         # Run with current keywords
         self._set(**kw)
 
+
     def _loaddata(self, file):
         """
         Load data from a file of Q, real(R), dreal(R).
         """
         data = numpy.loadtxt(file).T
         self._setdata(data, name=file)
+
 
     def _setdata(self, data, name="data"):
         """
@@ -353,6 +357,7 @@ class Inversion():
         # Force equal spacing by interpolation
         self.Qinput,self.RealRinput = asarray(q),asarray(rer)
         self.dRealRinput = asarray(drer) if drer is not None else None
+
 
     def _remesh(self):
         """
@@ -388,6 +393,7 @@ class Inversion():
             drer = None
 
         return q, rer, drer
+
 
     def run(self, **kw):
         """
@@ -439,6 +445,7 @@ class Inversion():
             profiles.append((z,rho))
         self.signals, self.profiles = signals, profiles
 
+
     def chisq(self):
         """
         Compute normalized sum squared difference between original real R and
@@ -488,11 +495,13 @@ class Inversion():
     RealR = property(_get_RealR)
     dRealR = property(_get_dRealR)
 
+
     def show(self):
         """Print z, rho, drho to the screen."""
         print "# %9s %11s %11s"%("z", "rho", "drho")
         for point in zip(self.z, self.rho, self.drho):
             print "%11.4f %11.4f %11.4f"%point
+
 
     def save(self, outfile=None):
         """
@@ -508,6 +517,7 @@ class Inversion():
         fid.write("# %13s %15s %15s\n"%("z", "rho", "drho"))
         numpy.savetxt(fid, array([self.z,self.rho,self.drho]).T)
         fid.close()
+
 
     def refl(self, Q=None, surround=None):
         """
@@ -537,6 +547,7 @@ class Inversion():
         r = refl(Q, dz, rho)
         return  r
 
+
     def plot(self, details=False, phase=None):
         """
         Plot the data and the inversion.
@@ -547,17 +558,18 @@ class Inversion():
         If *phase* is a phase reconstruction object, plot the original
         measurements.
         """
-
         import pylab
+
         if phase:
             pylab.subplot(221)
-            phase.plot_measurement(profile=(self.z,self.rho))
+            phase.plot_measurement(profile=(self.z, self.rho))
             pylab.subplot(223)
-            phase.plot_imag()
+            phase.plot_imaginary()
         pylab.subplot(222 if phase else 211)
         self.plot_input(details=details)
         pylab.subplot(224 if phase else 212)
         self.plot_profile(details=details)
+
 
     def plot_input(self, details=False, lowQ_inset=0):
         """
@@ -569,7 +581,6 @@ class Inversion():
         If *lowQ_inset* > 0, then plot a graph of Q, Real r values
         below lowQ_inset, without scaling by Q**2.
         """
-
         import pylab
 
         if details:
@@ -583,7 +594,7 @@ class Inversion():
                     color="blue")
             Rinverted = real(self.refl(self.Qinput))
             plotamp(self.Qinput, Rinverted, label="Inverted")
-            pylab.legend()
+            pylab.legend(prop=FontProperties(size='medium'))
             chisq = self.chisq() # Note: cache calculated profile?
             pylab.text(0.01, 0.01, "chisq=%.1f"%chisq,
                        transform=pylab.gca().transAxes,
@@ -598,15 +609,15 @@ class Inversion():
                                  axisbg=[0.95, 0.95, 0.65, 0.85])
                 ax.plot(self.Qinput, self.RealRinput, color="blue")
                 ax.plot(self.Qinput, Rinverted)
-                ax.text(0.99, 0.01, "Q,Re R for Q<%g"%lowQ_inset,
-                        fontsize="10", transform=ax.transAxes,
-                        ha='right', va='bottom')
+                ax.text(0.99, 0.01, "Q, Re R for Q<%g"%lowQ_inset,
+                        transform=ax.transAxes, ha='right', va='bottom')
                 qmax = lowQ_inset
                 ymax = max(max(self.RealRinput[self.Qinput<qmax]),
                            max(Rinverted[self.Qinput<qmax]))
                 pylab.setp(ax, xticks=[], yticks=[],
                            xlim=[0,qmax], ylim=[-1, 1.1*(ymax+1)-1])
                 pylab.axes(orig)
+
         plottitle('Reconstructed Phase')
 
 
@@ -641,7 +652,8 @@ class Inversion():
         pylab.xlabel('Depth (A)')
         plottitle('Depth Profile')
 
-    def plot_resid(self, details=False):
+
+    def plot_residual(self, details=False):
         """
         Plot the residuals (inversion minus input).
         """
@@ -653,6 +665,7 @@ class Inversion():
         pylab.xlabel("Q (inv A)")
         plottitle('Phase Residuals')
 
+
     def _set(self, **kw):
         """
         Set a group of attributes.
@@ -663,6 +676,7 @@ class Inversion():
             else:
                 raise ValueError("Invalid keyword argument for Inversion class")
         self.rhoscale = 1e6 / (4 * pi * self.thickness**2)
+
 
     def _transform(self, RealR, Qmax=None, bse=0, porder=1):
         """
@@ -714,6 +728,7 @@ class Inversion():
         ctf = lambda x: raw_ctf(x) - exp(-kappa*x) * raw_ctf(0)
         return ctf
 
+
     def _invert(self, ctf, iters):
         """
         Perform the inversion.
@@ -751,11 +766,13 @@ class Inversion():
             q = hstack((q, 0, 0))
         return qp
 
+
 def plottitle(t):
     import pylab
     pylab.text(0.5, 0.99, t,
                transform=pylab.gca().transAxes,
                ha='center', va='top', backgroundcolor=(0.9, 0.9, 0.6))
+
 
 def plotamp(Q, r, dr=None, scaled=True, ylabel="Re R", **kw):
     """
@@ -775,7 +792,7 @@ def plotamp(Q, r, dr=None, scaled=True, ylabel="Re R", **kw):
 
 class Interpolator():
     """
-    Class that peforms data interpolation.
+    Class that performs data interpolation.
 
     Construct an interpolation function from pairs (xi,yi).
     """
@@ -1160,7 +1177,7 @@ class SurroundVariation():
                            self.v1, name1, 'green', hold=False)
         chisq2, n2 = plot1(self.Qin, self.R2in, self.dR2in, R2,
                            self.v2, name2, 'blue', hold=True)
-        pylab.legend()
+        pylab.legend(prop=FontProperties(size='medium'))
         chisq = (chisq1+chisq2)/(n1+n2)
         if chisq != 0:
             pylab.text(0.01, 0.01, "chisq=%.1f"%chisq,
@@ -1176,11 +1193,11 @@ class SurroundVariation():
         import pylab
         plotamp(self.Q, self.ImagR, dr=self.dImagR)
         plotamp(self.Q, self.RealR, dr=self.dRealR)
-        pylab.legend()
+        pylab.legend(prop=FontProperties(size='medium'))
         plottitle('Reconstructed Phase')
 
 
-    def plot_imag(self):
+    def plot_imaginary(self):
         import pylab
         plotamp(self.Q, -self.ImagR, dr=self.dImagR)
         plotamp(self.Q, self.ImagR, dr=self.dImagR, ylabel="Im R")
