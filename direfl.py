@@ -55,24 +55,30 @@ from wx.lib.wordwrap import wordwrap
 from images import getOpenBitmap
 from input_list import ItemListInput
 
-from about import APP_NAME, APP_VERSION
-from about import APP_COPYRIGHT
-from about import APP_DESCRIPTION
-from about import APP_LICENSE
-from about import APP_PROJECT_URL, APP_PROJECT_TAG
-from about import APP_TUTORIAL_URL, APP_TUTORIAL_TXT
+from about import (APP_NAME, APP_TITLE, APP_VERSION,
+                   APP_COPYRIGHT, APP_DESCRIPTION, APP_LICENSE,
+                   APP_PROJECT_URL, APP_PROJECT_TAG,
+                   APP_TUTORIAL_URL, APP_TUTORIAL_TXT)
 
-# Specify desired initial window size (if physical screen size permits)
+# Desired initial window size (if physical screen size permits).
 DISPLAY_WIDTH = 1200
 DISPLAY_HEIGHT = 900
 TASKBAR_HEIGHT = 32
 
-BLANK_LINE = "\n"
-
+# Text strings for use in file selection dialog boxes.
 REFL_FILES = "Refl files (*.refl)|*.refl"
 DATA_FILES = "Data files (*.dat)|*.dat"
 TEXT_FILES = "Text files (*.txt)|*.txt"
 ALL_FILES = "All files (*.*)|*.*"
+
+# Resource files.
+PROG_ICON = "direfl.ico"
+PROG_SPLASH_SCREEN = "splash.png"
+DEMO_MODEL_DESC = "demo_model_1.dat"
+DEMO_REFLDATA_1 = "qrd1.refl"
+DEMO_REFLDATA_2 = "qrd2.refl"
+
+BLANK_LINE = "\n"
 
 #==============================================================================
 
@@ -92,7 +98,7 @@ class AppFrame(wx.Frame):
         self.panel.SetBackgroundColour("WHITE")
 
         # Display the DiRefl icon in the title bar.
-        icon = wx.Icon(os.path.join(get_appdir(), "direfl.ico"),
+        icon = wx.Icon(os.path.join(get_appdir(), PROG_ICON),
                         wx.BITMAP_TYPE_ICO)
         self.SetIcon(icon)
 
@@ -120,7 +126,7 @@ class AppFrame(wx.Frame):
         """Display the splash screen.  It will exactly cover the main frame."""
 
         x, y = self.GetSizeTuple()
-        image = wx.Image(os.path.join(get_appdir(), "splash.png"),
+        image = wx.Image(os.path.join(get_appdir(), PROG_SPLASH_SCREEN),
                          wx.BITMAP_TYPE_PNG)
         image.Rescale(x, y, wx.IMAGE_QUALITY_HIGH)
         bm = image.ConvertToBitmap()
@@ -248,9 +254,9 @@ class AppFrame(wx.Frame):
         to the generic About Box implementation instead of the native one.
         In addition, the generic form centers each line of the license text
         which is undesirable (and there is no way to disable centering).  The
-        workaround is to use About Box with parameters that cause the native
-        mode to be used, and to display the other info as separate menu items
-        (this is the wx recommended approach to handle the shortcoming).
+        workaround is to use About Box only with parameters that result in the
+        native mode being used, and to display the other info as separate menu
+        items (this is the wx recommended approach to handle the shortcoming).
         """
 
         info = wx.AboutDialogInfo()
@@ -401,8 +407,7 @@ your model."""
         # Read in demo model parameters.
         # Note that the number of lines determines the height of the box.
         # TODO: create a model edit box with a min-max height.
-        demoname = "demo_model_1.dat"
-        filespec = os.path.join(get_appdir(), demoname)
+        filespec = os.path.join(get_appdir(), DEMO_MODEL_DESC)
 
         try:
             fd = open(filespec, 'rU')
@@ -410,7 +415,7 @@ your model."""
             fd.close()
         except:
             display_warning_message(self, "Load Model Error",
-                "Error loading demo model from file "+demoname)
+                "Error loading demo model from file "+DEMO_MODEL_DESC)
             demo_model_params = \
                 "# SLDensity  Thickness  Roughness  comments\n\n\n\n\n\n\n"
 
@@ -785,8 +790,8 @@ from two surround measurements:"""
         box.Fit(self.pan2)
 
         root = get_appdir()
-        self.data_file_1 = os.path.join(root, "qrd1.refl")
-        self.data_file_2 = os.path.join(root, "qrd2.refl")
+        self.data_file_1 = os.path.join(root, DEMO_REFLDATA_1)
+        self.data_file_2 = os.path.join(root, DEMO_REFLDATA_2)
 
         #self.pan2.Bind(wx.EVT_MOTION, self.OnPan2Motion)
 
@@ -947,29 +952,6 @@ class TestPlotPage(wx.Panel):
             if (self.fignum==3 and '-test2' in sys.argv[1:]): test2()
         if self.fignum==4: test3()
         if self.fignum==5: test4(figure)
-
-#==============================================================================
-
-class InversionApp(wx.App):
-    """This class implements the main application window."""
-
-    def OnInit(self):
-        # Compute the size of the application frame such that it fits on the
-        # user's screen without obstructing (or being obstructed by) the
-        # Windows launch bar.  The maximum initial size in pixels is bounded by
-        # DISPLAY_WIDTH x DISPLAY_HEIGTH.
-        xpos = ypos = 0
-        x, y = wx.DisplaySize()
-        y -= TASKBAR_HEIGHT  # avoid obscuring the Windows task bar
-        if x > DISPLAY_WIDTH : xpos = (x - DISPLAY_WIDTH)/2
-        if y > DISPLAY_HEIGHT : ypos = (y - DISPLAY_HEIGHT)/2
-
-        frame = AppFrame(title="Phase Reconstruction and Direct Inversion Reflectometry",
-                         pos=(xpos, ypos),
-                         size=(min(x, DISPLAY_WIDTH), min(y, DISPLAY_HEIGHT)))
-        frame.Show(True)
-        self.SetTopWindow(frame)
-        return True
 
 #==============================================================================
 
@@ -1265,6 +1247,28 @@ def test4(figure):
                    fontsize=16)
     pylab.subplots_adjust(hspace=0.35)
     #pylab.show()
+
+#==============================================================================
+
+class InversionApp(wx.App):
+    """This class implements the main application window."""
+
+    def OnInit(self):
+        # Compute the size of the application frame such that it fits on the
+        # user's screen without obstructing (or being obstructed by) the
+        # Windows launch bar.  The maximum initial size in pixels is bounded by
+        # DISPLAY_WIDTH x DISPLAY_HEIGTH.
+        xpos = ypos = 0
+        x, y = wx.DisplaySize()
+        y -= TASKBAR_HEIGHT  # avoid obscuring the Windows task bar
+        if x > DISPLAY_WIDTH : xpos = (x - DISPLAY_WIDTH)/2
+        if y > DISPLAY_HEIGHT : ypos = (y - DISPLAY_HEIGHT)/2
+
+        frame = AppFrame(title=APP_TITLE, pos=(xpos, ypos),
+                         size=(min(x, DISPLAY_WIDTH), min(y, DISPLAY_HEIGHT)))
+        frame.Show(True)
+        self.SetTopWindow(frame)
+        return True
 
 #==============================================================================
 

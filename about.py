@@ -20,9 +20,17 @@
 
 # Author: James Krycka
 
+"""
+This module contains application specific text strings used for display
+purposes, most of which are used in the About menu output.  Note that the
+product version is maintained in the version.py file and thus imported here.
+"""
+
 from version import version as APP_VERSION
 
 APP_NAME = "DiRefl"
+
+APP_TITLE = "Phase Reconstruction and Direct Inversion Reflectometry"
 
 APP_COPYRIGHT = "(C) 2010 University of Maryland"
 
