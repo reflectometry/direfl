@@ -774,7 +774,7 @@ def plottitle(title):
     # Note that the title is drawn as text rather than as a title object so
     # that it will be kept as close as possible to the plot when the window is
     # resized to a smaller size.
-    pylab.text(0.5, 1.07, title, fontsize='small',
+    pylab.text(0.5, 1.07, title, fontsize='medium',
                transform=pylab.gca().transAxes,
                ha='center', va='top', backgroundcolor=(0.9, 0.9, 0.6))
 
