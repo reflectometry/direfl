@@ -22,6 +22,7 @@
 
 import wx
 import os
+import sys
 import numpy as np
 
 import matplotlib
@@ -206,18 +207,23 @@ class AppFrame(wx.Frame):
         # Create page windows as children of the notebook.
         self.page0 = SimulatedDataPage(nb, colour="#FFFFB0", fignum=0)  # pale yellow
         self.page1 = CollectedDataPage(nb, colour="#B0FFB0", fignum=1)  # pale green
-        #self.page2 = TestPlotPage(nb, colour="GREEN", fignum=2)
-        #self.page3 = TestPlotPage(nb, colour="BLUE", fignum=3)
-        #self.page4 = TestPlotPage(nb, colour="YELLOW", fignum=4)
-        #self.page5 = TestPlotPage(nb, colour="RED", fignum=5)
 
         # Add the pages to the notebook with a label to show on the tab.
         nb.AddPage(self.page0, "Simulated Data")
         nb.AddPage(self.page1, "Collected Data")
-        #nb.AddPage(self.page2, "Test 1")
-        #nb.AddPage(self.page3, "Test 2")
-        #nb.AddPage(self.page4, "Test 3")
-        #nb.AddPage(self.page5, "Test 4")
+
+        # Create test page windows and add them to notebook if requested.
+        if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
+            print "***", sys.argv[1:]
+            self.page2 = TestPlotPage(nb, colour="GREEN", fignum=2)
+            self.page3 = TestPlotPage(nb, colour="BLUE", fignum=3)
+            self.page4 = TestPlotPage(nb, colour="YELLOW", fignum=4)
+            self.page5 = TestPlotPage(nb, colour="RED", fignum=5)
+
+            nb.AddPage(self.page2, "Test 1")
+            nb.AddPage(self.page3, "Test 2")
+            nb.AddPage(self.page4, "Test 3")
+            nb.AddPage(self.page5, "Test 4")
 
         # Put the notebook in a sizer attached to the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -310,249 +316,6 @@ class AppFrame(wx.Frame):
 
 #==============================================================================
 
-class CollectedDataPage(wx.Panel):
-    """
-    This class implements phase reconstruction and direct inversion analysis
-    of two surround variation data sets (i.e., experimentally collected data)
-    to produce a scattering length density profile of the sample.
-    """
-
-    def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
-        wx.Panel.__init__(self, parent, id=id, **kwargs)
-        self.fignum=fignum
-        self.SetBackgroundColour("")  # default colour
-
-        # Split the panel to separate the input fields from the plots.
-        # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
-        sp = wx.SplitterWindow(self, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
-        sp.SetMinimumPaneSize(290)
-
-        # Create display panels as children of the splitter.
-        self.pan1 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
-        self.pan1.SetBackgroundColour(colour)
-        self.pan2 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
-        #self.pan2.SetBackgroundColour("LIGHT GREY")  # same as mpl background
-        self.pan2.SetBackgroundColour("WHITE")
-
-        self.init_panel_1()
-        self.init_panel_2()
-
-        # Attach the panels to the splitter.
-        sp.SplitVertically(self.pan1, self.pan2, sashPosition=300)
-        sp.SetSashGravity(0.2)  # on resize grow mostly on right side
-
-        # Put the splitter in a sizer attached to the main page.
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(sp, 1, wx.EXPAND)
-        self.SetSizer(sizer)
-        sizer.Fit(self)
-
-
-    def init_panel_1(self):
-        """Initialize the left panel."""
-
-        fields = [ ["SLD of Substrate:", 2.07, "float", None, True],
-                   ["SLD of Surface 1:", 6.33, "float", None, True],
-                   ["SLD of Surface 2:", 0.0, "float", None, True],
-                   ["Sample Thickness:", 1000, "float", None, True],
-                   ["Qmin:", 0.0, "float", None, True],
-                   ["Qmax:", 0.2, "float", None, True],
-                   ["# Profile Steps:", 128, "int", None, True],
-                   ["Over Sampling Factor:", 4, "int", None, True],
-                   ["# Inversion Iterations:", 6, "int", None, True],
-                   ["# Monte Carlo Trials:", 10, "int", None, True],
-                ###["Cosine Transform Smoothing:", 0.0, "float", None, True],
-                ###["Back Reflectivity:", "True", "str", ("True", "False"), False],
-                ###["Inversion Noise Factor:", 1, "int", None, True],
-                   ["Bound State Energy:", 0.0, "float", None, True],
-                ###["Show Iterations:", "False", "str", ("True", "False"), True]
-                ###["Monitor:", "None", "str", None, False]
-                 ]
-
-        self.pan3 = ItemListInput(parent=self.pan1, itemlist=fields)
-
-        INTRO_TEXT = """\
-Edit parameters then press Compute button to generate a density profile from \
-the data files."""
-
-        # Create an introductory section for the panel.
-        intro = wx.TextCtrl(self.pan1, wx.ID_ANY, value=INTRO_TEXT,
-                            style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
-        intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
-
-        # Create the button controls.
-        btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
-        #btn_compute.SetDefault()
-        #btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
-
-        self.Bind(wx.EVT_BUTTON, self.OnCompute, btn_compute)
-        #self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
-
-        # Create a horizontal box sizer for the buttons.
-        box_a = wx.BoxSizer(wx.HORIZONTAL)
-        box_a.Add((10,20), 1)  # stretchable whitespace
-        box_a.Add(btn_compute, 0)
-        #box_a.Add((10,20), 0)  # non-stretchable whitespace
-        #box_a.Add(btn_reset, 0)
-
-        # Create a vertical box sizer for the panel and layout widgets in it.
-        box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(intro, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border = 10)
-        box.Add(self.pan3, 1, wx.EXPAND|wx.ALL, border = 10)
-        box.Add(box_a, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, 10)
-
-        # Associate the sizer with its container.
-        self.pan1.SetSizer(box)
-        box.Fit(self.pan1)
-
-
-    def init_panel_2(self):
-        """Initialize the right panel."""
-
-        INTRO_TEXT = """\
-Results of phase reconstruction and direct inversion using reflectometry data \
-files from two surround measurements:"""
-
-        # Instantiate a figure object that will contain our plots.
-        figure = Figure()
-
-        # Initialize the FigureCanvas, mapping the figure object to the plot
-        # engine backend.
-        canvas = FigureCanvas(self.pan2, wx.ID_ANY, figure)
-
-        # Wx-Pylab magic ...
-        # Make our canvas the active figure manager for Pylab so that when
-        # pylab plotting statements are executed they will operate on our
-        # canvas and not create a new frame and canvas for display purposes.
-        # This technique allows this application to execute code that uses
-        # pylab stataments to generate plots and embed these plots in our
-        # application window(s).
-        self.fm = FigureManagerBase(canvas, self.fignum)
-        _pylab_helpers.Gcf.set_active(self.fm)
-
-        # Instantiate the matplotlib navigation toolbar and explicitly show it.
-        mpl_toolbar = Toolbar(canvas)
-        mpl_toolbar.Realize()
-
-        # Create a placeholder for text displayed above the plots.
-        intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
-        intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
-
-        # Create a vertical box sizer for the panel to layout its widgets.
-        box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(intro, 0, wx.EXPAND|wx.ALL, border = 10)
-        box.Add(canvas, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
-        box.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
-
-        # Associate the sizer with its container.
-        self.pan2.SetSizer(box)
-        box.Fit(self.pan2)
-
-        root = get_appdir()
-        self.data_file_1 = os.path.join(root, "qrd1.refl")
-        self.data_file_2 = os.path.join(root, "qrd2.refl")
-
-        #self.pan2.Bind(wx.EVT_MOTION, self.OnPan2Motion)
-
-
-    def OnPan2Motion(self, event):
-        """Display cursor position in status bar."""
-
-        write_to_statusbar("%s" % str(event.GetPositionTuple()), 4)
-
-
-    def OnCompute(self, event):
-        """Perform the operation."""
-
-        import pylab
-        import time
-
-        # Explicitly validate all input parameters before proceeding.  The
-        # panel's Validate method will invoke all validators associated with
-        # its top-level input objects and transfer data from them.  Although
-        # char-by-char validation would have warned the user about any invalid
-        # entries, the user could have pressed the Compute button without
-        # making the corrections, so a full validation pass must be done now.
-        if not self.pan3.Validate():
-            display_error_message(self, "Data Entry Error",
-                "Please correct the highlighted fields in error.")
-            return
-
-        self.args = [self.data_file_1, self.data_file_2]
-
-        # Get the validated parameters.
-        self.params = self.pan3.GetResults()
-        #print "Results from %d input fields:" %(len(self.params))
-        #print "  ", self.params
-
-        # Inform the user that we're entering a period of high computation.
-        write_to_statusbar("Generating new plots ...", 2)
-        write_to_statusbar("", 3)
-
-        # Set the plotting figure manager for this class as the active one and
-        # erase the current figure.
-        _pylab_helpers.Gcf.set_active(self.fm)
-        pylab.clf()
-        pylab.draw()
-
-        # Apply phase reconstruction and direct inversion techniques on the
-        # experimental reflectivity datasets.
-        t0 = time.time()
-        perform_recon_inver(self.args, self.params)
-        pylab.draw()
-        secs = time.time() - t0
-
-        # Write the total execution and plotting time to the status bar.
-        write_to_statusbar("Plots updated", 2)
-        write_to_statusbar("%g secs" %(secs), 3)
-
-
-    def OnReset(self, event):
-        pass
-
-
-    def col_tab_OnLoadData(self, event):
-    #def OnLoadData(self, event):  # TODO: reorganize menu to call directly
-        """Load reflectometry data files for measurement 1 and 2."""
-
-        dlg = wx.FileDialog(self,
-                            message="Load Data for Measurement 1",
-                            defaultDir=os.getcwd(),
-                            defaultFile="",
-                            wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
-                            style=wx.OPEN)
-        # Wait for user to close the dialog.
-        sts = dlg.ShowModal()
-        if sts == wx.ID_OK:
-            pathname  = dlg.GetDirectory()
-            filename = dlg.GetFilename()
-            filespec = os.path.join(pathname, filename)
-        dlg.Destroy()
-        if sts == wx.ID_CANCEL:
-            return  # Do nothing
-
-        self.data_file_1 = filespec
-
-        dlg = wx.FileDialog(self,
-                            message="Load Data for Measurement 2",
-                            defaultDir=pathname,  # directory of 1st file
-                            defaultFile="",
-                            wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
-                            style=wx.OPEN)
-        # Wait for user to close the dialog.
-        sts = dlg.ShowModal()
-        if sts == wx.ID_OK:
-            pathname  = dlg.GetDirectory()
-            filename = dlg.GetFilename()
-            filespec = os.path.join(pathname, filename)
-        dlg.Destroy()
-        if sts == wx.ID_CANCEL:
-            return  # Do nothing
-
-        self.data_file_2 = filespec
-
-#==============================================================================
-
 class SimulatedDataPage(wx.Panel):
     """
     This class implements phase reconstruction and direct inversion analysis
@@ -572,9 +335,8 @@ class SimulatedDataPage(wx.Panel):
 
         # Create display panels as children of the splitter.
         self.pan1 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
-        self.pan1.SetBackgroundColour("")  # default colour
+        self.pan1.SetBackgroundColour(colour)
         self.pan2 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
-        #self.pan2.SetBackgroundColour("LIGHT GREY")  # same as mpl background
         self.pan2.SetBackgroundColour("WHITE")
 
         self.init_panel_1()
@@ -592,7 +354,7 @@ class SimulatedDataPage(wx.Panel):
 
 
     def init_panel_1(self):
-        """Initialize the left panel."""
+        """Initialize the left panel of the SimulatedDataPage."""
 
         INTRO_TEXT = """\
 Edit parameters then press Compute button to generate a density profile from \
@@ -681,9 +443,9 @@ your model."""
 
         # Create a vertical box sizer for the panel and layout widgets in it.
         box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(intro, 0, wx.EXPAND|wx.ALL, border = 10)
-        box.Add(sbox_sizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border = 10)
-        box.Add(self.pan3, 1, wx.EXPAND|wx.ALL, border = 10)
+        box.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
+        box.Add(sbox_sizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        box.Add(self.pan3, 1, wx.EXPAND|wx.ALL, border=10)
         box.Add(box_a, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, 10)
 
         # Associate the sizer with its container.
@@ -692,11 +454,11 @@ your model."""
 
 
     def init_panel_2(self):
-        """Initialize the right panel."""
+        """Initialize the right panel of the SimulatedDataPage."""
 
         INTRO_TEXT = """\
-Results of phase reconstruction and direct inversion using simulated data \
-files generated from model parameters:"""
+Results from phase reconstruction and inversion of simulated data files \
+generated from model parameters:"""
 
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
@@ -721,11 +483,11 @@ files generated from model parameters:"""
 
         # Create a placeholder for text displayed above the plots.
         intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
-        intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+        intro.SetFont(wx.Font(10, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         # Create a vertical box sizer for the panel to layout its widgets.
         box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(intro, 0, wx.EXPAND|wx.ALL, border = 10)
+        box.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
         box.Add(canvas, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         box.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
 
@@ -885,6 +647,248 @@ files generated from model parameters:"""
 
 #==============================================================================
 
+class CollectedDataPage(wx.Panel):
+    """
+    This class implements phase reconstruction and direct inversion analysis
+    of two surround variation data sets (i.e., experimentally collected data)
+    to produce a scattering length density profile of the sample.
+    """
+
+    def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
+        wx.Panel.__init__(self, parent, id=id, **kwargs)
+        self.fignum=fignum
+        self.SetBackgroundColour(colour)
+
+        # Split the panel to separate the input fields from the plots.
+        # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
+        sp = wx.SplitterWindow(self, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
+        sp.SetMinimumPaneSize(290)
+
+        # Create display panels as children of the splitter.
+        self.pan1 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
+        self.pan1.SetBackgroundColour(colour)
+        self.pan2 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
+        self.pan2.SetBackgroundColour("WHITE")
+
+        self.init_panel_1()
+        self.init_panel_2()
+
+        # Attach the panels to the splitter.
+        sp.SplitVertically(self.pan1, self.pan2, sashPosition=300)
+        sp.SetSashGravity(0.2)  # on resize grow mostly on right side
+
+        # Put the splitter in a sizer attached to the main page.
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(sp, 1, wx.EXPAND)
+        self.SetSizer(sizer)
+        sizer.Fit(self)
+
+
+    def init_panel_1(self):
+        """Initialize the left panel of the CollectedDataPage."""
+
+        fields = [ ["SLD of Substrate:", 2.07, "float", None, True],
+                   ["SLD of Surface 1:", 6.33, "float", None, True],
+                   ["SLD of Surface 2:", 0.0, "float", None, True],
+                   ["Sample Thickness:", 1000, "float", None, True],
+                   ["Qmin:", 0.0, "float", None, True],
+                   ["Qmax:", 0.2, "float", None, True],
+                   ["# Profile Steps:", 128, "int", None, True],
+                   ["Over Sampling Factor:", 4, "int", None, True],
+                   ["# Inversion Iterations:", 6, "int", None, True],
+                   ["# Monte Carlo Trials:", 10, "int", None, True],
+                ###["Cosine Transform Smoothing:", 0.0, "float", None, True],
+                ###["Back Reflectivity:", "True", "str", ("True", "False"), False],
+                ###["Inversion Noise Factor:", 1, "int", None, True],
+                   ["Bound State Energy:", 0.0, "float", None, True],
+                ###["Show Iterations:", "False", "str", ("True", "False"), True]
+                ###["Monitor:", "None", "str", None, False]
+                 ]
+
+        self.pan3 = ItemListInput(parent=self.pan1, itemlist=fields)
+
+        INTRO_TEXT = """\
+Edit parameters then press Compute button to generate a density profile from \
+the data files."""
+
+        # Create an introductory section for the panel.
+        intro = wx.TextCtrl(self.pan1, wx.ID_ANY, value=INTRO_TEXT,
+                            style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
+        intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+
+        # Create the button controls.
+        btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
+        #btn_compute.SetDefault()
+        #btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
+
+        self.Bind(wx.EVT_BUTTON, self.OnCompute, btn_compute)
+        #self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
+
+        # Create a horizontal box sizer for the buttons.
+        box_a = wx.BoxSizer(wx.HORIZONTAL)
+        box_a.Add((10,20), 1)  # stretchable whitespace
+        box_a.Add(btn_compute, 0)
+        #box_a.Add((10,20), 0)  # non-stretchable whitespace
+        #box_a.Add(btn_reset, 0)
+
+        # Create a vertical box sizer for the panel and layout widgets in it.
+        box = wx.BoxSizer(wx.VERTICAL)
+        box.Add(intro, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        box.Add(self.pan3, 1, wx.EXPAND|wx.ALL, border=10)
+        box.Add(box_a, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, 10)
+
+        # Associate the sizer with its container.
+        self.pan1.SetSizer(box)
+        box.Fit(self.pan1)
+
+
+    def init_panel_2(self):
+        """Initialize the right panel of the CollectedDataPage."""
+
+        INTRO_TEXT = """\
+Results from phase reconstruction and inversion of reflectometry data files \
+from two surround measurements:"""
+
+        # Instantiate a figure object that will contain our plots.
+        figure = Figure()
+
+        # Initialize the FigureCanvas, mapping the figure object to the plot
+        # engine backend.
+        canvas = FigureCanvas(self.pan2, wx.ID_ANY, figure)
+
+        # Wx-Pylab magic ...
+        # Make our canvas the active figure manager for Pylab so that when
+        # pylab plotting statements are executed they will operate on our
+        # canvas and not create a new frame and canvas for display purposes.
+        # This technique allows this application to execute code that uses
+        # pylab stataments to generate plots and embed these plots in our
+        # application window(s).
+        self.fm = FigureManagerBase(canvas, self.fignum)
+        _pylab_helpers.Gcf.set_active(self.fm)
+
+        # Instantiate the matplotlib navigation toolbar and explicitly show it.
+        mpl_toolbar = Toolbar(canvas)
+        mpl_toolbar.Realize()
+
+        # Create a placeholder for text displayed above the plots.
+        intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
+        intro.SetFont(wx.Font(10, wx.SWISS, wx.NORMAL, wx.BOLD))
+
+        # Create a vertical box sizer for the panel to layout its widgets.
+        box = wx.BoxSizer(wx.VERTICAL)
+        box.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
+        box.Add(canvas, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        box.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
+
+        # Associate the sizer with its container.
+        self.pan2.SetSizer(box)
+        box.Fit(self.pan2)
+
+        root = get_appdir()
+        self.data_file_1 = os.path.join(root, "qrd1.refl")
+        self.data_file_2 = os.path.join(root, "qrd2.refl")
+
+        #self.pan2.Bind(wx.EVT_MOTION, self.OnPan2Motion)
+
+
+    def OnPan2Motion(self, event):
+        """Display cursor position in status bar."""
+
+        write_to_statusbar("%s" % str(event.GetPositionTuple()), 4)
+
+
+    def OnCompute(self, event):
+        """Perform the operation."""
+
+        import pylab
+        import time
+
+        # Explicitly validate all input parameters before proceeding.  The
+        # panel's Validate method will invoke all validators associated with
+        # its top-level input objects and transfer data from them.  Although
+        # char-by-char validation would have warned the user about any invalid
+        # entries, the user could have pressed the Compute button without
+        # making the corrections, so a full validation pass must be done now.
+        if not self.pan3.Validate():
+            display_error_message(self, "Data Entry Error",
+                "Please correct the highlighted fields in error.")
+            return
+
+        self.args = [self.data_file_1, self.data_file_2]
+
+        # Get the validated parameters.
+        self.params = self.pan3.GetResults()
+        #print "Results from %d input fields:" %(len(self.params))
+        #print "  ", self.params
+
+        # Inform the user that we're entering a period of high computation.
+        write_to_statusbar("Generating new plots ...", 2)
+        write_to_statusbar("", 3)
+
+        # Set the plotting figure manager for this class as the active one and
+        # erase the current figure.
+        _pylab_helpers.Gcf.set_active(self.fm)
+        pylab.clf()
+        pylab.draw()
+
+        # Apply phase reconstruction and direct inversion techniques on the
+        # experimental reflectivity datasets.
+        t0 = time.time()
+        perform_recon_inver(self.args, self.params)
+        pylab.draw()
+        secs = time.time() - t0
+
+        # Write the total execution and plotting time to the status bar.
+        write_to_statusbar("Plots updated", 2)
+        write_to_statusbar("%g secs" %(secs), 3)
+
+
+    def OnReset(self, event):
+        pass
+
+
+    def col_tab_OnLoadData(self, event):
+    #def OnLoadData(self, event):  # TODO: reorganize menu to call directly
+        """Load reflectometry data files for measurement 1 and 2."""
+
+        dlg = wx.FileDialog(self,
+                            message="Load Data for Measurement 1",
+                            defaultDir=os.getcwd(),
+                            defaultFile="",
+                            wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
+                            style=wx.OPEN)
+        # Wait for user to close the dialog.
+        sts = dlg.ShowModal()
+        if sts == wx.ID_OK:
+            pathname  = dlg.GetDirectory()
+            filename = dlg.GetFilename()
+            filespec = os.path.join(pathname, filename)
+        dlg.Destroy()
+        if sts == wx.ID_CANCEL:
+            return  # Do nothing
+
+        self.data_file_1 = filespec
+
+        dlg = wx.FileDialog(self,
+                            message="Load Data for Measurement 2",
+                            defaultDir=pathname,  # directory of 1st file
+                            defaultFile="",
+                            wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
+                            style=wx.OPEN)
+        # Wait for user to close the dialog.
+        sts = dlg.ShowModal()
+        if sts == wx.ID_OK:
+            pathname  = dlg.GetDirectory()
+            filename = dlg.GetFilename()
+            filespec = os.path.join(pathname, filename)
+        dlg.Destroy()
+        if sts == wx.ID_CANCEL:
+            return  # Do nothing
+
+        self.data_file_2 = filespec
+
+#==============================================================================
+
 class TestPlotPage(wx.Panel):
     """This class implements adds a page to the notebook."""
 
@@ -905,7 +909,7 @@ class TestPlotPage(wx.Panel):
 
 
     def init_panel_1(self):
-        """Initialize the first panel."""
+        """Initialize the first panel of the TestPlotPage."""
 
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
@@ -937,13 +941,12 @@ class TestPlotPage(wx.Panel):
         self.pan1.SetSizer(box)
         box.Fit(self.pan1)
 
-        # Execute tests associated with the test tab.
+        # Execute tests associated with the test tabs.
+        if len(sys.argv) > 1:
+            if (self.fignum==2 and '-test1' in sys.argv[1:]): test1()
+            if (self.fignum==3 and '-test2' in sys.argv[1:]): test2()
         if self.fignum==4: test3()
         if self.fignum==5: test4(figure)
-        import sys
-        if len(sys.argv) < 2: return
-        if (self.fignum==2 and '-test1' in sys.argv): test1()
-        if (self.fignum==3 and '-test2' in sys.argv): test2()
 
 #==============================================================================
 
@@ -1015,8 +1018,6 @@ def get_appdir():
     root directory from which the application was started.  Note that this may
     be different than the current working directory.
     """
-    import sys
-    import os
 
     if hasattr(sys, "frozen"):  # check for py2exe image
         path = sys.executable
@@ -1028,7 +1029,7 @@ def get_appdir():
 def perform_recon_inver(args, params):
     """
     Perform phase reconstruction and direct inversion on two reflectometry data
-    sets to generation a scattering length depth profile of the sample.
+    sets to generate a scattering length depth profile of the sample.
     """
 
     from core import refl, SurroundVariation, Inversion
@@ -1080,7 +1081,6 @@ def perform_simulation(sample, params):
     from numpy import linspace
     import pylab
 
-
     if sample is None:
         # Roughness parameters (surface, sample, substrate)
         sv, s, su = 3, 5, 2
@@ -1108,6 +1108,7 @@ def perform_simulation(sample, params):
                stages=params[7],
                rhopoints=params[4],
                calcpoints=params[5])
+
     t = Simulation(q=linspace(params[2], params[3], 150),
                    sample=sample,
                    u=params[11],
@@ -1118,6 +1119,7 @@ def perform_simulation(sample, params):
                    invert_args=inv,
                    phase_args=dict(stages=100),
                    perfect_reconstruction=_perfect_reconstruction)
+
     t.plot()
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right = 0.96,
@@ -1163,9 +1165,9 @@ def test1():
                                       bse=0,
                                       showiters=False,
                                       monitor=None))
+
     res.run(showiters=False)
     res.plot(phase=phase)
-
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right=0.96,
                           top=0.95, bottom=0.08)
@@ -1193,10 +1195,12 @@ def test2():
     # Run the simulation
     inv = dict(showiters=False, iters=6, monitor=None, bse=bse,
                noise=1, stages=10, calcpoints=4, rhopoints=128)
+
     t = Simulation(q = linspace(0, 0.4, 150), sample=sample,
                    u=u, urough=su, v1=v1, v2=v2, noise=0.08,
                    invert_args=inv, phase_args=dict(stages=100),
                    perfect_reconstruction=False)
+
     t.plot()
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right = 0.96,
