@@ -294,34 +294,53 @@ class ItemListInput(ScrolledPanel):
 
 #==============================================================================
 
+class AppTestFrame(wx.Frame):
+
+    def __init__(self):
+        wx.Frame.__init__(self, parent=None, id=wx.ID_ANY,
+                          title="ItemListInput Test", size=(280, 300))
+        panel = wx.Panel(self, wx.ID_ANY, style=wx.RAISED_BORDER)
+        panel.SetBackgroundColour("WHITE")
+
+        fields = [ ["Integer:", 123, "int", None, True],
+                   ["Floating Point:", 45.678, "float", None, True],
+                   ["Non-editable field:", "Cannot be changed!", "str", None, False],
+                   ["String (1 or more char):", "Error if blank", "str", None, True],
+                   ["String (0 or more char):", "", "any", None, True],
+                   ["ComboBox String:", "Two", "str", ("One", "Two", "Three"), True],
+                   ["String (no validation):", "DANSE Project", "", None, True]
+                 ]
+
+        # Create the scrolled window with input boxes.  Due to the size of the
+        # frame and the parent panel, both scroll bars should be displayed.
+        self.scrolled = ItemListInput(parent=panel, itemlist=fields)
+
+        # Create button to signal end of user edits.
+        ok_button = wx.Button(panel, wx.ID_OK, "OK")
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.Add((10,20), 1)  # stretchable whitespace
+        button_sizer.Add(ok_button, 0)
+
+        self.Bind(wx.EVT_BUTTON, self.OnOkay, ok_button)
+
+        # Create a vertical box sizer for the panel and layout widgets in it.
+        box = wx.BoxSizer(wx.VERTICAL)
+        box.Add(self.scrolled, 1, wx.EXPAND|wx.ALL, border=10)
+        box.Add(button_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.RIGHT, border=10)
+
+        # Associate the sizer with its container.
+        panel.SetSizer(box)
+        box.Fit(panel)
+
+    def OnOkay(self, event):
+        print "Results from all input fields:"
+        print "  ", self.scrolled.GetResults()
+
+
 if __name__ == '__main__':
     """GUI unit test of the ItemListInput class and input field validation."""
 
-    fields = [ ["Integer:", 123, "int", None, True],
-               ["Floating Point:", 45.678, "float", None, True],
-               ["Non-editable field:", "Cannot be changed!", "str", None, False],
-               ["String (1 or more char):", "Error if blank", "str", None, True],
-               ["String (0 or more char):", "", "any", None, True],
-               ["ComboBox String:", "Two", "str", ("One", "Two", "Three"), True],
-               ["String (no validation):", "DANSE Project", "", None, True]
-             ]
-
     app = wx.PySimpleApp()
-
-    # Test 1
-    dlg = ItemListInput(parent=None)
-    if dlg.ShowModal() == wx.ID_OK:
-        print "Results from all input fields:"
-        print "  ", dlg.GetResults()
-    dlg.Destroy()
-
-    # Test 2
-    dlg = ItemListInput(parent=None,
-                         title="Test of ItemListInput Box",
-                         itemlist=fields)
-    if dlg.ShowModal() == wx.ID_OK:
-        print "Results from all input fields:"
-        print "  ", dlg.GetResults()
-    dlg.Destroy()
-
+    frame = AppTestFrame()
+    frame.Show(True)
     app.MainLoop()
