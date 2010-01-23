@@ -78,7 +78,8 @@ DEMO_MODEL_DESC = "demo_model_1.dat"
 DEMO_REFLDATA_1 = "qrd1.refl"
 DEMO_REFLDATA_2 = "qrd2.refl"
 
-BLANK_LINE = "\n"
+NEWLINE = "\n"
+NEWLINES_2 = "\n\n"
 
 #==============================================================================
 
@@ -99,7 +100,7 @@ class AppFrame(wx.Frame):
 
         # Display the DiRefl icon in the title bar.
         icon = wx.Icon(os.path.join(get_appdir(), PROG_ICON),
-                        wx.BITMAP_TYPE_ICO)
+                       wx.BITMAP_TYPE_ICO)
         self.SetIcon(icon)
 
         # Display a splash screen.
@@ -149,32 +150,32 @@ class AppFrame(wx.Frame):
         # Add a 'File' menu to the menu bar and define its options.
         menu1 = wx.Menu()
 
-        load_id = menu1.Append(wx.ID_ANY, "&Load Data Files ...")
-        self.Bind(wx.EVT_MENU, self.OnLoadData, load_id)
+        ret_id = menu1.Append(wx.ID_ANY, "&Load Data Files ...")
+        self.Bind(wx.EVT_MENU, self.OnLoadData, ret_id)
 
         menu1.AppendSeparator()
 
-        load_id = menu1.Append(wx.ID_ANY, "&Load Model ...")
-        self.Bind(wx.EVT_MENU, self.OnLoadModel, load_id)
-        save_id = menu1.Append(wx.ID_ANY, "&Save Model ...")
-        self.Bind(wx.EVT_MENU, self.OnSaveModel, save_id)
+        ret_id = menu1.Append(wx.ID_ANY, "&Load Model ...")
+        self.Bind(wx.EVT_MENU, self.OnLoadModel, ret_id)
+        ret_id = menu1.Append(wx.ID_ANY, "&Save Model ...")
+        self.Bind(wx.EVT_MENU, self.OnSaveModel, ret_id)
 
         menu1.AppendSeparator()
 
-        exit_id = menu1.Append(wx.ID_ANY, "&Exit")
-        self.Bind(wx.EVT_MENU, self.OnExit, exit_id)
+        ret_id = menu1.Append(wx.ID_ANY, "&Exit")
+        self.Bind(wx.EVT_MENU, self.OnExit, ret_id)
 
         mb.Append(menu1, "&File")
 
         # Add a 'Help' menu to the menu bar and define its options.
         menu2 = wx.Menu()
 
-        tutorial_id = menu2.Append(wx.ID_ANY, "&Tutorial")
-        self.Bind(wx.EVT_MENU, self.OnTutorial, tutorial_id)
-        license_id = menu2.Append(wx.ID_ANY, "&License")
-        self.Bind(wx.EVT_MENU, self.OnLicense, license_id)
-        about_id = menu2.Append(wx.ID_ANY, "&About")
-        self.Bind(wx.EVT_MENU, self.OnAbout, about_id)
+        ret_id = menu2.Append(wx.ID_ANY, "&Tutorial")
+        self.Bind(wx.EVT_MENU, self.OnTutorial, ret_id)
+        ret_id = menu2.Append(wx.ID_ANY, "&License")
+        self.Bind(wx.EVT_MENU, self.OnLicense, ret_id)
+        ret_id = menu2.Append(wx.ID_ANY, "&About")
+        self.Bind(wx.EVT_MENU, self.OnAbout, ret_id)
 
         mb.Append(menu2, "&Help")
 
@@ -261,8 +262,8 @@ class AppFrame(wx.Frame):
 
         info = wx.AboutDialogInfo()
         info.Name = APP_NAME
-        info.Version = APP_VERSION + BLANK_LINE
-        info.Copyright = APP_COPYRIGHT + BLANK_LINE
+        info.Version = APP_VERSION + NEWLINE
+        info.Copyright = APP_COPYRIGHT + NEWLINE
         info.Description = wordwrap(APP_DESCRIPTION, 500, wx.ClientDC(self))
         #info.WebSite = (APP_PROJECT_URL, APP_PROJECT_TAG)
         wx.AboutBox(info)
@@ -283,8 +284,8 @@ class AppFrame(wx.Frame):
 
         info = wx.AboutDialogInfo()
         info.Name = APP_NAME
-        info.Version = APP_VERSION + BLANK_LINE
-        info.Copyright = APP_COPYRIGHT + BLANK_LINE
+        info.Version = APP_VERSION + NEWLINE
+        info.Copyright = APP_COPYRIGHT + NEWLINE
         info.Description = wordwrap(APP_LICENSE, 500, wx.ClientDC(self))
         wx.AboutBox(info)
 
@@ -312,7 +313,7 @@ class AppFrame(wx.Frame):
 
         dlg =wx.MessageDialog(self,
                               message = wordwrap(APP_TUTORIAL_TXT +
-                                                 BLANK_LINE + BLANK_LINE +
+                                                 NEWLINES_2 +
                                                  APP_TUTORIAL_URL,
                                                  500, wx.ClientDC(self)),
                               caption = 'Tutorial',
@@ -348,11 +349,11 @@ class SimulatedDataPage(wx.Panel):
         self.init_panel_1()
         self.init_panel_2()
 
-        # Attach the panels to the splitter.
+        # Attach the child panels to the splitter.
         sp.SplitVertically(self.pan1, self.pan2, sashPosition=300)
         sp.SetSashGravity(0.2)  # on resize grow mostly on right side
 
-        # Put the splitter in a sizer attached to the main page.
+        # Put the splitter in a sizer attached to the main panel of the page.
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(sp, 1, wx.EXPAND)
         self.SetSizer(sizer)
@@ -387,21 +388,19 @@ your model."""
                 ###["Monitor:", "None", "str", None, False]
                  ]
 
-        self.pan3 = ItemListInput(parent=self.pan1, itemlist=fields)
+        self.pan_inputs = ItemListInput(parent=self.pan1, itemlist=fields)
 
         # Create an introductory section for the panel.
         intro = wx.TextCtrl(self.pan1, wx.ID_ANY, value=INTRO_TEXT,
                             style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
         intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
-        sbox = wx.StaticBox(self.pan1, wx.ID_ANY, "Model Parameters")
-        sbox_sizer = wx.StaticBoxSizer(sbox, wx.VERTICAL)
-
-        stxt1 = wx.StaticText(self, wx.ID_ANY,
+        # Create instructions for using the model description input box.
+        line1 = wx.StaticText(self, wx.ID_ANY,
                     label="Define the Surface, Sample Layers, and Substrate")
-        stxt2 = wx.StaticText(self, wx.ID_ANY,
+        line2 = wx.StaticText(self, wx.ID_ANY,
                     label="    components of your model (one layer per line):")
-        #stxt3 = wx.StaticText(self, wx.ID_ANY,
+        #line3 = wx.StaticText(self, wx.ID_ANY,
         #           label="    as shown below (roughness defaults to 0):")
 
         # Read in demo model parameters.
@@ -417,7 +416,8 @@ your model."""
             display_warning_message(self, "Load Model Error",
                 "Error loading demo model from file "+DEMO_MODEL_DESC)
             demo_model_params = \
-                "# SLDensity  Thickness  Roughness  comments\n\n\n\n\n\n\n"
+                "# SLDensity  Thickness  Roughness  comments" + \
+                NEWLINES_2 + NEWLINES_2 + NEWLINES_2 + NEWLINE
 
         # Create an input box to enter and edit the model description and
         # populate it with the contents of the demo file.
@@ -426,12 +426,16 @@ your model."""
                                  style=wx.TE_MULTILINE|wx.TE_WORDWRAP)
         #self.model.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
-        sbox_sizer.Add(stxt1, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        sbox_sizer.Add(stxt2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
-        #sbox_sizer.Add(stxt3, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
-        sbox_sizer.Add(self.model, 1, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
+        # Group model parameter widgets into a labelled section and
+        # manage them with a static box sizer.
+        sbox1 = wx.StaticBox(self.pan1, wx.ID_ANY, "Model Parameters")
+        sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
+        sbox1_sizer.Add(line1, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sbox1_sizer.Add(line2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        #sbox1_sizer.Add(line3, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        sbox1_sizer.Add(self.model, 1, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
-        # Create the button controls.
+        # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
         #btn_compute.SetDefault()
         #btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
@@ -440,22 +444,22 @@ your model."""
         #self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
 
         # Create a horizontal box sizer for the buttons.
-        box_a = wx.BoxSizer(wx.HORIZONTAL)
-        box_a.Add((10,20), 1)  # stretchable whitespace
-        box_a.Add(btn_compute, 0)
-        #box_a.Add((10,20), 0)  # non-stretchable whitespace
-        #box_a.Add(btn_reset, 0)
+        box_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        box_sizer.Add((10,20), 1)  # stretchable whitespace
+        box_sizer.Add(btn_compute, 0)
+        #box_sizer.Add((10,20), 0)  # non-stretchable whitespace
+        #box_sizer.Add(btn_reset, 0)
 
-        # Create a vertical box sizer for the panel and layout widgets in it.
-        box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
-        box.Add(sbox_sizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
-        box.Add(self.pan3, 1, wx.EXPAND|wx.ALL, border=10)
-        box.Add(box_a, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, 10)
+        # Create a vertical box sizer to manage the widgets in the main panel.
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
+        sizer.Add(sbox1_sizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(self.pan_inputs, 1, wx.EXPAND|wx.ALL, border=10)
+        sizer.Add(box_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
         # Associate the sizer with its container.
-        self.pan1.SetSizer(box)
-        box.Fit(self.pan1)
+        self.pan1.SetSizer(sizer)
+        sizer.Fit(self.pan1)
 
 
     def init_panel_2(self):
@@ -490,15 +494,15 @@ generated from model parameters:"""
         intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
         intro.SetFont(wx.Font(10, wx.SWISS, wx.NORMAL, wx.BOLD))
 
-        # Create a vertical box sizer for the panel to layout its widgets.
-        box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
-        box.Add(canvas, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
-        box.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
+        # Create a vertical box sizer to manage the widgets in the main panel.
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
+        sizer.Add(canvas, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
 
         # Associate the sizer with its container.
-        self.pan2.SetSizer(box)
-        box.Fit(self.pan2)
+        self.pan2.SetSizer(sizer)
+        sizer.Fit(self.pan2)
 
 
     def OnCompute(self, event):
@@ -513,13 +517,13 @@ generated from model parameters:"""
         # char-by-char validation would have warned the user about any invalid
         # entries, the user could have pressed the Compute button without
         # making the corrections, so a full validation pass must be done now.
-        if not self.pan3.Validate():
+        if not self.pan_inputs.Validate():
             display_error_message(self, "Data Entry Error",
                 "Please correct the highlighted fields in error.")
             return
 
         # Get the validated parameters.
-        self.params = self.pan3.GetResults()
+        self.params = self.pan_inputs.GetResults()
 
         # Validate and convert the model description into a list of layers.
         lines = self.model.GetValue().splitlines()
@@ -682,7 +686,7 @@ class CollectedDataPage(wx.Panel):
         sp.SplitVertically(self.pan1, self.pan2, sashPosition=300)
         sp.SetSashGravity(0.2)  # on resize grow mostly on right side
 
-        # Put the splitter in a sizer attached to the main page.
+        # Put the splitter in a sizer attached to the main panel of the page.
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(sp, 1, wx.EXPAND)
         self.SetSizer(sizer)
@@ -710,7 +714,7 @@ class CollectedDataPage(wx.Panel):
                 ###["Monitor:", "None", "str", None, False]
                  ]
 
-        self.pan3 = ItemListInput(parent=self.pan1, itemlist=fields)
+        self.pan_inputs = ItemListInput(parent=self.pan1, itemlist=fields)
 
         INTRO_TEXT = """\
 Edit parameters then press Compute button to generate a density profile from \
@@ -721,7 +725,7 @@ the data files."""
                             style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
         intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
-        # Create the button controls.
+        # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
         #btn_compute.SetDefault()
         #btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
@@ -730,21 +734,21 @@ the data files."""
         #self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
 
         # Create a horizontal box sizer for the buttons.
-        box_a = wx.BoxSizer(wx.HORIZONTAL)
-        box_a.Add((10,20), 1)  # stretchable whitespace
-        box_a.Add(btn_compute, 0)
-        #box_a.Add((10,20), 0)  # non-stretchable whitespace
-        #box_a.Add(btn_reset, 0)
+        box_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        box_sizer.Add((10,20), 1)  # stretchable whitespace
+        box_sizer.Add(btn_compute, 0)
+        #box_sizer.Add((10,20), 0)  # non-stretchable whitespace
+        #box_sizer.Add(btn_reset, 0)
 
-        # Create a vertical box sizer for the panel and layout widgets in it.
-        box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(intro, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        box.Add(self.pan3, 1, wx.EXPAND|wx.ALL, border=10)
-        box.Add(box_a, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, 10)
+        # Create a vertical box sizer to manage the widgets in the main panel.
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(intro, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(self.pan_inputs, 1, wx.EXPAND|wx.ALL, border=10)
+        sizer.Add(box_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, 10)
 
         # Associate the sizer with its container.
-        self.pan1.SetSizer(box)
-        box.Fit(self.pan1)
+        self.pan1.SetSizer(sizer)
+        sizer.Fit(self.pan1)
 
 
     def init_panel_2(self):
@@ -779,15 +783,15 @@ from two surround measurements:"""
         intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
         intro.SetFont(wx.Font(10, wx.SWISS, wx.NORMAL, wx.BOLD))
 
-        # Create a vertical box sizer for the panel to layout its widgets.
-        box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
-        box.Add(canvas, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
-        box.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
+        # Create a vertical box sizer to manage the widgets in the main panel.
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
+        sizer.Add(canvas, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
 
         # Associate the sizer with its container.
-        self.pan2.SetSizer(box)
-        box.Fit(self.pan2)
+        self.pan2.SetSizer(sizer)
+        sizer.Fit(self.pan2)
 
         root = get_appdir()
         self.data_file_1 = os.path.join(root, DEMO_REFLDATA_1)
@@ -814,7 +818,7 @@ from two surround measurements:"""
         # char-by-char validation would have warned the user about any invalid
         # entries, the user could have pressed the Compute button without
         # making the corrections, so a full validation pass must be done now.
-        if not self.pan3.Validate():
+        if not self.pan_inputs.Validate():
             display_error_message(self, "Data Entry Error",
                 "Please correct the highlighted fields in error.")
             return
@@ -822,7 +826,7 @@ from two surround measurements:"""
         self.args = [self.data_file_1, self.data_file_2]
 
         # Get the validated parameters.
-        self.params = self.pan3.GetResults()
+        self.params = self.pan_inputs.GetResults()
         #print "Results from %d input fields:" %(len(self.params))
         #print "  ", self.params
 
@@ -906,7 +910,7 @@ class TestPlotPage(wx.Panel):
 
         self.init_panel_1()
 
-        # Put the panel in a sizer attached to its parent panel.
+        # Put the panel in a sizer attached to the main panel of the page.
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.pan1, 1, wx.EXPAND)
         self.SetSizer(sizer)
@@ -937,14 +941,14 @@ class TestPlotPage(wx.Panel):
         mpl_toolbar = Toolbar(canvas)
         mpl_toolbar.Realize()
 
-        # Create a vertical box sizer for the panel to layout its widgets.
-        box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(canvas, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        box.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
+        # Create a vertical box sizer to manage the widgets in the main panel.
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(canvas, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
 
         # Associate the sizer with its container.
-        self.pan1.SetSizer(box)
-        box.Fit(self.pan1)
+        self.pan1.SetSizer(sizer)
+        sizer.Fit(self.pan1)
 
         # Execute tests associated with the test tabs.
         if len(sys.argv) > 1:
