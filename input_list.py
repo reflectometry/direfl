@@ -123,24 +123,32 @@ class ItemListValidator(wx.PyValidator):
 
 class ItemListInput(ScrolledPanel):
     """
-    This class implements the generic Item List Input Box.
-    It displays one or more input fields each preceded by a label.  The input
-    fields can be a combination of data entry boxes or drop down combo boxes.
-    Automatic validation of user input is performed.  The caller can use the
-    GetResults() method to obtain the final results from all fields in the form
-    of a list of values.
+    This class implements the generic Item List Input Panel.
+
+    It creates a scrolled window in which to display one or more input fields
+    each preceded by a label.  The input fields can be a combination of simple
+    data entry boxes or drop down combo boxes.  Automatic validation of user
+    input is performed.  The caller can use the GetResults() method to obtain
+    the final results from all fields in the form of a list of values.
+
+    The scrolled window object is created as a child of the parent panel passed
+    in.  Normally the caller puts this object in a sizer attached to the parent
+    panel to allow it to expand or contract based on the size constraints
+    imposed by its parent.
 
     The layout is:
 
-    +-------------------------------------+
-    |                                     |
-    |  Label-1:   [<drop down list>  |V]  |
-    |                                     |    Note that drop down lists and
-    |  Label-2:   [<data entry field-2>]  |    simple data entry fields can be
-    |  ...                                |    in any order.
-    |  Label-n:   [<data entry field-n>]  |
-    |                                     |
-    +-------------------------------------+
+    +-------------------------------------+-+
+    |                                     |v|
+    |  Label-1:   [<drop down list>  |V]  |e|
+    |                                     |r|    Note that drop down lists and
+    |  Label-2:   [<data entry field-2>]  |t|    simple data entry fields can
+    |  ...                                |||    be specified in any order.
+    |  Label-n:   [<data entry field-n>]  |||
+    |                                     |v|
+    +-------------------------------------+-+
+    |      horizontal scroll bar -->      |X|
+    +-------------------------------------+-+
 
     The itemlist parameter controls the display.  It is a list containing one
     or more 5-element lists where each list specifies a:
@@ -161,11 +169,7 @@ class ItemListInput(ScrolledPanel):
         self.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW))
 
         # Specify the widget layout using sizers.
-        # The main_sizer is the top-level sizer that manages everything.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        sbox = wx.StaticBox(self, wx.ID_ANY, "Parameters")
-        sbox_sizer = wx.StaticBoxSizer(sbox, wx.VERTICAL)
 
         # Create the text controls for labels and associated input fields.
         self._add_items_to_input_box()
@@ -175,10 +179,8 @@ class ItemListInput(ScrolledPanel):
         grid_sizer.AddGrowableCol(1)
         self._add_items_to_sizer(grid_sizer)
 
-        sbox_sizer.Add(grid_sizer, 1)
-
         # Add the grid sizer to the main sizer.
-        main_sizer.Add(sbox_sizer, 0, wx.EXPAND|wx.ALL, 10)
+        main_sizer.Add(grid_sizer, 1, wx.EXPAND|wx.ALL, border=10)
 
         # Finalize the sizer and establish the dimensions of the input box.
         self.SetSizer(main_sizer)
@@ -191,7 +193,7 @@ class ItemListInput(ScrolledPanel):
 
 
     def _add_items_to_input_box(self):
-        # Note that the validator will update self.itemlist successful
+        # Note that the validator will update self.itemlist upon successful
         # validation of user input.
         self.labels = []; self.inputs = []
         for x in xrange(len(self.itemlist)):
@@ -277,7 +279,7 @@ class ItemListInput(ScrolledPanel):
         combo boxes instantiated by the ItemListInput class.  This method
         should be subclassed if the caller wants to perform some action in
         response to a selection event.  The sample code below shows how to
-        obtain the index of the box and index of the item selected.
+        obtain the index of the box and the index of the item selected.
 
         # Get index of selected item in combo box dropdown list.
         item_idx = event.GetSelection()

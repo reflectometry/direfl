@@ -435,6 +435,12 @@ your model."""
         #sbox1_sizer.Add(line3, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         sbox1_sizer.Add(self.model, 1, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
+        # Group inversion parameter widgets into a labelled section and
+        # manage them with a static box sizer.
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
+        sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
+        sbox2_sizer.Add(self.pan_inputs, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
         #btn_compute.SetDefault()
@@ -454,7 +460,7 @@ your model."""
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
         sizer.Add(sbox1_sizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
-        sizer.Add(self.pan_inputs, 1, wx.EXPAND|wx.ALL, border=10)
+        sizer.Add(sbox2_sizer, 1, wx.EXPAND|wx.ALL, border=10)
         sizer.Add(box_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
         # Associate the sizer with its container.
@@ -549,7 +555,8 @@ generated from model parameters:"""
 
         if len(layers) < 3:
             display_error_message(self, "Less Than 3 Layers Defined",
-                "You must specify at least one Surface, Sample, and Substrate layer.")
+                ("You must specify at least one Surface, Sample, and " +
+                 "Substrate layer for your model."))
             return
 
         sample = layers[1:-1]
@@ -725,6 +732,12 @@ the data files."""
                             style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
         intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
+        # Group inversion parameter widgets into a labelled section and
+        # manage them with a static box sizer.
+        sbox = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
+        sbox_sizer = wx.StaticBoxSizer(sbox, wx.VERTICAL)
+        sbox_sizer.Add(self.pan_inputs, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
         #btn_compute.SetDefault()
@@ -743,7 +756,7 @@ the data files."""
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(intro, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        sizer.Add(self.pan_inputs, 1, wx.EXPAND|wx.ALL, border=10)
+        sizer.Add(sbox_sizer, 1, wx.EXPAND|wx.ALL, border=10)
         sizer.Add(box_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, 10)
 
         # Associate the sizer with its container.
