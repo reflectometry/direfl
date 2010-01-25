@@ -53,7 +53,7 @@ from wx.lib.wordwrap import wordwrap
 # Note that relative imports cannot be performed by this module because it is
 # not run in the context of a package.
 from images import getOpenBitmap
-from input_list import ItemListInput
+from input_list import ItemListDialog, ItemListInput
 
 from about import (APP_NAME, APP_TITLE, APP_VERSION,
                    APP_COPYRIGHT, APP_DESCRIPTION, APP_LICENSE,
@@ -113,7 +113,7 @@ class AppFrame(wx.Frame):
         self.add_toolbar()
 
         # Initialize the status bar.
-        self.add_statusbar([-3, -2, -1, -1, -1])
+        self.add_statusbar([-5, -1, -1, -1])
 
         # Initialize the notebook bar.
         self.add_notebookbar()
@@ -148,36 +148,36 @@ class AppFrame(wx.Frame):
         mb = wx.MenuBar()
 
         # Add a 'File' menu to the menu bar and define its options.
-        menu1 = wx.Menu()
+        file_menu = wx.Menu()
 
-        ret_id = menu1.Append(wx.ID_ANY, "&Load Data Files ...")
+        ret_id = file_menu.Append(wx.ID_ANY, "Load &Data Files ...")
         self.Bind(wx.EVT_MENU, self.OnLoadData, ret_id)
 
-        menu1.AppendSeparator()
+        file_menu.AppendSeparator()
 
-        ret_id = menu1.Append(wx.ID_ANY, "&Load Model ...")
+        ret_id = file_menu.Append(wx.ID_ANY, "&Load Model ...")
         self.Bind(wx.EVT_MENU, self.OnLoadModel, ret_id)
-        ret_id = menu1.Append(wx.ID_ANY, "&Save Model ...")
+        ret_id = file_menu.Append(wx.ID_ANY, "&Save Model ...")
         self.Bind(wx.EVT_MENU, self.OnSaveModel, ret_id)
 
-        menu1.AppendSeparator()
+        file_menu.AppendSeparator()
 
-        ret_id = menu1.Append(wx.ID_ANY, "&Exit")
+        ret_id = file_menu.Append(wx.ID_ANY, "&Exit")
         self.Bind(wx.EVT_MENU, self.OnExit, ret_id)
 
-        mb.Append(menu1, "&File")
+        mb.Append(file_menu, "&File")
 
         # Add a 'Help' menu to the menu bar and define its options.
-        menu2 = wx.Menu()
+        help_menu = wx.Menu()
 
-        ret_id = menu2.Append(wx.ID_ANY, "&Tutorial")
+        ret_id = help_menu.Append(wx.ID_ANY, "&Tutorial")
         self.Bind(wx.EVT_MENU, self.OnTutorial, ret_id)
-        ret_id = menu2.Append(wx.ID_ANY, "&License")
+        ret_id = help_menu.Append(wx.ID_ANY, "&License")
         self.Bind(wx.EVT_MENU, self.OnLicense, ret_id)
-        ret_id = menu2.Append(wx.ID_ANY, "&About")
+        ret_id = help_menu.Append(wx.ID_ANY, "&About")
         self.Bind(wx.EVT_MENU, self.OnAbout, ret_id)
 
-        mb.Append(menu2, "&Help")
+        mb.Append(help_menu, "&Help")
 
         # Attach the menubar to the frame.
         self.SetMenuBar(mb)
@@ -246,6 +246,20 @@ class AppFrame(wx.Frame):
         nb.InsertPage(1, self.page0, "Replace 0")
         '''
 
+        self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged)
+
+
+    def OnPageChanged(self, event):
+        """
+        Perform any save, restore, or update operations when the user switches
+        notebook pages (via clicking on the notebook tab).
+        """
+
+        prev_page = self.notebook.GetPage(event.GetOldSelection())
+        curr_page = self.notebook.GetPage(event.GetSelection())
+        curr_page.active_page()
+        event.Skip()
+
 
     def OnAbout(self, evt):
         """
@@ -291,7 +305,7 @@ class AppFrame(wx.Frame):
 
 
     def OnLoadData(self, event):
-        """Load reflectometry data files for measurement 1 and 2."""
+        """Load reflectometry data files for measurements 1 and 2."""
 
         self.page1.col_tab_OnLoadData(event)  # TODO: create menu in dest class
 
@@ -359,13 +373,11 @@ class SimulatedDataPage(wx.Panel):
         self.SetSizer(sizer)
         sizer.Fit(self)
 
+        self.active_page()
+
 
     def init_panel_1(self):
         """Initialize the left panel of the SimulatedDataPage."""
-
-        INTRO_TEXT = """\
-Edit parameters then press Compute button to generate a density profile from \
-your model."""
 
         fields = [
                 ###["SLD of Substrate:", 2.07, "float", None, True],
@@ -390,10 +402,13 @@ your model."""
 
         self.pan_inputs = ItemListInput(parent=self.pan1, itemlist=fields)
 
+        '''
         # Create an introductory section for the panel.
+        INTRO_TEXT = "Tutorial information for the user ..."
         intro = wx.TextCtrl(self.pan1, wx.ID_ANY, value=INTRO_TEXT,
                             style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
         intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+        '''
 
         # Create instructions for using the model description input box.
         line1 = wx.StaticText(self, wx.ID_ANY,
@@ -460,8 +475,8 @@ your model."""
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
-        sizer.Add(sbox1_sizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        #sizer.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
+        sizer.Add(sbox1_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sizer.Add(sbox2_sizer, 1, wx.EXPAND|wx.ALL, border=10)
         sizer.Add(box_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
@@ -511,6 +526,17 @@ generated from model parameters:"""
         # Associate the sizer with its container.
         self.pan2.SetSizer(sizer)
         sizer.Fit(self.pan2)
+
+
+    def active_page(self):
+        """This method is called when user selects (makes current) the page."""
+
+        WHAT_TODO_NEXT = """\
+Edit parameters then press the Compute button to generate a density profile \
+from your model."""
+        write_to_statusbar(WHAT_TODO_NEXT, 0)
+        write_to_statusbar("", 1)
+        write_to_statusbar("", 2)
 
 
     def OnCompute(self, event):
@@ -568,8 +594,8 @@ generated from model parameters:"""
         self.params.append(layers[-1][2])  # add roughness of substrate to list
 
         # Inform the user that we're entering a period of high computation.
-        write_to_statusbar("Generating new plots ...", 2)
-        write_to_statusbar("", 3)
+        write_to_statusbar("Generating new plots ...", 1)
+        write_to_statusbar("", 2)
 
         # Set the plotting figure manager for this class as the active one and
         # erase the current figure.
@@ -585,8 +611,8 @@ generated from model parameters:"""
         secs = time.time() - t0
 
         # Write the total execution and plotting time to the status bar.
-        write_to_statusbar("Plots updated", 2)
-        write_to_statusbar("%g secs" %(secs), 3)
+        write_to_statusbar("Plots updated", 1)
+        write_to_statusbar("%g secs" %(secs), 2)
 
 
     def OnReset(self, event):
@@ -725,15 +751,6 @@ class CollectedDataPage(wx.Panel):
 
         self.pan_inputs = ItemListInput(parent=self.pan1, itemlist=fields)
 
-        INTRO_TEXT = """\
-Edit parameters then press Compute button to generate a density profile from \
-the data files."""
-
-        # Create an introductory section for the panel.
-        intro = wx.TextCtrl(self.pan1, wx.ID_ANY, value=INTRO_TEXT,
-                            style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
-        intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
-
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
         sbox = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
@@ -758,7 +775,7 @@ the data files."""
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(intro, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        #sizer.Add(intro, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sizer.Add(sbox_sizer, 1, wx.EXPAND|wx.ALL, border=10)
         sizer.Add(box_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, 10)
 
@@ -816,10 +833,21 @@ from two surround measurements:"""
         #self.pan2.Bind(wx.EVT_MOTION, self.OnPan2Motion)
 
 
+    def active_page(self):
+        """This method is called when user selects (makes current) the page."""
+
+        WHAT_TODO_NEXT = """\
+Edit parameters then press the Compute button to generate a density profile \
+from the data files."""
+        write_to_statusbar(WHAT_TODO_NEXT, 0)
+        write_to_statusbar("", 1)
+        write_to_statusbar("", 2)
+
+
     def OnPan2Motion(self, event):
         """Display cursor position in status bar."""
 
-        write_to_statusbar("%s" % str(event.GetPositionTuple()), 4)
+        write_to_statusbar("%s" % str(event.GetPositionTuple()), 3)
 
 
     def OnCompute(self, event):
@@ -847,8 +875,8 @@ from two surround measurements:"""
         #print "  ", self.params
 
         # Inform the user that we're entering a period of high computation.
-        write_to_statusbar("Generating new plots ...", 2)
-        write_to_statusbar("", 3)
+        write_to_statusbar("Generating new plots ...", 1)
+        write_to_statusbar("", 2)
 
         # Set the plotting figure manager for this class as the active one and
         # erase the current figure.
@@ -864,8 +892,8 @@ from two surround measurements:"""
         secs = time.time() - t0
 
         # Write the total execution and plotting time to the status bar.
-        write_to_statusbar("Plots updated", 2)
-        write_to_statusbar("%g secs" %(secs), 3)
+        write_to_statusbar("Plots updated", 1)
+        write_to_statusbar("%g secs" %(secs), 2)
 
 
     def OnReset(self, event):
@@ -972,6 +1000,14 @@ class TestPlotPage(wx.Panel):
             if (self.fignum==3 and '-test2' in sys.argv[1:]): test2()
         if self.fignum==4: test3()
         if self.fignum==5: test4(figure)
+
+
+    def active_page(self):
+        """This method is called when user selects (makes current) the page."""
+
+        write_to_statusbar("", 0)
+        write_to_statusbar("", 1)
+        write_to_statusbar("", 2)
 
 #==============================================================================
 
