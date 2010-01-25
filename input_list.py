@@ -546,51 +546,95 @@ class ItemListDialog(wx.Dialog):
 #==============================================================================
 
 class AppTestFrame(wx.Frame):
+    """
+    Interactively test both the ItemListDialog and the ItemListInput classes.
+    Both will display the same input fields.  Enter invalid data to verify
+    char-by-char error processing.  Press the OK and Done buttons with an
+    uncorrected highlighted field in error to generate a pop-up error box.
+    Resize the main window to see scroll bars disappear and reappear.
+    """
 
     def __init__(self):
         wx.Frame.__init__(self, parent=None, id=wx.ID_ANY,
-                          title="ItemListInput Test", size=(280, 300))
+                          title="ItemListInput Test", size=(260, 360))
         panel = wx.Panel(self, wx.ID_ANY, style=wx.RAISED_BORDER)
-        panel.SetBackgroundColour("WHITE")
+        panel.SetBackgroundColour("PALE GREEN")
 
-        fields = [ ["Integer:", 123, "int", None, True],
-                   ["Floating Point:", 45.678, "float", None, True],
-                   ["Non-editable field:", "Cannot be changed!", "str", None, False],
-                   ["String (1 or more char):", "Error if blank", "str", None, True],
-                   ["String (0 or more char):", "", "any", None, True],
-                   ["ComboBox String:", "Two", "str", ("One", "Two", "Three"), True],
-                   ["String (no validation):", "DANSE Project", "", None, True]
-                 ]
+        # Define fields for both ItemListInput and ItemListDialog to display.
+        self.fields = [
+            ["Integer:", 123, "int", None, True],
+            ["Floating Point:", 45.678, "float", None, True],
+            ["Non-editable field:", "Cannot be changed!", "str", None, False],
+            ["String (1 or more char):", "Error if blank", "str", None, True],
+            ["String (0 or more char):", "", "any", None, True],
+            ["ComboBox String:", "Two", "str", ("One", "Two", "Three"), True],
+            ["String (no validation):", "DANSE Project", "", None, True]
+                      ]
 
         # Create the scrolled window with input boxes.  Due to the size of the
         # frame and the parent panel, both scroll bars should be displayed.
-        self.scrolled = ItemListInput(parent=panel, itemlist=fields)
+        self.scrolled = ItemListInput(parent=panel, itemlist=self.fields)
 
-        # Create button to signal end of user edits.
-        ok_button = wx.Button(panel, wx.ID_OK, "OK")
+        # Create a button to request the popup dialog box.
+        show_button = wx.Button(panel, wx.ID_ANY, "Show Pop-up Dialog Box")
+        self.Bind(wx.EVT_BUTTON, self.OnShow, show_button)
+
+        # Create a button to signal end of user edits and one to exit program.
+        submit_button = wx.Button(panel, wx.ID_ANY, "Submit")
+        self.Bind(wx.EVT_BUTTON, self.OnSubmit, submit_button)
+        exit_button = wx.Button(panel, wx.ID_ANY, "Exit")
+        self.Bind(wx.EVT_BUTTON, self.OnExit, exit_button)
+
+        # Create a horizontal sizer for the buttons.
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         button_sizer.Add((10,20), 1)  # stretchable whitespace
-        button_sizer.Add(ok_button, 0)
-
-        self.Bind(wx.EVT_BUTTON, self.OnOkay, ok_button)
+        button_sizer.Add(submit_button, 0)
+        button_sizer.Add((10,20), 0)  # non-stretchable whitespace
+        button_sizer.Add(exit_button, 0)
 
         # Create a vertical box sizer for the panel and layout widgets in it.
-        box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(self.scrolled, 1, wx.EXPAND|wx.ALL, border=10)
-        box.Add(button_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.RIGHT, border=10)
+        box_sizer = wx.BoxSizer(wx.VERTICAL)
+        box_sizer.Add(show_button, 0, wx.ALIGN_CENTER|wx.ALL, border=10)
+        box_sizer.Add(self.scrolled, 1, wx.EXPAND|wx.ALL, border=10)
+        box_sizer.Add(button_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.ALL, border=10)
 
         # Associate the sizer with its container.
-        panel.SetSizer(box)
-        box.Fit(panel)
+        panel.SetSizer(box_sizer)
+        box_sizer.Fit(panel)
 
-    def OnOkay(self, event):
-        print "Results from all input fields:"
+
+    def OnShow(self, event):
+        # Display the same fields shown in the frame in a a pop-up dialog box.
+        dlg = ItemListDialog(parent=None,
+                             title="ItemListDialog Test",
+                             itemlist=self.fields)
+        if dlg.ShowModal() == wx.ID_OK:
+            print "Results from all input fields of the dialog box:"
+            print "  ", dlg.GetResults()
+        dlg.Destroy()
+
+
+    def OnSubmit(self, event):
+        # Explicitly validate all input parameters before proceeding.  Even
+        # though char-by-char validation would have warned the user about any
+        # invalid entries, the user could have pressed the Done button without
+        # making the corrections, so a full validation pass is necessary.
+        if not self.scrolled.Validate():
+            wx.MessageBox(caption="Data Entry Error",
+                message="Please correct the highlighted fields in error.",
+                style=wx.ICON_ERROR|wx.OK)
+            return  # keep the dialog box open
+        print "Results from all input fields of the scrolled panel:"
         print "  ", self.scrolled.GetResults()
 
 
-if __name__ == '__main__':
-    """GUI unit test of the ItemListInput class and input field validation."""
+    def OnExit(self, event):
+        # Terminate the program.
+        self.Close()
 
+
+if __name__ == '__main__':
+    # Interactively test both the ItemListInput and the ItemListDialog classes.
     app = wx.PySimpleApp()
     frame = AppTestFrame()
     frame.Show(True)
