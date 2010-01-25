@@ -433,13 +433,15 @@ your model."""
         sbox1_sizer.Add(line1, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sbox1_sizer.Add(line2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         #sbox1_sizer.Add(line3, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
-        sbox1_sizer.Add(self.model, 1, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
+        sbox1_sizer.Add(self.model, 1,
+                        wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
         sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.pan_inputs, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sbox2_sizer.Add(self.pan_inputs, 1,
+                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
@@ -736,7 +738,8 @@ the data files."""
         # manage them with a static box sizer.
         sbox = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
         sbox_sizer = wx.StaticBoxSizer(sbox, wx.VERTICAL)
-        sbox_sizer.Add(self.pan_inputs, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sbox_sizer.Add(self.pan_inputs, 1,
+                       wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
@@ -979,34 +982,37 @@ def write_to_statusbar(text, index):
     frame.statusbar.SetStatusText(text, index)
 
 
-def display_error_message(win, title, msg):
+def display_error_message(parent, caption, message):
     """Display an error message in a pop-up dialog box with an OK button."""
 
-    msg = wx.MessageDialog(win, msg, title, wx.ICON_ERROR|wx.OK)
+    msg = wx.MessageDialog(parent, message, caption, style=wx.ICON_ERROR|wx.OK)
     msg.ShowModal()
     msg.Destroy()
 
 
-def display_warning_message(win, title, msg):
+def display_warning_message(parent, caption, message):
     """Display a warning message in a pop-up dialog box with an OK button."""
 
-    msg = wx.MessageDialog(win, msg, title, wx.ICON_WARNING|wx.OK)
+    msg = wx.MessageDialog(parent, message, caption,
+                           style=wx.ICON_WARNING|wx.OK)
     msg.ShowModal()
     msg.Destroy()
 
 
-def display_information_message(win, title, msg):
-    """Display an informational message in a pop-up dialog box with an OK button."""
+def display_information_message(parent, caption, message):
+    """Display an informational message in a pop-up with an OK button."""
 
-    msg = wx.MessageDialog(win, msg, title, wx.ICON_INFORMATION|wx.OK)
+    msg = wx.MessageDialog(parent, message, caption,
+                           style=wx.ICON_INFORMATION|wx.OK)
     msg.ShowModal()
     msg.Destroy()
 
 
-def display_question(win, title, msg):
+def display_question(parent, caption, message):
     """Display a question in a pop-up dialog box with YES and NO buttons."""
 
-    msg = wx.MessageDialog(win, msg, title, wx.ICON_QUESTION|wx.YES_NO)
+    msg = wx.MessageDialog(parent, message, caption,
+                           style=wx.ICON_QUESTION|wx.YES_NO)
     msg.ShowModal()
     msg.Destroy()
 
@@ -1292,4 +1298,11 @@ class InversionApp(wx.App):
 if __name__ == '__main__':
     # Instantiate the application class and give control to wxPython.
     app = InversionApp(redirect=False, filename=None)
+
+    # For wx debugging, load the wxPython Widget Inspection Tool if requested.
+    # It will cause a separate interactive debugger window to be displayed.
+    if len(sys.argv) > 1 and '-inspect' in sys.argv[1:]:
+        import wx.lib.inspection
+        wx.lib.inspection.InspectionTool().Show()
+
     app.MainLoop()
