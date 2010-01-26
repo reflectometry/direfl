@@ -167,6 +167,14 @@ class AppFrame(wx.Frame):
 
         mb.Append(file_menu, "&File")
 
+        # Add an 'Edit' menu to the menu bar and define its options.
+        edit_menu = wx.Menu()
+
+        ret_id = edit_menu.Append(wx.ID_ANY, "&Instrument ...")
+        self.Bind(wx.EVT_MENU, self.OnInstrument, ret_id)
+
+        mb.Append(edit_menu, "&Edit")
+
         # Add a 'Help' menu to the menu bar and define its options.
         help_menu = wx.Menu()
 
@@ -255,7 +263,8 @@ class AppFrame(wx.Frame):
         notebook pages (via clicking on the notebook tab).
         """
 
-        prev_page = self.notebook.GetPage(event.GetOldSelection())
+        #prev_page = self.notebook.GetPage(event.GetOldSelection())
+        #print "*** OnPageChanged:", event.GetOldSelection(), event.GetSelection()
         curr_page = self.notebook.GetPage(event.GetSelection())
         curr_page.active_page()
         event.Skip()
@@ -286,6 +295,12 @@ class AppFrame(wx.Frame):
     def OnExit(self, event):
         """Terminate the program."""
         self.Close()
+
+
+    def OnInstrument(self, event):
+        """Edit instrument metadata."""
+
+        self.page0.sim_tab_OnInstrument(event)  # TODO: create menu in dest class
 
 
     def OnLicense(self, evt):
@@ -379,6 +394,8 @@ class SimulatedDataPage(wx.Panel):
     def init_panel_1(self):
         """Initialize the left panel of the SimulatedDataPage."""
 
+        self.default_inst_idx = 0
+
         fields = [
                 ###["SLD of Substrate:", 2.07, "float", None, True],
                    ["SLD of Surface 1:", 0.0, "float", None, True],
@@ -400,7 +417,7 @@ class SimulatedDataPage(wx.Panel):
                 ###["Monitor:", "None", "str", None, False]
                  ]
 
-        self.pan_inputs = ItemListInput(parent=self.pan1, itemlist=fields)
+        self.inv_params = ItemListInput(parent=self.pan1, itemlist=fields)
 
         '''
         # Create an introductory section for the panel.
@@ -411,11 +428,11 @@ class SimulatedDataPage(wx.Panel):
         '''
 
         # Create instructions for using the model description input box.
-        line1 = wx.StaticText(self, wx.ID_ANY,
+        line1 = wx.StaticText(self.pan1, wx.ID_ANY,
                     label="Define the Surface, Sample Layers, and Substrate")
-        line2 = wx.StaticText(self, wx.ID_ANY,
-                    label="    components of your model (one layer per line):")
-        #line3 = wx.StaticText(self, wx.ID_ANY,
+        line2 = wx.StaticText(self.pan1, wx.ID_ANY,
+                    label="components of your model (one layer per line):")
+        #line3 = wx.StaticText(self.pan1, wx.ID_ANY,
         #           label="    as shown below (roughness defaults to 0):")
 
         # Read in demo model parameters.
@@ -451,34 +468,70 @@ class SimulatedDataPage(wx.Panel):
         sbox1_sizer.Add(self.model, 1,
                         wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
+        self.pan4 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
+        self.pan4.SetBackgroundColour("WHITE")
+        # Present a combobox with instrument choices.
+        cb_label = wx.StaticText(self.pan4, wx.ID_ANY, "Choose Instrument:")
+        instruments = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
+                      "SNS Liquid", "SNS Magnetic")
+        cb = wx.ComboBox(self.pan4, wx.ID_ANY,
+                         value=instruments[0],
+                         choices=instruments,
+                         style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
+
+        # Create a horizontal box sizer for the combo box and its label.
+        hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox1_sizer.Add(cb_label, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.TOP|wx.BOTTOM|wx.LEFT, border=10)
+        hbox1_sizer.Add(cb, 1, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, border=10)
+
+        # Associate the sizer with its container.
+        self.pan4.SetSizer(hbox1_sizer)
+        hbox1_sizer.Fit(self.pan4)
+
+        # Create button controls.
+        btn_edit = wx.Button(self.pan1, wx.ID_ANY, "Edit")
+        self.Bind(wx.EVT_BUTTON, self.OnEdit, btn_edit)
+        btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
+        self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
+
+        # Create a horizontal box sizer for the buttons.
+        hbox2_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox2_sizer.Add((10,20), 1)  # stretchable whitespace
+        hbox2_sizer.Add(btn_edit, 0)
+        hbox2_sizer.Add((10,20), 0)  # non-stretchable whitespace
+        hbox2_sizer.Add(btn_reset, 0)
+
+        # Group instrument metadata widgets into a labelled section and
+        # manage them with a static box sizer.
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Metadata")
+        sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
+        sbox2_sizer.Add(self.pan4, 0,
+                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
+
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
-        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
-        sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.pan_inputs, 1,
+        sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
+        sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
+        sbox3_sizer.Add(self.inv_params, 1,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
-        #btn_compute.SetDefault()
-        #btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
-
         self.Bind(wx.EVT_BUTTON, self.OnCompute, btn_compute)
-        #self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
 
         # Create a horizontal box sizer for the buttons.
-        box_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        box_sizer.Add((10,20), 1)  # stretchable whitespace
-        box_sizer.Add(btn_compute, 0)
-        #box_sizer.Add((10,20), 0)  # non-stretchable whitespace
-        #box_sizer.Add(btn_reset, 0)
+        hbox3_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox3_sizer.Add((10,20), 1)  # stretchable whitespace
+        hbox3_sizer.Add(btn_compute, 0)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
-        #sizer.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
-        sizer.Add(sbox1_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        sizer.Add(sbox2_sizer, 1, wx.EXPAND|wx.ALL, border=10)
-        sizer.Add(box_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(sbox1_sizer, 2, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(sbox2_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(sbox3_sizer, 3, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(hbox3_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.ALL, border=10)
 
         # Associate the sizer with its container.
         self.pan1.SetSizer(sizer)
@@ -538,6 +591,10 @@ from your model."""
         write_to_statusbar("", 1)
         write_to_statusbar("", 2)
 
+    def OnComboBoxSelect(self, event):
+        """Process the user's choice of instrument."""
+        sel = event.GetEventObject().GetSelection()
+        self.default_inst_idx = sel
 
     def OnCompute(self, event):
         """Perform the operation."""
@@ -551,13 +608,13 @@ from your model."""
         # char-by-char validation would have warned the user about any invalid
         # entries, the user could have pressed the Compute button without
         # making the corrections, so a full validation pass must be done now.
-        if not self.pan_inputs.Validate():
+        if not self.inv_params.Validate():
             display_error_message(self, "Data Entry Error",
                 "Please correct the highlighted fields in error.")
             return
 
         # Get the validated parameters.
-        self.params = self.pan_inputs.GetResults()
+        self.params = self.inv_params.GetResults()
 
         # Validate and convert the model description into a list of layers.
         lines = self.model.GetValue().splitlines()
@@ -615,8 +672,50 @@ from your model."""
         write_to_statusbar("%g secs" %(secs), 2)
 
 
+    def OnEdit(self, event):
+        self.sim_tab_OnInstrument(None)
+
+
     def OnReset(self, event):
         pass
+
+
+    def sim_tab_OnInstrument(self, event):
+    #def OnInstrument(self, event):  # TODO: reorganize menu to call directly
+        """Edit instrument metadata."""
+        from ncnrdata import ANDR, NG1, NG7, XRay
+
+        instruments = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
+                      "SNS Liquid", "SNS Magnetic")
+        radiation = ("neutron", "xray")
+        fields = [
+                   ["Instrument Name:", instruments[self.default_inst_idx],
+                    "any", instruments, True],
+                   ["Radiation Type:", radiation[0], "str", radiation, True],
+                   ["Wavelength (A):", 0.0, "float", None, True],
+                   ["Wavelength Dispersion (dLoL):", 0.0, "float", None, True],
+                   ["Distance to Slit 1 (mm):", 0.0, "float", None, True],
+                   ["Distance to Slit 2 (mm):", 0.0, "float", None, True],
+                   ["Theta Lo (degrees):", 0.0, "float", None, True],
+                   ["Theta Hi (degrees):", 0.0, "float", None, True],
+                   ["Slit 1 at Theta Lo (mm):", 0.0, "float", None, True],
+                   ["Slit 2 at Theta Lo (mm):", 0.0, "float", None, True],
+                   ["Slit 1 below Theta Lo (mm):", 0.0, "float", None, True],
+                   ["Slit 2 below Theta Lo (mm):", 0.0, "float", None, True],
+                   ["Slit 1 above Theta Hi (mm):", 0.0, "float", None, True],
+                   ["Slit 2 above Theta Hi (mm):", 0.0, "float", None, True],
+                   ["Sample Width (mm):", 0.0, "float", None, True],
+                   ["Sample Broadening (mm):", 0.0, "float", None, True],
+                 ]
+
+        dlg = ItemListDialog(parent=self,
+                             title="Edit Instrument Metadata",
+                             pos=(500, 100),
+                             itemlist=fields)
+        if dlg.ShowModal() == wx.ID_OK:
+            print "Results from all input fields of the dialog box:"
+            print "  ", dlg.GetResults()
+        dlg.Destroy()
 
 
     def sim_tab_OnLoadModel(self, event):
@@ -749,13 +848,13 @@ class CollectedDataPage(wx.Panel):
                 ###["Monitor:", "None", "str", None, False]
                  ]
 
-        self.pan_inputs = ItemListInput(parent=self.pan1, itemlist=fields)
+        self.inv_params = ItemListInput(parent=self.pan1, itemlist=fields)
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
         sbox = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
         sbox_sizer = wx.StaticBoxSizer(sbox, wx.VERTICAL)
-        sbox_sizer.Add(self.pan_inputs, 1,
+        sbox_sizer.Add(self.inv_params, 1,
                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
         # Create button controls.
@@ -862,7 +961,7 @@ from the data files."""
         # char-by-char validation would have warned the user about any invalid
         # entries, the user could have pressed the Compute button without
         # making the corrections, so a full validation pass must be done now.
-        if not self.pan_inputs.Validate():
+        if not self.inv_params.Validate():
             display_error_message(self, "Data Entry Error",
                 "Please correct the highlighted fields in error.")
             return
@@ -870,7 +969,7 @@ from the data files."""
         self.args = [self.data_file_1, self.data_file_2]
 
         # Get the validated parameters.
-        self.params = self.pan_inputs.GetResults()
+        self.params = self.inv_params.GetResults()
         #print "Results from %d input fields:" %(len(self.params))
         #print "  ", self.params
 
