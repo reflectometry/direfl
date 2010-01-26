@@ -60,6 +60,9 @@ from about import (APP_NAME, APP_TITLE, APP_VERSION,
                    APP_PROJECT_URL, APP_PROJECT_TAG,
                    APP_TUTORIAL_URL, APP_TUTORIAL_TXT)
 
+from ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
+from snsdata import Liquids, Magnetic
+
 # Desired initial window size (if physical screen size permits).
 DISPLAY_WIDTH = 1200
 DISPLAY_HEIGHT = 900
@@ -80,6 +83,8 @@ DEMO_REFLDATA_2 = "qrd2.refl"
 
 NEWLINE = "\n"
 NEWLINES_2 = "\n\n"
+
+BEIGE = "#F3EED6"
 
 #==============================================================================
 
@@ -210,7 +215,6 @@ class AppFrame(wx.Frame):
         sb = self.statusbar = self.CreateStatusBar()
         sb.SetFieldsCount(len(subbars))
         sb.SetStatusWidths(subbars)
-        sb.SetStatusText("Welcome to DiRefl", 0)
 
 
     def add_notebookbar(self):
@@ -375,8 +379,8 @@ class SimulatedDataPage(wx.Panel):
         self.pan2 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
         self.pan2.SetBackgroundColour("WHITE")
 
-        self.init_panel_1()
-        self.init_panel_2()
+        self.init_param_panel()
+        self.init_plot_panel()
 
         # Attach the child panels to the splitter.
         sp.SplitVertically(self.pan1, self.pan2, sashPosition=300)
@@ -391,8 +395,8 @@ class SimulatedDataPage(wx.Panel):
         self.active_page()
 
 
-    def init_panel_1(self):
-        """Initialize the left panel of the SimulatedDataPage."""
+    def init_param_panel(self):
+        """Initialize the parameter input panel of the SimulatedDataPage."""
 
         self.default_inst_idx = 0
 
@@ -418,14 +422,6 @@ class SimulatedDataPage(wx.Panel):
                  ]
 
         self.inv_params = ItemListInput(parent=self.pan1, itemlist=fields)
-
-        '''
-        # Create an introductory section for the panel.
-        INTRO_TEXT = "Tutorial information for the user ..."
-        intro = wx.TextCtrl(self.pan1, wx.ID_ANY, value=INTRO_TEXT,
-                            style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.TE_READONLY)
-        intro.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
-        '''
 
         # Create instructions for using the model description input box.
         line1 = wx.StaticText(self.pan1, wx.ID_ANY,
@@ -456,6 +452,7 @@ class SimulatedDataPage(wx.Panel):
         self.model = wx.TextCtrl(self.pan1, wx.ID_ANY,
                                  value=demo_model_params,
                                  style=wx.TE_MULTILINE|wx.TE_WORDWRAP)
+        self.model.SetBackgroundColour(BEIGE)
         #self.model.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         # Group model parameter widgets into a labelled section and
@@ -468,13 +465,13 @@ class SimulatedDataPage(wx.Panel):
         sbox1_sizer.Add(self.model, 1,
                         wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
-        self.pan4 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
-        self.pan4.SetBackgroundColour("WHITE")
+        self.pan11 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
+        self.pan11.SetBackgroundColour(BEIGE)
         # Present a combobox with instrument choices.
-        cb_label = wx.StaticText(self.pan4, wx.ID_ANY, "Choose Instrument:")
+        cb_label = wx.StaticText(self.pan11, wx.ID_ANY, "Choose Instrument:")
         instruments = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
                       "SNS Liquid", "SNS Magnetic")
-        cb = wx.ComboBox(self.pan4, wx.ID_ANY,
+        cb = wx.ComboBox(self.pan11, wx.ID_ANY,
                          value=instruments[0],
                          choices=instruments,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
@@ -486,8 +483,8 @@ class SimulatedDataPage(wx.Panel):
         hbox1_sizer.Add(cb, 1, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, border=10)
 
         # Associate the sizer with its container.
-        self.pan4.SetSizer(hbox1_sizer)
-        hbox1_sizer.Fit(self.pan4)
+        self.pan11.SetSizer(hbox1_sizer)
+        hbox1_sizer.Fit(self.pan11)
 
         # Create button controls.
         btn_edit = wx.Button(self.pan1, wx.ID_ANY, "Edit")
@@ -506,7 +503,7 @@ class SimulatedDataPage(wx.Panel):
         # manage them with a static box sizer.
         sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Metadata")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.pan4, 0,
+        sbox2_sizer.Add(self.pan11, 0,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
 
@@ -538,8 +535,8 @@ class SimulatedDataPage(wx.Panel):
         sizer.Fit(self.pan1)
 
 
-    def init_panel_2(self):
-        """Initialize the right panel of the SimulatedDataPage."""
+    def init_plot_panel(self):
+        """Initialize the plotting panel of the SimulatedDataPage."""
 
         INTRO_TEXT = """\
 Results from phase reconstruction and inversion of simulated data files \
@@ -683,7 +680,6 @@ from your model."""
     def sim_tab_OnInstrument(self, event):
     #def OnInstrument(self, event):  # TODO: reorganize menu to call directly
         """Edit instrument metadata."""
-        from ncnrdata import ANDR, NG1, NG7, XRay
 
         instruments = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
                       "SNS Liquid", "SNS Magnetic")
@@ -813,8 +809,8 @@ class CollectedDataPage(wx.Panel):
         self.pan2 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
         self.pan2.SetBackgroundColour("WHITE")
 
-        self.init_panel_1()
-        self.init_panel_2()
+        self.init_param_panel()
+        self.init_plot_panel()
 
         # Attach the panels to the splitter.
         sp.SplitVertically(self.pan1, self.pan2, sashPosition=300)
@@ -827,8 +823,8 @@ class CollectedDataPage(wx.Panel):
         sizer.Fit(self)
 
 
-    def init_panel_1(self):
-        """Initialize the left panel of the CollectedDataPage."""
+    def init_param_panel(self):
+        """Initialize the parameter input panel of the CollectedDataPage."""
 
         fields = [ ["SLD of Substrate:", 2.07, "float", None, True],
                    ["SLD of Surface 1:", 6.33, "float", None, True],
@@ -883,8 +879,8 @@ class CollectedDataPage(wx.Panel):
         sizer.Fit(self.pan1)
 
 
-    def init_panel_2(self):
-        """Initialize the right panel of the CollectedDataPage."""
+    def init_plot_panel(self):
+        """Initialize the plotting panel of the CollectedDataPage."""
 
         INTRO_TEXT = """\
 Results from phase reconstruction and inversion of reflectometry data files \
@@ -929,8 +925,6 @@ from two surround measurements:"""
         self.data_file_1 = os.path.join(root, DEMO_REFLDATA_1)
         self.data_file_2 = os.path.join(root, DEMO_REFLDATA_2)
 
-        #self.pan2.Bind(wx.EVT_MOTION, self.OnPan2Motion)
-
 
     def active_page(self):
         """This method is called when user selects (makes current) the page."""
@@ -941,12 +935,6 @@ from the data files."""
         write_to_statusbar(WHAT_TODO_NEXT, 0)
         write_to_statusbar("", 1)
         write_to_statusbar("", 2)
-
-
-    def OnPan2Motion(self, event):
-        """Display cursor position in status bar."""
-
-        write_to_statusbar("%s" % str(event.GetPositionTuple()), 3)
 
 
     def OnCompute(self, event):
@@ -1051,7 +1039,7 @@ class TestPlotPage(wx.Panel):
 
         self.pan1 = wx.Panel(self, wx.ID_ANY, style=wx.SUNKEN_BORDER)
 
-        self.init_panel_1()
+        self.init_testplot_panel()
 
         # Put the panel in a sizer attached to the main panel of the page.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1060,8 +1048,8 @@ class TestPlotPage(wx.Panel):
         sizer.Fit(self)
 
 
-    def init_panel_1(self):
-        """Initialize the first panel of the TestPlotPage."""
+    def init_testplot_panel(self):
+        """Initialize the main panel of the TestPlotPage."""
 
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
@@ -1115,6 +1103,7 @@ def write_to_statusbar(text, index):
 
     frame = wx.FindWindowByName("AppFrame", parent=None)
     frame.statusbar.SetStatusText(text, index)
+    print "*** writing to index", index
 
 
 def display_error_message(parent, caption, message):

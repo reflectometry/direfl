@@ -28,14 +28,14 @@
 
 [Setup]
 ; Make the AppName string unique so that other versions of the program can be installed simultaniously
-AppName=DiRefl 0.3.0
-AppVerName=DiRefl 0.3.0
-DefaultDirName={pf}\DANSE\DiRefl 0.3.0
-DefaultGroupName=DANSE\DiRefl 0.3.0
+AppName=DiRefl 0.4.0
+AppVerName=DiRefl 0.4.0
+DefaultDirName={pf}\DANSE\DiRefl 0.4.0
+DefaultGroupName=DANSE\DiRefl 0.4.0
 DisableProgramGroupPage=yes
 SourceDir=.
-OutputBaseFilename=DiRefl-0.3.0-win32
-OutputManifestFile=DiRefl-0.3.0-manifest.txt
+OutputBaseFilename=DiRefl-0.4.0-win32
+OutputManifestFile=DiRefl-0.4.0-manifest.txt
 OutputDir=.
 ; Specify an icon file for inclusion in the setup and uninstall programs that will be created
 SetupIconFile=direfl.ico
@@ -69,8 +69,8 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Name: "{group}\Launch DiRefl"; Filename: "{app}\direfl.exe"; IconFilename: "{app}\direfl.ico"
 Name: "{group}\{cm:ProgramOnTheWeb,DiRefl}"; Filename: "http://www.reflectometry.org/danse/"
 Name: "{group}\{cm:UninstallProgram,DiRefl}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\DiRefl 0.3.0"; Filename: "{app}\direfl.exe"; Tasks: desktopicon; WorkingDir: "{app}"; IconFilename: "{app}\direfl.ico"
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\DiRefl 0.3.0"; Filename: "{app}\direfl.exe"; Tasks: quicklaunchicon; WorkingDir: "{app}"; IconFilename: "{app}\direfl.ico"
+Name: "{commondesktop}\DiRefl 0.4.0"; Filename: "{app}\direfl.exe"; Tasks: desktopicon; WorkingDir: "{app}"; IconFilename: "{app}\direfl.ico"
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\DiRefl 0.4.0"; Filename: "{app}\direfl.exe"; Tasks: quicklaunchicon; WorkingDir: "{app}"; IconFilename: "{app}\direfl.ico"
 
 [Run]
 Filename: "{app}\direfl.exe"; Description: "{cm:LaunchProgram,DiRefl}"; Flags: nowait postinstall skipifsilent

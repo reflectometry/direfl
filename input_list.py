@@ -28,6 +28,8 @@ validating user input.
 import wx
 from wx.lib.scrolledpanel import ScrolledPanel
 
+BEIGE = "#F3EED6"
+
 
 class ItemListValidator(wx.PyValidator):
     """
@@ -175,7 +177,8 @@ class ItemListInput(ScrolledPanel):
         ScrolledPanel.__init__(self, parent, id, pos, size, style, name)
 
         self.itemlist = itemlist
-        self.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW))
+        #self.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW))
+        self.SetBackgroundColour(BEIGE)
 
         # Specify the widget layout using sizers.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
