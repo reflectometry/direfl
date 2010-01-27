@@ -233,7 +233,6 @@ class AppFrame(wx.Frame):
 
         # Create test page windows and add them to notebook if requested.
         if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
-            print "***", sys.argv[1:]
             self.page2 = TestPlotPage(nb, colour="GREEN", fignum=2)
             self.page3 = TestPlotPage(nb, colour="BLUE", fignum=3)
             self.page4 = TestPlotPage(nb, colour="YELLOW", fignum=4)
@@ -257,6 +256,8 @@ class AppFrame(wx.Frame):
         nb.InsertPage(0, self.page1, "Replace 1")
         nb.InsertPage(1, self.page0, "Replace 0")
         '''
+
+        self.page0.active_page()
 
         self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged)
 
@@ -304,7 +305,7 @@ class AppFrame(wx.Frame):
     def OnInstrument(self, event):
         """Edit instrument metadata."""
 
-        self.page0.sim_tab_OnInstrument(event)  # TODO: create menu in dest class
+        self.page0.OnEdit(event)
 
 
     def OnLicense(self, evt):
@@ -392,36 +393,11 @@ class SimulatedDataPage(wx.Panel):
         self.SetSizer(sizer)
         sizer.Fit(self)
 
-        self.active_page()
-
 
     def init_param_panel(self):
         """Initialize the parameter input panel of the SimulatedDataPage."""
 
-        self.default_inst_idx = 0
-
-        fields = [
-                ###["SLD of Substrate:", 2.07, "float", None, True],
-                   ["SLD of Surface 1:", 0.0, "float", None, True],
-                   ["SLD of Surface 2:", 4.5, "float", None, True],
-                ###["Sample Thickness:", 1000, "float", None, True],
-                   ["Qmin:", 0.0, "float", None, True],
-                   ["Qmax:", 0.4, "float", None, True],
-                   ["# Profile Steps:", 128, "int", None, True],
-                   ["Over Sampling Factor:", 4, "int", None, True],
-                   ["# Inversion Iterations:", 6, "int", None, True],
-                   ["# Monte Carlo Trials:", 10, "int", None, True],
-                ###["Cosine Transform Smoothing:", 0.0, "float", None, True],
-                ###["Back Reflectivity:", "True", "str", ("True", "False"), True],
-                ###["Inversion Noise Factor:", 1, "int", None, True],
-                   ["Simulated Noise (as %):", 8.0, "float", None, True],
-                   ["Bound State Energy:", 0.0, "float", None, True],
-                   ["Perfect Reconstruction:", "False", "str", ("True", "False"), True],
-                ###["Show Iterations:", "False", "str", ("True", "False"), True]
-                ###["Monitor:", "None", "str", None, False]
-                 ]
-
-        self.inv_params = ItemListInput(parent=self.pan1, itemlist=fields)
+        self.instmeta = InstrumentMetadata()
 
         # Create instructions for using the model description input box.
         line1 = wx.StaticText(self.pan1, wx.ID_ANY,
@@ -465,21 +441,26 @@ class SimulatedDataPage(wx.Panel):
         sbox1_sizer.Add(self.model, 1,
                         wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
+        #----------------------------------------------------------------------
+
+        # Create a panel for gathering instrument metadata.
         self.pan11 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
         self.pan11.SetBackgroundColour(BEIGE)
+
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan11, wx.ID_ANY, "Choose Instrument:")
-        instruments = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
-                      "SNS Liquid", "SNS Magnetic")
+        inst_names = self.instmeta.get_instruments()
         cb = wx.ComboBox(self.pan11, wx.ID_ANY,
-                         value=instruments[0],
-                         choices=instruments,
+                         value=inst_names[self.instmeta.get_inst_idx()],
+                         choices=inst_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
 
         # Create a horizontal box sizer for the combo box and its label.
         hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox1_sizer.Add(cb_label, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.TOP|wx.BOTTOM|wx.LEFT, border=10)
+        hbox1_sizer.Add(cb_label, 0,
+            wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.TOP|wx.BOTTOM|wx.LEFT,
+            border=10)
         hbox1_sizer.Add(cb, 1, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, border=10)
 
         # Associate the sizer with its container.
@@ -507,12 +488,39 @@ class SimulatedDataPage(wx.Panel):
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
 
+        #----------------------------------------------------------------------
+
+        fields = [
+                ###["SLD of Substrate:", 2.07, "float", None, True],
+                   ["SLD of Surface 1:", 0.0, "float", None, True],
+                   ["SLD of Surface 2:", 4.5, "float", None, True],
+                ###["Sample Thickness:", 1000, "float", None, True],
+                   ["Qmin:", 0.0, "float", None, True],
+                   ["Qmax:", 0.4, "float", None, True],
+                   ["# Profile Steps:", 128, "int", None, True],
+                   ["Over Sampling Factor:", 4, "int", None, True],
+                   ["# Inversion Iterations:", 6, "int", None, True],
+                   ["# Monte Carlo Trials:", 10, "int", None, True],
+                ###["Cosine Transform Smoothing:", 0.0, "float", None, True],
+                ###["Back Reflectivity:", "True", "str", ("True", "False"), True],
+                ###["Inversion Noise Factor:", 1, "int", None, True],
+                   ["Simulated Noise (as %):", 8.0, "float", None, True],
+                   ["Bound State Energy:", 0.0, "float", None, True],
+                   ["Perfect Reconstruction:", "False", "str", ("True", "False"), True],
+                ###["Show Iterations:", "False", "str", ("True", "False"), True]
+                ###["Monitor:", "None", "str", None, False]
+                 ]
+
+        self.inv_params = ItemListInput(parent=self.pan1, itemlist=fields)
+
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
         sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
         sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
         sbox3_sizer.Add(self.inv_params, 1,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+
+        #----------------------------------------------------------------------
 
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
@@ -588,10 +596,13 @@ from your model."""
         write_to_statusbar("", 1)
         write_to_statusbar("", 2)
 
+
     def OnComboBoxSelect(self, event):
         """Process the user's choice of instrument."""
+
         sel = event.GetEventObject().GetSelection()
-        self.default_inst_idx = sel
+        self.instmeta.set_inst_idx(sel)
+
 
     def OnCompute(self, event):
         """Perform the operation."""
@@ -670,48 +681,11 @@ from your model."""
 
 
     def OnEdit(self, event):
-        self.sim_tab_OnInstrument(None)
+        self.instmeta.edit_metadata()
 
 
     def OnReset(self, event):
         pass
-
-
-    def sim_tab_OnInstrument(self, event):
-    #def OnInstrument(self, event):  # TODO: reorganize menu to call directly
-        """Edit instrument metadata."""
-
-        instruments = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
-                      "SNS Liquid", "SNS Magnetic")
-        radiation = ("neutron", "xray")
-        fields = [
-                   ["Instrument Name:", instruments[self.default_inst_idx],
-                    "any", instruments, True],
-                   ["Radiation Type:", radiation[0], "str", radiation, True],
-                   ["Wavelength (A):", 0.0, "float", None, True],
-                   ["Wavelength Dispersion (dLoL):", 0.0, "float", None, True],
-                   ["Distance to Slit 1 (mm):", 0.0, "float", None, True],
-                   ["Distance to Slit 2 (mm):", 0.0, "float", None, True],
-                   ["Theta Lo (degrees):", 0.0, "float", None, True],
-                   ["Theta Hi (degrees):", 0.0, "float", None, True],
-                   ["Slit 1 at Theta Lo (mm):", 0.0, "float", None, True],
-                   ["Slit 2 at Theta Lo (mm):", 0.0, "float", None, True],
-                   ["Slit 1 below Theta Lo (mm):", 0.0, "float", None, True],
-                   ["Slit 2 below Theta Lo (mm):", 0.0, "float", None, True],
-                   ["Slit 1 above Theta Hi (mm):", 0.0, "float", None, True],
-                   ["Slit 2 above Theta Hi (mm):", 0.0, "float", None, True],
-                   ["Sample Width (mm):", 0.0, "float", None, True],
-                   ["Sample Broadening (mm):", 0.0, "float", None, True],
-                 ]
-
-        dlg = ItemListDialog(parent=self,
-                             title="Edit Instrument Metadata",
-                             pos=(500, 100),
-                             itemlist=fields)
-        if dlg.ShowModal() == wx.ID_OK:
-            print "Results from all input fields of the dialog box:"
-            print "  ", dlg.GetResults()
-        dlg.Destroy()
 
 
     def sim_tab_OnLoadModel(self, event):
@@ -795,6 +769,7 @@ class CollectedDataPage(wx.Panel):
 
     def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
+        self.parent=parent
         self.fignum=fignum
         self.SetBackgroundColour(colour)
 
@@ -826,6 +801,55 @@ class CollectedDataPage(wx.Panel):
     def init_param_panel(self):
         """Initialize the parameter input panel of the CollectedDataPage."""
 
+        self.instmeta = InstrumentMetadata()
+
+        # Create a panel for gathering instrument metadata.
+        self.pan11 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
+        self.pan11.SetBackgroundColour(BEIGE)
+
+        # Present a combobox with instrument choices.
+        cb_label = wx.StaticText(self.pan11, wx.ID_ANY, "Choose Instrument:")
+        inst_names = self.instmeta.get_instruments()
+        cb = wx.ComboBox(self.pan11, wx.ID_ANY,
+                         value=inst_names[self.instmeta.get_inst_idx()],
+                         choices=inst_names,
+                         style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
+
+        # Create a horizontal box sizer for the combo box and its label.
+        hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox1_sizer.Add(cb_label, 0,
+            wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.TOP|wx.BOTTOM|wx.LEFT,
+            border=10)
+        hbox1_sizer.Add(cb, 1, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, border=10)
+
+        # Associate the sizer with its container.
+        self.pan11.SetSizer(hbox1_sizer)
+        hbox1_sizer.Fit(self.pan11)
+
+        # Create button controls.
+        btn_edit = wx.Button(self.pan1, wx.ID_ANY, "Edit")
+        self.Bind(wx.EVT_BUTTON, self.OnEdit, btn_edit)
+        btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
+        self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
+
+        # Create a horizontal box sizer for the buttons.
+        hbox2_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox2_sizer.Add((10,20), 1)  # stretchable whitespace
+        hbox2_sizer.Add(btn_edit, 0)
+        hbox2_sizer.Add((10,20), 0)  # non-stretchable whitespace
+        hbox2_sizer.Add(btn_reset, 0)
+
+        # Group instrument metadata widgets into a labelled section and
+        # manage them with a static box sizer.
+        sbox1 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Metadata")
+        sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
+        sbox1_sizer.Add(self.pan11, 0,
+                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sbox1_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
+
+        #----------------------------------------------------------------------
+
         fields = [ ["SLD of Substrate:", 2.07, "float", None, True],
                    ["SLD of Surface 1:", 6.33, "float", None, True],
                    ["SLD of Surface 2:", 0.0, "float", None, True],
@@ -848,31 +872,28 @@ class CollectedDataPage(wx.Panel):
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
-        sbox = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
-        sbox_sizer = wx.StaticBoxSizer(sbox, wx.VERTICAL)
-        sbox_sizer.Add(self.inv_params, 1,
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
+        sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
+        sbox2_sizer.Add(self.inv_params, 1,
                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+
+        #----------------------------------------------------------------------
 
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
-        #btn_compute.SetDefault()
-        #btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
-
         self.Bind(wx.EVT_BUTTON, self.OnCompute, btn_compute)
-        #self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
 
         # Create a horizontal box sizer for the buttons.
         box_sizer = wx.BoxSizer(wx.HORIZONTAL)
         box_sizer.Add((10,20), 1)  # stretchable whitespace
         box_sizer.Add(btn_compute, 0)
-        #box_sizer.Add((10,20), 0)  # non-stretchable whitespace
-        #box_sizer.Add(btn_reset, 0)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
         #sizer.Add(intro, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        sizer.Add(sbox_sizer, 1, wx.EXPAND|wx.ALL, border=10)
-        sizer.Add(box_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, 10)
+        sizer.Add(sbox1_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(sbox2_sizer, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(box_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.ALL, border=10)
 
         # Associate the sizer with its container.
         self.pan1.SetSizer(sizer)
@@ -937,6 +958,13 @@ from the data files."""
         write_to_statusbar("", 2)
 
 
+    def OnComboBoxSelect(self, event):
+        """Process the user's choice of instrument."""
+
+        sel = event.GetEventObject().GetSelection()
+        self.instmeta.set_inst_idx(sel)
+
+
     def OnCompute(self, event):
         """Perform the operation."""
 
@@ -981,6 +1009,10 @@ from the data files."""
         # Write the total execution and plotting time to the status bar.
         write_to_statusbar("Plots updated", 1)
         write_to_statusbar("%g secs" %(secs), 2)
+
+
+    def OnEdit(self, event):
+        self.instmeta.edit_metadata()
 
 
     def OnReset(self, event):
@@ -1098,12 +1130,61 @@ class TestPlotPage(wx.Panel):
 
 #==============================================================================
 
+class InstrumentMetadata():
+    """This class is responsible for processing the instrument metadata."""
+
+    def __init__(self):
+        self.instruments = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
+                            "SNS Liquid", "SNS Magnetic")
+        self.radiation = ("neutron", "xray")
+        self.inst_idx = 0
+
+    def get_instruments(self):
+        return self.instruments
+
+    def get_inst_idx(self):
+        return self.inst_idx
+
+    def set_inst_idx(self, index):
+            self.inst_idx = index
+
+    def edit_metadata(self):
+        fields = [
+                   ["Instrument Name:", self.instruments[self.inst_idx],
+                    "any", self.instruments, True],
+                   ["Radiation Type:", self.radiation[0], "str", self.radiation, True],
+                   ["Wavelength (A):", 0.0, "float", None, True],
+                   ["Wavelength Dispersion (dLoL):", 0.0, "float", None, True],
+                   ["Distance to Slit 1 (mm):", 0.0, "float", None, True],
+                   ["Distance to Slit 2 (mm):", 0.0, "float", None, True],
+                   ["Theta Lo (degrees):", 0.0, "float", None, True],
+                   ["Theta Hi (degrees):", 0.0, "float", None, True],
+                   ["Slit 1 at Theta Lo (mm):", 0.0, "float", None, True],
+                   ["Slit 2 at Theta Lo (mm):", 0.0, "float", None, True],
+                   ["Slit 1 below Theta Lo (mm):", 0.0, "float", None, True],
+                   ["Slit 2 below Theta Lo (mm):", 0.0, "float", None, True],
+                   ["Slit 1 above Theta Hi (mm):", 0.0, "float", None, True],
+                   ["Slit 2 above Theta Hi (mm):", 0.0, "float", None, True],
+                   ["Sample Width (mm):", 0.0, "float", None, True],
+                   ["Sample Broadening (mm):", 0.0, "float", None, True],
+                 ]
+
+        dlg = ItemListDialog(parent=None,
+                             title="Edit Instrument Metadata",
+                             pos=(500, 100),
+                             itemlist=fields)
+        if dlg.ShowModal() == wx.ID_OK:
+            print "Results from all input fields of the dialog box:"
+            print "  ", dlg.GetResults()
+        dlg.Destroy()
+
+#==============================================================================
+
 def write_to_statusbar(text, index):
     """Write a message to the status bar in the specified slot."""
 
     frame = wx.FindWindowByName("AppFrame", parent=None)
     frame.statusbar.SetStatusText(text, index)
-    print "*** writing to index", index
 
 
 def display_error_message(parent, caption, message):
