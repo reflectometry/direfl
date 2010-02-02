@@ -687,7 +687,7 @@ from your model."""
 
 
     def OnReset(self, event):
-        pass
+        self.instmeta.init_metadata()
 
 
     def sim_tab_OnLoadModel(self, event):
@@ -1018,7 +1018,7 @@ from the data files."""
 
 
     def OnReset(self, event):
-        pass
+        self.instmeta.init_metadata()
 
 
     def col_tab_OnLoadData(self, event):
@@ -1137,47 +1137,238 @@ class InstrumentMetadata():
 
     def __init__(self):
         self.instruments = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
-                            "SNS Liquid", "SNS Magnetic")
-        self.radiation = ("neutron", "xray")
+                            "SNS Liquids", "SNS Magnetic")
+        self.radiation = ["unknown"] *6
+        self.wavelength = [[0.0] * 6, [0.0] * 6]
+        self.dLoL = [[0.0] * 6, [0.0] * 6]
+        self.d_s1 = [[0.0] * 6, [0.0] * 6]
+        self.d_s2 = [[0.0] * 6, [0.0] * 6]
+        self.Tlo = [[0.0] * 6, [0.0] * 6]
+        self.Thi = [[0.0] * 6, [0.0] * 6]
+        self.slit1_at_Tlo = [[0.0] * 6, [0.0] * 6]
+        self.slit2_at_Tlo = [[0.0] * 6, [0.0] * 6]
+        self.slit1_below = [[0.0] * 6, [0.0] * 6]
+        self.slit2_below = [[0.0] * 6, [0.0] * 6]
+        self.slit1_above = [[0.0] * 6, [0.0] * 6]
+        self.slit2_above = [[0.0] * 6, [0.0] * 6]
+        self.sample_width = [[0.0] * 6, [0.0] * 6]
+        self.sample_broadening = [[0.0] * 6, [0.0] * 6]
+
+        self.wavelength_lo = [[0.0] * 6, [0.0] * 6]
+        self.wavelength_hi = [[0.0] * 6, [0.0] * 6]
+        self.slit1_size = [[0.0] * 6, [0.0] * 6]
+        self.slit2_size = [[0.0] * 6, [0.0] * 6]
+        self.theta = [[0.0] * 6, [0.0] * 6]
+
+        self.set_attr_mono(ANDR, 0)
+        self.set_attr_mono(NG1, 1)
+        self.set_attr_mono(NG7, 2)
+        self.set_attr_mono(XRay, 3)
+        self.set_attr_poly(Liquids, 4)
+        self.set_attr_poly(Magnetic, 5)
         self.inst_idx = 0
+
+    def set_attr_mono(self, iclass, idx):
+        if hasattr(iclass, 'radiation'):
+            self.radiation[idx] = iclass.radiation
+        if hasattr(iclass, 'wavelength'):
+            self.wavelength[0][idx] = iclass.wavelength
+        if hasattr(iclass, 'dLoL'):
+            self.dLoL[0][idx] = iclass.dLoL
+        if hasattr(iclass, 'd_s1') and iclass.d_s1 is not None:  # temp check
+            self.d_s1[0][idx] = iclass.d_s1
+        if hasattr(iclass, 'd_s2') and iclass.d_s2 is not None:  # temp check
+            self.d_s2[0][idx] = iclass.d_s2
+        self.inst_idx = idx
+        self.init_metadata()
+
+    def set_attr_poly(self, iclass, idx):
+        if hasattr(iclass, 'radiation'):
+            self.radiation[idx] = iclass.radiation
+        if hasattr(iclass, 'wavelength'):
+            self.wavelength_lo[0][idx], \
+            self.wavelength_hi[0][idx] = iclass.wavelength
+        if hasattr(iclass, 'dLoL'):
+            self.dLoL[0][idx] = iclass.dLoL
+        if hasattr(iclass, 'd_s1'):
+            self.d_s1[0][idx] = iclass.d_s1
+        if hasattr(iclass, 'd_s2'):
+            self.d_s2[0][idx] = iclass.d_s2
+        self.inst_idx = idx
+        self.init_metadata()
+
 
     def get_instruments(self):
         return self.instruments
+    def get_radiation(self):
+        return self.radiation[self.inst_idx]
+    def get_wavelength(self):
+        return self.wavelength[1][self.inst_idx]
+    def get_dLoL(self):
+        return self.dLoL[1][self.inst_idx]
+    def get_d_s1(self):
+        return self.d_s1[1][self.inst_idx]
+    def get_d_s2(self):
+        return self.d_s2[1][self.inst_idx]
+    def get_Tlo(self):
+        return self.Tlo[1][self.inst_idx]
+    def get_Thi(self):
+        return self.Thi[1][self.inst_idx]
+    def get_slit1_at_Tlo(self):
+        return self.slit1_at_Tlo[1][self.inst_idx]
+    def get_slit2_at_Tlo(self):
+        return self.slit2_at_Tlo[1][self.inst_idx]
+    def get_slit1_below(self):
+        return self.slit1_below[1][self.inst_idx]
+    def get_slit2_below(self):
+        return self.slit2_below[1][self.inst_idx]
+    def get_slit1_above(self):
+        return self.slit1_above[1][self.inst_idx]
+    def get_slit2_above(self):
+        return self.slit2_above[1][self.inst_idx]
+    def get_sample_width(self):
+        return self.sample_width[1][self.inst_idx]
+    def get_sample_broadening(self):
+        return self.sample_broadening[1][self.inst_idx]
+    def get_wavelength_lo(self):
+        return self.wavelength_lo[1][self.inst_idx]
+    def get_wavelength_hi(self):
+        return self.wavelength_hi[1][self.inst_idx]
+    def get_slit1_size(self):
+        return self.slit1_size[1][self.inst_idx]
+    def get_slit2_size(self):
+        return self.slit2_size[1][self.inst_idx]
+    def get_theta(self):
+        self.theta[1][self.inst_idx]
+
 
     def get_inst_idx(self):
         return self.inst_idx
 
+
     def set_inst_idx(self, index):
-            self.inst_idx = index
+        self.inst_idx = index
+        self.init_metadata()
+
+
+    def init_metadata(self):
+        # Set current metadata values for insturment to their default values.
+        i = self.inst_idx
+        self.wavelength[1][i] = self.wavelength[0][i]
+        self.dLoL[1][i] = self.dLoL[0][i]
+        self.d_s1[1][i] = self.d_s1[0][i]
+        self.d_s2[1][i] = self.d_s2[0][i]
+        self.Tlo[1][i] = self.Tlo[0][i]
+        self.Thi[1][i] = self.Thi[0][i]
+        self.slit1_at_Tlo[1][i] = self.slit1_at_Tlo[0][i]
+        self.slit2_at_Tlo[1][i] = self.slit2_at_Tlo[0][i]
+        self.slit1_below[1][i] = self.slit1_below[0][i]
+        self.slit2_below[1][i] = self.slit2_below[0][i]
+        self.slit1_above[1][i] = self.slit1_above[0][i]
+        self.slit2_above[1][i] = self.slit2_above[0][i]
+        self.sample_width[1][i] = self.sample_width[0][i]
+        self.sample_broadening[1][i] = self.sample_broadening[0][i]
+
+        self.wavelength_lo[1][i] = self.wavelength_lo[0][i]
+        self.wavelength_hi[1][i] = self.wavelength_hi[0][i]
+        self.slit1_size[1][i] = self.slit1_size[0][i]
+        self.slit2_size[1][i] = self.slit2_size[0][i]
+        self.theta[1][i] = self.Tlo[0][i]
+
 
     def edit_metadata(self):
+        if self.inst_idx <= 3:
+            self.edit_metadata_mono()
+        else:
+            self.edit_metadata_poly()
+
+
+    def edit_metadata_mono(self):
+        i = self.inst_idx
         fields = [
-                   ["Instrument Name:", self.instruments[self.inst_idx],
-                    "any", self.instruments, True],
-                   ["Radiation Type:", self.radiation[0], "str", self.radiation, True],
-                   ["Wavelength (A):", 0.0, "float", None, True],
-                   ["Wavelength Dispersion (dLoL):", 0.0, "float", None, True],
-                   ["Distance to Slit 1 (mm):", 0.0, "float", None, True],
-                   ["Distance to Slit 2 (mm):", 0.0, "float", None, True],
-                   ["Theta Lo (degrees):", 0.0, "float", None, True],
-                   ["Theta Hi (degrees):", 0.0, "float", None, True],
-                   ["Slit 1 at Theta Lo (mm):", 0.0, "float", None, True],
-                   ["Slit 2 at Theta Lo (mm):", 0.0, "float", None, True],
-                   ["Slit 1 below Theta Lo (mm):", 0.0, "float", None, True],
-                   ["Slit 2 below Theta Lo (mm):", 0.0, "float", None, True],
-                   ["Slit 1 above Theta Hi (mm):", 0.0, "float", None, True],
-                   ["Slit 2 above Theta Hi (mm):", 0.0, "float", None, True],
-                   ["Sample Width (mm):", 0.0, "float", None, True],
-                   ["Sample Broadening (mm):", 0.0, "float", None, True],
+                   ["Radiation Type:", self.radiation[i], "str", None, False],
+                   ["Wavelength (A):", self.wavelength[1][i], "float", None, True],
+                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", None, True],
+                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", None, True],
+                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", None, True],
+                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", None, True],
+                   ["Theta Hi (degrees):", self.Thi[1][i], "float", None, True],
+                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", None, True],
+                   ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", None, True],
+                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", None, True],
+                   ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", None, True],
+                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", None, True],
+                   ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", None, True],
+                   ["Sample Width (mm):", self.sample_width[1][i], "float", None, True],
+                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, True],
                  ]
 
+        title = "Edit " + self.instruments[self.inst_idx] + " Attribues"
         dlg = ItemListDialog(parent=None,
-                             title="Edit Instrument Metadata",
+                             title=title,
                              pos=(500, 100),
                              itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
+            results = dlg.GetResults()
+            #print "Results from all input fields of the dialog box:"
+            #print "  ", results
+
+            # Skip results[0], the radiation value that is not editable
+            i = self.inst_idx
+            self.wavelength[1][i] = results[1]
+            self.dLoL[1][i] = results[2]
+            self.d_s1[1][i] = results[3]
+            self.d_s2[1][i] = results[4]
+            self.Tlo[1][i] = results[5]
+            self.Thi[1][i] = results[6]
+            self.slit1_at_Tlo[1][i] = results[7]
+            self.slit2_at_Tlo[1][i] = results[8]
+            self.slit1_below[1][i] = results[9]
+            self.slit2_below[1][i] = results[10]
+            self.slit1_above[1][i] = results[11]
+            self.slit2_above[1][i] = results[12]
+            self.sample_width[1][i] = results[13]
+            self.sample_broadening[1][i] = results[14]
+        dlg.Destroy()
+
+
+    def edit_metadata_poly(self):
+        i = self.inst_idx
+        fields = [
+                   ["Radiation Type:", self.radiation[i], "str", None, False],
+                   ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", None, True],
+                   ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", None, True],
+                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", None, True],
+                   ["Slit 1 Size (mm):", self.slit1_size[1][i], "float", None, True],
+                   ["Slit 2 Size (mm):", self.slit2_size[1][i], "float", None, True],
+                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", None, True],
+                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", None, True],
+                   ["Theta (degrees):", self.theta[1][i], "float", None, True],
+                   ["Sample Width (mm):", self.sample_width[1][i], "float", None, True],
+                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, True],
+                 ]
+
+        title = "Edit " + self.instruments[self.inst_idx] + " Attribues"
+        dlg = ItemListDialog(parent=None,
+                             title=title,
+                             pos=(500, 100),
+                             itemlist=fields)
+        if dlg.ShowModal() == wx.ID_OK:
+            results = dlg.GetResults()
             print "Results from all input fields of the dialog box:"
-            print "  ", dlg.GetResults()
+            print "  ", results
+            # Skip results[0], the radiation value that is not editable
+            i = self.inst_idx
+            self.wavelength_lo [1][i] = results[1]
+            self.wavelength_hi[1][i] = results[2]
+            self.dLoL[1][i] = results[3]
+            self.slit1_size[1][i] = results[4]
+            self.slit2_size[1][i] = results[5]
+            self.d_s1[1][i] = results[6]
+            self.d_s2[1][i] = results[7]
+            self.theta[1][i] = results[8]
+            self.sample_width[1][i] = results[9]
+            self.sample_broadening[1][i] = results[10]
         dlg.Destroy()
 
 #==============================================================================
