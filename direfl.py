@@ -84,7 +84,9 @@ DEMO_REFLDATA_2 = "qrd2.refl"
 NEWLINE = "\n"
 NEWLINES_2 = "\n\n"
 
-BEIGE = "#F3EED6"
+BKGD_COLOUR_WINDOW = "#ECE9D8"
+PALE_YELLOW = "#FFFFB0"
+PALE_GREEN = "#B0FFB0"
 
 #==============================================================================
 
@@ -224,8 +226,8 @@ class AppFrame(wx.Frame):
                                          style=wx.NB_TOP|wx.NB_FIXEDWIDTH)
 
         # Create page windows as children of the notebook.
-        self.page0 = SimulatedDataPage(nb, colour="#FFFFB0", fignum=0)  # pale yellow
-        self.page1 = CollectedDataPage(nb, colour="#B0FFB0", fignum=1)  # pale green
+        self.page0 = SimulatedDataPage(nb, colour=PALE_YELLOW, fignum=0)
+        self.page1 = CollectedDataPage(nb, colour=PALE_GREEN, fignum=1)
 
         # Add the pages to the notebook with a label to show on the tab.
         nb.AddPage(self.page0, "Simulated Data")
@@ -428,7 +430,7 @@ class SimulatedDataPage(wx.Panel):
         self.model = wx.TextCtrl(self.pan1, wx.ID_ANY,
                                  value=demo_model_params,
                                  style=wx.TE_MULTILINE|wx.TE_WORDWRAP)
-        self.model.SetBackgroundColour(BEIGE)
+        self.model.SetBackgroundColour(BKGD_COLOUR_WINDOW)
         #self.model.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         # Group model parameter widgets into a labelled section and
@@ -445,7 +447,7 @@ class SimulatedDataPage(wx.Panel):
 
         # Create a panel for gathering instrument metadata.
         self.pan11 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
-        self.pan11.SetBackgroundColour(BEIGE)
+        self.pan11.SetBackgroundColour(BKGD_COLOUR_WINDOW)
 
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan11, wx.ID_ANY, "Choose Instrument:")
@@ -805,7 +807,7 @@ class CollectedDataPage(wx.Panel):
 
         # Create a panel for gathering instrument metadata.
         self.pan11 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
-        self.pan11.SetBackgroundColour(BEIGE)
+        self.pan11.SetBackgroundColour(BKGD_COLOUR_WINDOW)
 
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan11, wx.ID_ANY, "Choose Instrument:")
