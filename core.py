@@ -79,6 +79,13 @@ from numpy.random import uniform, poisson, normal
 
 from matplotlib.font_manager import FontProperties
 
+try:
+    from reflectometry.model1d.model.calcRefl import convolve
+except:
+    print "WARNING: faking convolution with linear interpolation"
+    def convolve(Qin, Rin, Q, dQ):
+        return numpy.interp1(Qin, Rin, Q)
+
 # Common SLDs
 silicon = Si = 2.07
 sapphire = Al2O3 = 5.0
@@ -1211,7 +1218,8 @@ class SurroundVariation():
 
     def _load(self, file1, file2):
         """
-        Load the data from files or from tuples of (Q,R) or (Q,R,dR).
+        Load the data from files or from tuples of (Q,R) or (Q,R,dR),
+        (Q,dQ,R,dR) or (Q,dQ,R,dR,L).
         """
 
         # This code assumes the following data file formats:
@@ -1221,8 +1229,6 @@ class SurroundVariation():
         # 5-column data: Q, dQ, R, dR, Lambda
         if isinstance(file1, basestring):
             d1 = numpy.loadtxt(file1).T
-            if len(d1) > 3:
-                d1 = numpy.loadtxt(file1, usecols=(0, 2, 3)).T
             name1 = file1
         else:
             d1 = file1
@@ -1230,26 +1236,36 @@ class SurroundVariation():
 
         if isinstance(file2, basestring):
             d2 = numpy.loadtxt(file2).T
-            if len(d2) > 3:
-                d2 = numpy.loadtxt(file2, usecols=(0, 2, 3)).T
             name2 = file2
         else:
             d2 = file2
             name2 = "data2"
 
-        q1, r1 = d1[0:2]
-        q2, r2 = d2[0:2]
-
-        # Check if we have uncertainty
-        try:
-            dr1, dr2 = d1[2], d2[2]
-        except:
+        ncols = len(d1)
+        if ncols <= 1:
+            raise ValueError("Data file has less than two columns")
+        elif ncols == 2:
+            q1, r1 = d1[0:2]
+            q2, r2 = d2[0:2]
             dr1 = dr2 = None
+            dq1 = dq2 = None
+        elif ncols == 3:
+            q1, r1, dr1 = d1[0:3]
+            q2, r2, dr2 = d2[0:3]
+            dq1 = dq2 = None
+        elif ncols == 4:
+            q1, dq1, r1, dr1 = d1[0:4]
+            q2, dq2, r2, dr2 = d2[0:4]
+        elif ncols >= 5:
+            q1, dq1, r1, dr1, lambda1 = d1[0:5]
+            q2, dq2, r2, dr2, lanbda2 = d2[0:5]
 
         if not q1.shape == q2.shape or not all(q1==q2):
             raise ValueError("Q points do not match in data files")
+
+        # Note that q2, dq2, lambda1, and lambda2 are currently discarded.
         self.name1, self.name2 = name1, name2
-        self.Qin, self.dQin = q1, None
+        self.Qin, self.dQin = q1, dq1
         self.R1in, self.R2in = r1, r2
         self.dR1in, self.dR2in = dr1, dr2
 
