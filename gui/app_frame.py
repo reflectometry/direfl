@@ -23,7 +23,6 @@
 import wx
 import os
 import sys
-import numpy as np
 
 import matplotlib
 
@@ -41,17 +40,29 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as Toolbar
 # The Figure object is used to create backend-independent plot representations.
 from matplotlib.figure import Figure
 
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
 
 # Wx-Pylab magic ...
 from matplotlib import _pylab_helpers
 from matplotlib.backend_bases import FigureManagerBase
 
+import numpy as np
+
 from wx.lib.wordwrap import wordwrap
+
 
 from .utilities import (get_appdir, write_to_statusbar,
                         display_error_message, display_warning_message)
+# Add a path one level above 'inversion...' to sys.path so that this app can be
+# run even if the inversion package is not installed and the current working
+# directory is in a diffferent location.  Do this before importing (directly or
+# indirectly) from sibling directories (e.g. 'from inversion/...'.  Note that
+# 'from ..core.module' cannot be used as it traverses outside of the package.
+#print "path added to sys.path:", os.path.dirname(get_appdir())
+#print "app root directory:", get_appdir(), " and __file__:", __file__
+sys.path.append(os.path.dirname(get_appdir()))
+
 from .about import (APP_NAME, APP_TITLE, APP_VERSION,
                     APP_COPYRIGHT, APP_DESCRIPTION, APP_LICENSE,
                     APP_PROJECT_URL, APP_PROJECT_TAG,
@@ -59,8 +70,8 @@ from .about import (APP_NAME, APP_TITLE, APP_VERSION,
 from .images import getOpenBitmap
 from .input_list import ItemListDialog, ItemListInput
 
-from .ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
-from .snsdata import Liquids, Magnetic
+from inversion.core.ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
+from inversion.core.snsdata import Liquids, Magnetic
 
 # Text strings for use in file selection dialog boxes.
 REFL_FILES = "Refl files (*.refl)|*.refl"
@@ -1374,7 +1385,7 @@ def perform_recon_inver(args, params):
     sets to generate a scattering length depth profile of the sample.
     """
 
-    from core import refl, SurroundVariation, Inversion
+    from inversion.core.core import refl, SurroundVariation, Inversion
     import pylab
 
     u = params[0]
@@ -1419,7 +1430,7 @@ def perform_simulation(sample, params):
     scattering length density profile.
     """
 
-    from simulate import Simulation
+    from inversion.core.simulate import Simulation
     from numpy import linspace
     import pylab
 
@@ -1474,7 +1485,7 @@ def test1():
     in core.py using two actual reflectometry data files.
     """
 
-    from core import refl, SurroundVariation, Inversion
+    from inversion.core.core import refl, SurroundVariation, Inversion
     import os
     import pylab
 
@@ -1521,7 +1532,7 @@ def test2():
     reflectometry data file.
     """
 
-    from simulate import Simulation
+    from inversion.core.simulate import Simulation
     from numpy import linspace
     import pylab
 

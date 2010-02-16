@@ -21,12 +21,10 @@
 # Author: James Krycka
 
 import wx
+import sys
 
-# Import app_frame through a package, not directly, so that relative import
-# references can be used by code in the inversion tree.
-import sys; sys.path.append('..')
-from inversion.app_frame import AppFrame
-from about import APP_TITLE
+from gui.app_frame import AppFrame
+from gui.about import APP_TITLE
 
 # Desired initial window size (if physical screen size permits).
 DISPLAY_WIDTH = 1200

@@ -26,7 +26,7 @@ purposes, most of which are used in the About menu output.  Note that the
 product version is maintained in the version.py file and thus imported here.
 """
 
-from version import version as APP_VERSION
+from inversion.version import version as APP_VERSION
 
 APP_NAME = "DiRefl"
 
