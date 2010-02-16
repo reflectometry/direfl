@@ -14,8 +14,8 @@ See :module:`resolution` for details.
 
 import re
 import numpy
-from resolution import Polychromatic, binwidths
-import util
+from .resolution import Polychromatic, binwidths
+from . import util
 
 def load(filename, instrument=None, **kw):
     """
@@ -66,19 +66,19 @@ def parse_file(filename):
 
     # Date-time field for the file
     header['date'] = raw_header.get('D','')
-
+    
     # Column names and units
     columnpat = re.compile(r'(?P<name>\w+)[(](?P<units>\w*)[)]')
     columns,units = zip(*columnpat.findall(raw_header.get('L','')))
     header['columns'] = columns
     header['units'] = units
-
+    
     # extra information like title, angle, etc.
     commentpat = re.compile(r'(?P<name>.*)\s*:\s*(?P<value>.*)\s*\n')
     comments = dict(commentpat.findall(raw_header.get('C','')))
     header['title'] = comments.get('Title','')
     header['description'] = comments.get('Notes','')
-
+    
     # parse values of the form "Long Name: (value, 'units')" in comments
     valuepat = re.compile(r"[(]\s*(?P<value>.*)\s*,\s*'(?P<units>.*)'\s*[)]")
     def parse_value(valstr):

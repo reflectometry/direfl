@@ -5,25 +5,75 @@ NCNR data loaders.
 
 The following instruments are defined::
 
-    Ng1, ANDR, NG7 and Xray
+    ANDR, NG1, NG7 and Xray
 
 These are :class:`resolution.Monochromatic` classes tuned with
 default instrument parameters and loaders for reduced NCNR data.
 See :module:`resolution` for details.
 """
 
+import os
 import numpy
 from numpy import inf, pi
 
-from resolution import Monochromatic
-import util
+from .resolution import Monochromatic
+from . import util
 
 def load(filename, instrument=None, **kw):
     """
     Return a probe for NCNR data.
     """
-    content = parse_file(filename)
-    return _make_probe(geometry=Monochromatic(), content=content, **kw)
+    if filename is None: return None
+    if instrument is None: instrument=Monochromatic()
+    header,data = parse_file(filename)
+    header.update(**kw)
+    Q,R,dR = data
+    resolution = instrument.resolution(Q, **header)
+    probe = resolution.probe(data=(R,dR))
+    probe.title = header['title']
+    probe.date = header['date']
+    probe.instrument = header['instrument']
+    probe.filename = filename
+    return probe
+
+def load_magnetic(filename, **kw):
+    """
+    Return a probe for magnetic NCNR data.
+    
+    *Tguide* is the guide angle.
+    """
+    Tguide = kw.pop('Tguide',270)
+    probes = [load(v, **kw) for v in find_xsec(filename)]
+    return PolarizedNeutronProbe(probes, Tguide=Tguide)
+
+def find_xsec(filename):
+    """
+    Find files containing the polarization cross-sections.
+    
+    Returns tuple with file names for ++ +- -+ -- cross sections, or
+    None if the spin cross section does not exist.
+
+    # TODO: check whether I have the spin states correct
+    'a' corresponds to spin --
+    'b' corresponds to spin -+
+    'c' corresponds to spin +-
+    'd' corresponds to spin ++
+
+    Unfortunately the interpretation is a little more complicated than
+    this as the data acquisition system assigns letter on the basis of
+    flipper state rather than neutron spin state.  Whether flipper on
+    or off corresponds to spin up or down depends on whether the
+    polarizer/analyzer is a supermirror in transmission or reflection
+    mode, or in the case of ^3He polarizers, whether the polarization
+    is up or down.
+    """
+    if filename[-1] in 'abcdABCD':
+        filename = filename[:-1]
+    def check(a):
+        if os.path.exists(filename+a): return filename+a
+        elif os.path.exists(filename+a.upper()): return filename+a.upper()
+        else: return None
+    return (check('d'),check('c'),check('b'),check('a'))
 
 def parse_file(filename):
     """
@@ -56,59 +106,49 @@ def parse_file(filename):
 
     return header, data
 
-def _make_probe(geometry, header, data, **kw):
-    header.update(**kw)
-    Q,R,dR = data
-    resolution = geometry.resolution(Q, **header)
-    probe = resolution.probe(data=(R,dR))
-    probe.title = header['title']
-    probe.date = header['date']
-    probe.instrument = header['instrument']
-    return probe
-
 class NCNRLoader:
     def load(self, filename, **kw):
-        header, data = parse_file(filename)
-        header.update(**kw)
-        return _make_probe(geometry=self, header=header, data=data, **kw)
+        return load(filename, instrument=self)
+    def load_magnetic(self, filename, **kw):
+        pass
 
-class ANDR(Monochromatic,NCNRLoader):
+class ANDR(Monochromatic, NCNRLoader):
     """
     Instrument definition for NCNR AND/R diffractometer/reflectometer.
     """
     instrument = "AND/R"
     radiation = "neutron"
     wavelength = 5.0042
-    dLoL=0.009
+    dLoL = 0.009
     d_s1 = 230.0 + 1856.0
     d_s2 = 230.0
 
-class NG1(Monochromatic,NCNRLoader):
+class NG1(Monochromatic, NCNRLoader):
     """
     Instrument definition for NCNR NG-1 reflectometer.
     """
     instrument = "NG-1"
     radiation = "neutron"
     wavelength = 4.75
-    dLoL=0.015
-    d_s1 = 75*2.54
-    d_s2 = 14*2.54
-    d_s3 = 9*2.54
-    d_s4 = 42*2.54
+    dLoL = 0.015
+    d_s1 = 75*25.4
+    d_s2 = 14*25.4
+    d_s3 = 9*25.4
+    d_s4 = 42*25.4
 
-class NG7(Monochromatic,NCNRLoader):
+class NG7(Monochromatic, NCNRLoader):
     """
     Instrument definition for NCNR NG-7 reflectometer.
     """
     instrument = "NG-7"
     radiation = "neutron"
     wavelength = 4.768
-    dLoL=0.040
+    dLoL = 0.040
     d_s1 = None
     d_s2 = None
     d_detector = 2000
 
-class XRay(Monochromatic,NCNRLoader):
+class XRay(Monochromatic, NCNRLoader):
     """
     Instrument definition for NCNR X-ray reflectometer.
 
@@ -122,7 +162,7 @@ class XRay(Monochromatic,NCNRLoader):
     by setting the slit opening to 0 and using sample_broadening
     to define the entire divergence::
 
-        xray = ncnrdata.Xray(slits_at_To=0)
+        xray = ncnrdata.XRay(slits_at_To=0)
         data = xray.load("exp123.dat", sample_broadening=1e-4)
     """
     instrument = "X-ray"
