@@ -23,7 +23,7 @@ except:
     print "WARNING: faking convolution with linear interpolation"
     def convolve(Qin, Rin, Q, dQ):
         return numpy.interp1(Qin, Rin, Q)
-import profile
+from . import profile
 
 # Note that for efficiency, pylab is only imported if plotting is requested.
 
