@@ -50,23 +50,17 @@ from matplotlib.backend_bases import FigureManagerBase
 
 from wx.lib.wordwrap import wordwrap
 
-# Note that relative imports cannot be performed by this module because it is
-# not run in the context of a package.
-from images import getOpenBitmap
-from input_list import ItemListDialog, ItemListInput
+from .utilities import (get_appdir, write_to_statusbar,
+                        display_error_message, display_warning_message)
+from .about import (APP_NAME, APP_TITLE, APP_VERSION,
+                    APP_COPYRIGHT, APP_DESCRIPTION, APP_LICENSE,
+                    APP_PROJECT_URL, APP_PROJECT_TAG,
+                    APP_TUTORIAL_URL, APP_TUTORIAL_TXT)
+from .images import getOpenBitmap
+from .input_list import ItemListDialog, ItemListInput
 
-from about import (APP_NAME, APP_TITLE, APP_VERSION,
-                   APP_COPYRIGHT, APP_DESCRIPTION, APP_LICENSE,
-                   APP_PROJECT_URL, APP_PROJECT_TAG,
-                   APP_TUTORIAL_URL, APP_TUTORIAL_TXT)
-
-from ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
-from snsdata import Liquids, Magnetic
-
-# Desired initial window size (if physical screen size permits).
-DISPLAY_WIDTH = 1200
-DISPLAY_HEIGHT = 900
-TASKBAR_HEIGHT = 32
+from .ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
+from .snsdata import Liquids, Magnetic
 
 # Text strings for use in file selection dialog boxes.
 REFL_FILES = "Refl files (*.refl)|*.refl"
@@ -91,9 +85,9 @@ PALE_GREEN = "#B0FFB0"
 #==============================================================================
 
 class AppFrame(wx.Frame):
-    """This class implements the top-level frame for the applicaton."""
+    """This class implements the top-level frame for the application."""
 
-    def __init__(self, parent=None, id=wx.ID_ANY, title="",
+    def __init__(self, parent=None, id=wx.ID_ANY, title=APP_TITLE,
                  pos=wx.DefaultPosition, size=(800, 600), name="AppFrame"
                 ):
         wx.Frame.__init__(self, parent, id, title, pos, size, name=name)
@@ -1373,61 +1367,6 @@ class InstrumentMetadata():
 
 #==============================================================================
 
-def write_to_statusbar(text, index):
-    """Write a message to the status bar in the specified slot."""
-
-    frame = wx.FindWindowByName("AppFrame", parent=None)
-    frame.statusbar.SetStatusText(text, index)
-
-
-def display_error_message(parent, caption, message):
-    """Display an error message in a pop-up dialog box with an OK button."""
-
-    msg = wx.MessageDialog(parent, message, caption, style=wx.ICON_ERROR|wx.OK)
-    msg.ShowModal()
-    msg.Destroy()
-
-
-def display_warning_message(parent, caption, message):
-    """Display a warning message in a pop-up dialog box with an OK button."""
-
-    msg = wx.MessageDialog(parent, message, caption,
-                           style=wx.ICON_WARNING|wx.OK)
-    msg.ShowModal()
-    msg.Destroy()
-
-
-def display_information_message(parent, caption, message):
-    """Display an informational message in a pop-up with an OK button."""
-
-    msg = wx.MessageDialog(parent, message, caption,
-                           style=wx.ICON_INFORMATION|wx.OK)
-    msg.ShowModal()
-    msg.Destroy()
-
-
-def display_question(parent, caption, message):
-    """Display a question in a pop-up dialog box with YES and NO buttons."""
-
-    msg = wx.MessageDialog(parent, message, caption,
-                           style=wx.ICON_QUESTION|wx.YES_NO)
-    msg.ShowModal()
-    msg.Destroy()
-
-
-def get_appdir():
-    """
-    Return the directory path of the main module of the application, i.e, the
-    root directory from which the application was started.  Note that this may
-    be different than the current working directory.
-    """
-
-    if hasattr(sys, "frozen"):  # check for py2exe image
-        path = sys.executable
-    else:
-        path = sys.argv[0]
-    return os.path.dirname(os.path.abspath(path))
-
 
 def perform_recon_inver(args, params):
     """
@@ -1670,37 +1609,15 @@ def test4(figure):
     #pylab.show()
 
 #==============================================================================
-
-class InversionApp(wx.App):
-    """This class implements the main application window."""
-
-    def OnInit(self):
-        # Compute the size of the application frame such that it fits on the
-        # user's screen without obstructing (or being obstructed by) the
-        # Windows launch bar.  The maximum initial size in pixels is bounded by
-        # DISPLAY_WIDTH x DISPLAY_HEIGTH.
-        xpos = ypos = 0
-        x, y = wx.DisplaySize()
-        y -= TASKBAR_HEIGHT  # avoid obscuring the Windows task bar
-        if x > DISPLAY_WIDTH : xpos = (x - DISPLAY_WIDTH)/2
-        if y > DISPLAY_HEIGHT : ypos = (y - DISPLAY_HEIGHT)/2
-
-        frame = AppFrame(title=APP_TITLE, pos=(xpos, ypos),
-                         size=(min(x, DISPLAY_WIDTH), min(y, DISPLAY_HEIGHT)))
-        frame.Show(True)
-        self.SetTopWindow(frame)
-        return True
-
-#==============================================================================
-
+# The following code fails because AppFrame is run in a non-package context.
+# Instead it must be imported from a package because it and its imported
+# modules use relative imports which Python does allow from script mode.
+'''
 if __name__ == '__main__':
     # Instantiate the application class and give control to wxPython.
-    app = InversionApp(redirect=False, filename=None)
-
-    # For wx debugging, load the wxPython Widget Inspection Tool if requested.
-    # It will cause a separate interactive debugger window to be displayed.
-    if len(sys.argv) > 1 and '-inspect' in sys.argv[1:]:
-        import wx.lib.inspection
-        wx.lib.inspection.InspectionTool().Show()
-
+    app = wx.PySimpleApp()
+    frame = AppFrame(title="DiRefl Test")
+    frame.Show(True)
+    app.SetTopWindow(frame)
     app.MainLoop()
+'''
