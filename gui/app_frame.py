@@ -165,6 +165,11 @@ class AppFrame(wx.Frame):
         ret_id = file_menu.Append(wx.ID_ANY, "Load &Data Files ...")
         self.Bind(wx.EVT_MENU, self.OnLoadData, ret_id)
 
+        # For debug - jak
+        if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:]:
+            ret_id = file_menu.Append(wx.ID_ANY, "Load &Data Files (res)...")
+            self.Bind(wx.EVT_MENU, self.OnLoadData_res, ret_id)
+
         file_menu.AppendSeparator()
 
         ret_id = file_menu.Append(wx.ID_ANY, "&Load Model ...")
@@ -238,7 +243,15 @@ class AppFrame(wx.Frame):
         nb.AddPage(self.page0, "Simulated Data")
         nb.AddPage(self.page1, "Collected Data")
 
+        # For debug - jak
         # Create test page windows and add them to notebook if requested.
+        if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:]:
+            self.page2 = SimulatedDataPage(nb, colour="YELLOW", fignum=2)
+            self.page3 = CollectedDataPage(nb, colour="GREEN", fignum=3)
+
+            nb.AddPage(self.page2, "Simulation Test")
+            nb.AddPage(self.page3, "Analysis Test")
+
         if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
             self.page2 = TestPlotPage(nb, colour="GREEN", fignum=2)
             self.page3 = TestPlotPage(nb, colour="BLUE", fignum=3)
@@ -335,6 +348,13 @@ class AppFrame(wx.Frame):
         """Load reflectometry data files for measurements 1 and 2."""
 
         self.page1.col_tab_OnLoadData(event)  # TODO: create menu in dest class
+
+
+    # For debug - jak
+    def OnLoadData_res(self, event):
+        """Load reflectometry data files for measurements 1 and 2."""
+
+        self.page3.col_tab_OnLoadData(event)  # TODO: create menu in dest class
 
 
     def OnLoadModel(self, event):
@@ -456,7 +476,7 @@ class SimulatedDataPage(wx.Panel):
 
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan11, wx.ID_ANY, "Choose Instrument:")
-        inst_names = self.instmeta.get_instruments()
+        inst_names = self.instmeta.get_inst_names()
         cb = wx.ComboBox(self.pan11, wx.ID_ANY,
                          value=inst_names[self.instmeta.get_inst_idx()],
                          choices=inst_names,
@@ -665,6 +685,35 @@ from your model."""
         self.params.append(layers[-1][0])  # add SLD of substrate to list
         self.params.append(layers[-1][2])  # add roughness of substrate to list
 
+        # Get resolution parameters.
+        i = self.instmeta.get_inst_idx()
+        if i <= 3:
+            self.wavelength = self.instmeta.get_wavelength()
+            self.dLoL = self.instmeta.get_dLoL()
+            self.d_s1 = self.instmeta.get_d_s1()
+            self.d_s2 = self.instmeta.get_d_s2()
+            self.Tlo = self.instmeta.get_Tlo()
+            self.Thi = self.instmeta.get_Thi()
+            self.slit1_at_Tlo = self.instmeta.get_slit1_at_Tlo()
+            self.slit2_at_Tlo = self.instmeta.get_slit2_at_Tlo()
+            self.slit1_below = self.instmeta.get_slit1_below()
+            self.slit2_below = self.instmeta.get_slit2_below()
+            self.slit1_above = self.instmeta.get_slit1_above()
+            self.slit2_above = self.instmeta.get_slit2_above()
+            self.sample_width = self.instmeta.get_sample_width()
+            self.sample_broadening = self.instmeta.get_sample_broadening()
+        else:
+            self.wavelength_lo = self.instmeta.get_wavelength_lo()
+            self.wavelength_hi = self.instmeta.get_wavelength_hi()
+            self.dLoL = self.instmeta.get_dLoL()
+            self.slit1_size = self.instmeta.get_slit1_size()
+            self.slit2_size = self.instmeta.get_slit2_size()
+            self.d_s1 = self.instmeta.get_d_s1()
+            self.d_s2 = self.instmeta.get_d_s2()
+            self.theta = self.instmeta.get_theta()
+            self.sample_width = self.instmeta.get_sample_width()
+            self.sample_broadening = self.instmeta.get_sample_broadening()
+
         # Inform the user that we're entering a period of high computation.
         write_to_statusbar("Generating new plots ...", 1)
         write_to_statusbar("", 2)
@@ -678,7 +727,11 @@ from your model."""
         # Apply phase reconstruction and direct inversion techniques on the
         # simulated reflectivity datasets.
         t0 = time.time()
-        perform_simulation(sample, self.params)
+        if self.fignum == 0:
+            perform_simulation(sample, self.params)
+        # For debug - jak
+        if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:] and self.fignum == 2:
+            perform_simulation_res(sample, self.params)
         pylab.draw()
         secs = time.time() - t0
 
@@ -816,7 +869,7 @@ class CollectedDataPage(wx.Panel):
 
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan11, wx.ID_ANY, "Choose Instrument:")
-        inst_names = self.instmeta.get_instruments()
+        inst_names = self.instmeta.get_inst_names()
         cb = wx.ComboBox(self.pan11, wx.ID_ANY,
                          value=inst_names[self.instmeta.get_inst_idx()],
                          choices=inst_names,
@@ -1009,7 +1062,11 @@ from the data files."""
         # Apply phase reconstruction and direct inversion techniques on the
         # experimental reflectivity datasets.
         t0 = time.time()
-        perform_recon_inver(self.args, self.params)
+        if self.fignum == 1:
+            perform_recon_inver(self.args, self.params)
+        # For debug - jak
+        if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:] and self.fignum == 3:
+            perform_recon_inver_res(self.args, self.params)
         pylab.draw()
         secs = time.time() - t0
 
@@ -1121,7 +1178,8 @@ class TestPlotPage(wx.Panel):
         sizer.Fit(self.pan1)
 
         # Execute tests associated with the test tabs.
-        if len(sys.argv) > 1:
+        # For debug - jak
+        if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:]:
             if (self.fignum==2 and '-test1' in sys.argv[1:]): test1()
             if (self.fignum==3 and '-test2' in sys.argv[1:]): test2()
         if self.fignum==4: test3()
@@ -1141,8 +1199,9 @@ class InstrumentMetadata():
     """This class is responsible for processing the instrument metadata."""
 
     def __init__(self):
-        self.instruments = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
-                            "SNS Liquids", "SNS Magnetic")
+        self.inst_names = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
+                           "SNS Liquids", "SNS Magnetic")
+        self.inst_classes = ("ANDR", "NG1", "NG7", "Xray", "Liquids", "Magnetic")
         self.radiation = ["unknown"] *6
         self.wavelength = [[0.0] * 6, [0.0] * 6]
         self.dLoL = [[0.0] * 6, [0.0] * 6]
@@ -1171,6 +1230,11 @@ class InstrumentMetadata():
         self.set_attr_mono(XRay, 3)
         self.set_attr_poly(Liquids, 4)
         self.set_attr_poly(Magnetic, 5)
+        '''
+        for i, name in iter(self.inst_names):
+            if i <= 3: self.set_attr_mono(name, i)
+            else:      self.set_attr_poly(name, i)
+        '''
         self.inst_idx = 0
 
     def set_attr_mono(self, iclass, idx):
@@ -1203,8 +1267,10 @@ class InstrumentMetadata():
         self.init_metadata()
 
 
-    def get_instruments(self):
-        return self.instruments
+    def get_inst_names(self):
+        return self.inst_classes
+    def get_inst_classes(self):
+        return self.inst_classes
     def get_radiation(self):
         return self.radiation[self.inst_idx]
     def get_wavelength(self):
@@ -1308,7 +1374,7 @@ class InstrumentMetadata():
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, True],
                  ]
 
-        title = "Edit " + self.instruments[self.inst_idx] + " Attribues"
+        title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
         dlg = ItemListDialog(parent=None,
                              title=title,
                              pos=(500, 100),
@@ -1353,7 +1419,7 @@ class InstrumentMetadata():
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, True],
                  ]
 
-        title = "Edit " + self.instruments[self.inst_idx] + " Attribues"
+        title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
         dlg = ItemListDialog(parent=None,
                              title=title,
                              pos=(500, 100),
@@ -1378,8 +1444,52 @@ class InstrumentMetadata():
 
 #==============================================================================
 
-
 def perform_recon_inver(args, params):
+    """
+    Perform phase reconstruction and direct inversion on two reflectometry data
+    sets to generate a scattering length depth profile of the sample.
+    """
+
+    from inversion.core.core import refl, SurroundVariation, Inversion
+    import pylab
+
+    u = params[0]
+    v1 = params[1]
+    v2 = params[2]
+    phase = SurroundVariation(args[0], args[1], u=u, v1=v1, v2=v2)
+    data = phase.Q, phase.RealR, phase.dRealR
+
+    #if dz: rhopoints = ceil(1/dz)
+    #_backrefl = True if params[99] == "True" else False
+    _backrefl = True
+    #_showiters = True if params[99] == "True" else False
+    _showiters = False
+
+    res = Inversion(data=data, **dict(substrate=u,
+                                      thickness=params[3],
+                                      Qmin=params[4],
+                                      Qmax=params[5],
+                                      #Qmax=None,
+                                      rhopoints=params[6],
+                                      calcpoints=params[7],
+                                      iters=params[8],
+                                      stages=params[9],
+                                      ctf_window=0, #cosine transform smoothing
+                                      backrefl=_backrefl,
+                                      noise=1,  # inversion noise factor
+                                      bse=params[10],
+                                      showiters=_showiters,
+                                      monitor=None))
+    res.run(showiters=False)
+    res.plot(phase=phase)
+
+    pylab.subplots_adjust(wspace=0.25, hspace=0.33,
+                          left=0.09, right=0.96,
+                          top=0.95, bottom=0.08)
+
+
+# For debug - jak
+def perform_recon_inver_res(args, params):
     """
     Perform phase reconstruction and direct inversion on two reflectometry data
     sets to generate a scattering length depth profile of the sample.
@@ -1463,6 +1573,66 @@ def perform_simulation(sample, params):
                calcpoints=params[5])
 
     t = Simulation(q=linspace(params[2], params[3], 150),
+                   sample=sample,
+                   u=params[11],
+                   urough=params[12],
+                   v1=params[0],
+                   v2=params[1],
+                   noise=_noise,
+                   invert_args=inv,
+                   phase_args=dict(stages=100),
+                   perfect_reconstruction=_perfect_reconstruction)
+
+    t.plot()
+    pylab.subplots_adjust(wspace=0.25, hspace=0.33,
+                          left=0.09, right = 0.96,
+                          top=0.95, bottom=0.08)
+
+
+# For debug - jak
+def perform_simulation_res(sample, params):
+    """
+    Simulate reflectometry data sets from model information then perform
+    phase reconstruction and direct inversion on the data to generate a
+    scattering length density profile.
+    """
+
+    from inversion.core.simulate import Simulation
+    from numpy import linspace
+    import pylab
+
+    if sample is None:
+        # Roughness parameters (surface, sample, substrate)
+        sv, s, su = 3, 5, 2
+        # Surround parameters
+        u, v1, v2 = 2.07, 0, 4.5
+        # Default sample
+        sample = ([5,100,s], [1,123,s], [3,47,s], [-1,25,s])
+        sample[0][2] = sv
+    else:
+        su = 2
+
+    # Run the simulation
+    _perfect_reconstruction = True if params[10] == "True" else False
+    #_showiters = True if params[99] == "True" else False
+    _showiters = False
+    _noise = params[8]
+    if _noise < 0.01: _noise = 0.01
+    _noise /= 100.0  # convert percent value to hundreths value
+
+    instrument = NG1(Tlo=0.5, slits_at_Tlo=0.2, slits_below=0.1)
+    res = instrument.resolution(Q=np.linspace(params[2], params[3], 150))
+
+    inv = dict(showiters=_showiters,
+               monitor=None,
+               bse=params[9],
+               noise=1,  # inversion noise factor
+               iters=params[6],
+               stages=params[7],
+               rhopoints=params[4],
+               calcpoints=params[5])
+    t = Simulation(q=linspace(params[2], params[3], 150),
+                   dq=res.dQ,
                    sample=sample,
                    u=params[11],
                    urough=params[12],
