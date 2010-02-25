@@ -17,7 +17,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-#
+
 # Author: James Krycka
 
 """
@@ -34,73 +34,79 @@ BKGD_COLOUR_WINDOW = "#ECE9D8"
 class ItemListValidator(wx.PyValidator):
     """
     This class implements a custom item list validator.  Each instance of this
-    class services one data entry field of the display.  The parameter item is
-    a list where element:
-    - [0] is not used by this class
-    - [1] contains the default value and will be updated with the final result
-    - [2] specifies the datatype of the field
-    - [3] is not used by this class
-    - [4] is not used by this class
+    class services one data entry field of the display.  Parameters are:
+
+    - datatype of the field used during input validation as follows:
+      o 'int'       => signed or unsigned integer value
+      o 'float'     => floating point value
+      o 'str'       => string of characters
+      o '' or any unknown datatype is treated the same as 'str'
+
+    - flag to indicate whether user input is required (True) or optional (False)
     """
 
-    def __init__(self, item):
+    def __init__(self, datatype='str', required=True):
         wx.PyValidator.__init__(self)
-        self.item = item
-        self.value = item[1]
-        self.type = item[2]
+        self.datatype = datatype
+        self.required = required
 
 
     def Clone(self):
         # Every validator must implement the Clone() method that returns a
         # instance of the class as follows:
-        return ItemListValidator(self.item)
+        return ItemListValidator(self.datatype, self.required)
 
 
     def Validate(self, win):
         """
-        Verify that user input is of the datatype specified:
-        - 'float', a floating point value
-        - 'int', a signed or unsigned integer value
-        - 'str', a string of non-zero length after whitespace has been trimmed
-        - 'any', a string of any length after whitespace has been trimmed
-        - '' or an unknown string, a raw string with input validation disabled
-        On error, the field is highlighted and the cursor is placed there.
+        Verify user input according to the expected datatype.  Leading and
+        trailing whitespace is always stripped before evaluation.  Floating and
+        integer values are returned as normalized float or int objects; thus
+        conversion can generate an error.  On error, the field is highlighted
+        and the cursor is placed there.  Note that all string datatypes are
+        returned stripped of leading and trailing whitespace.
         """
 
         text_ctrl = self.GetWindow()
-        text = text_ctrl.GetValue()
+        text = text_ctrl.GetValue().strip()
 
         try:
-            if self.type == "float":
-                if len(text) == 0:
-                    self.value = 0.0
-                else:
-                    self.value = float(text)
-            elif self.type == "int":
+            if self.datatype == "int":
                 if len(text) == 0:
                     self.value = 0
+                    self.value_alt = None
+                    if self.required:
+                        raise RuntimeError("input required")
                 else:
-                    self.value = int(text)
-            elif self.type == "str":
-                self.value = str(text).strip()
-                if len(self.value) == 0:
-                    wx.MessageBox(message="Please fill in the box.",
-                                  caption="Blank Field",
-                                  style=wx.ICON_EXCLAMATION|wx.OK)
-                    text_ctrl.SetBackgroundColour("YELLOW")
-                    text_ctrl.SetFocus()
-                    text_ctrl.Refresh()
-                    return False
-            elif self.type == "any":
-                self.value = str(text).strip()
-            else:
-                self.value = str(text)
+                    self.value = self.value_alt = int(text)
+            elif self.datatype == "float":
+                if len(text) == 0:
+                    self.value = 0.0
+                    self.value_alt = None
+                    if self.required:
+                        raise RuntimeError("input required")
+                else:
+                    self.value = self.value_alt = float(text)
+            else:  # For self.datatype of "str", "", or any unrecognized type.
+                if len(text) == 0:
+                    self.value = ''
+                    self.value_alt = None
+                    if self.required:
+                        raise RuntimeError("input required")
+                else:
+                    self.value = self.value_alt = str(text)
 
             text_ctrl.SetBackgroundColour(
                 wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW))
             text_ctrl.Refresh()
             self.TransferFromWindow()
             return True
+
+        except RuntimeError:
+            text_ctrl.SetBackgroundColour("YELLOW")
+            text_ctrl.SetFocus()
+            text_ctrl.Refresh()
+            return False
 
         except:
             text_ctrl.SetBackgroundColour("PINK")
@@ -113,15 +119,23 @@ class ItemListValidator(wx.PyValidator):
         # The parent of this class is responsible for setting the default value
         # for the field (e.g., by calling wx.TextCtrl() or wx.ComboBox() or
         # instance.SetValue(), etc.).
-        return True
+        return True  # Default is False for failure
 
 
     def TransferFromWindow(self):
-        # Save the final result of the edit that has already been validated.
-        # If more validation is needed (such as limit checking), it should be
-        # performed by the caller after retrieving this data.
-        self.item[1] = self.value
-        return True
+        # Data has already been transferred from the window and validated
+        # in Validate(), so there is nothing useful to do here.
+        return True  # Default is False for failure
+
+
+    def get_validated_value(self):
+        # Return the validated value or zero or blank for a null input.
+        return self.value
+
+
+    def get_validated_value_alt(self):
+        # Return the validated value or None for a null input.
+        return self.value_alt
 
 #==============================================================================
 
@@ -159,10 +173,13 @@ class ItemListInput(ScrolledPanel):
     or more 5-element lists where each list specifies a:
     - label string
     - default value
-    - datatype for validation (see ItemListValidator.Validate() for details)
+    - datatype for validation (see the ItemListValidator docstring for details)
     - list of values for a combo box or None for a simple data entry field
-    - flag to indicate that the field accepts user input (True) or the field is
-      grayed-out (False); grayed-out fields have their default values returned
+    - flags in the form of a string of characters to specify:
+      * input is required ('R') or is optional ('r') and therefore can be blank
+      * field is editable by the user ('E') or cannot be changed ('e) and is
+        grayed-out; a non-editable field has its default value returned
+      The default flags value is required and editable ('RE').
     """
 
     def __init__(self,
@@ -170,7 +187,7 @@ class ItemListInput(ScrolledPanel):
                  id       = wx.ID_ANY,
                  pos      = wx.DefaultPosition,
                  size     = wx.DefaultSize,
-                 style=(wx.BORDER_RAISED|wx.TAB_TRAVERSAL),
+                 style    =(wx.BORDER_RAISED|wx.TAB_TRAVERSAL),
                  name     = "",
                  itemlist = []
                 ):
@@ -183,12 +200,12 @@ class ItemListInput(ScrolledPanel):
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Create the text controls for labels and associated input fields.
-        self._add_items_to_input_box()
+        self.add_items_to_input_box()
 
         # Create the grid sizer that organizes the labels and input fields.
         grid_sizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=10)
         grid_sizer.AddGrowableCol(1)
-        self._add_items_to_sizer(grid_sizer)
+        self.add_items_to_sizer(grid_sizer)
 
         # Add the grid sizer to the main sizer.
         main_sizer.Add(grid_sizer, 1, wx.EXPAND|wx.ALL, border=10)
@@ -203,61 +220,80 @@ class ItemListInput(ScrolledPanel):
         self.InitDialog()
 
 
-    def _add_items_to_input_box(self):
+    def add_items_to_input_box(self):
         # Note that the validator will update self.itemlist upon successful
         # validation of user input.
         self.labels = []; self.inputs = []
         for x in xrange(len(self.itemlist)):
-            text, default, datatype, combolist, editable = self.itemlist[x]
+            text, default, datatype, combolist, flags = self.itemlist[x]
+            required = True
+            if flags.find('r') >= 0: required = False
+            editable = True
+            if flags.find('e') >= 0: editable = False
 
             self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text))
 
             if combolist is None:  # it is a simple data entry field
                 self.inputs.append(wx.TextCtrl(self, wx.ID_ANY,
                                    value=str(default),
-                                   validator=ItemListValidator(self.itemlist[x])))
+                                   validator=ItemListValidator(datatype, required)))
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
             else:                  # it is a drop down combo box list
                 self.inputs.append(wx.ComboBox(self, wx.ID_ANY,
                                    value=str(default),
-                                   validator=ItemListValidator(self.itemlist[x]),
+                                   validator=ItemListValidator(datatype, required),
                                    choices=combolist,
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY))
                 self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
 
             if not editable:
-                self.inputs[x].Enable(False)  # disallow edits to field
+                self.inputs[x].Enable(False)  # disallow edits to the field
 
 
-    def _add_items_to_sizer(self, sizer):
+    def add_items_to_sizer(self, sizer):
         for x in xrange(len(self.itemlist)):
             sizer.Add(self.labels[x], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             sizer.Add(self.inputs[x], 0, wx.EXPAND)
 
 
-    def _update_items_in_input_box(self, new_values):
+    def update_items_in_input_box(self, new_values):
         for x in xrange(len(self.inputs)):
             if new_values[x] is not None:
                 self.inputs[x].SetValue(str(new_values[x]))
 
 
     def GetResults(self):
-        # Return a list of values, one for each input field.  The value of for
+        # Returns a list of values, one for each input field.  The value for
         # a field is either its initial (default) value or the last value
         # entered by the user that has been successfully validated.  An input
         # that fails validation is not returned by the validator from the
         # window.  For a non-editable field, its initial value is returned.
+        # Blank input is converted to 0.0, 0, or a null string as appropriate
+        # for the datatype of the field
         ret = []
         for x in xrange(len(self.itemlist)):
-            ret.append(self.itemlist[x][1])
+            ret.append(self.inputs[x].GetValidator().get_validated_value())
         return ret
 
 
-    def GetRawValues(self):
-        # Return a list of strings corresponding to each input field.  These
-        # are the current values from the text control widgets when may have
+    def GetResults_Alt(self):
+        # Returns a list of values, one for each input field.  The value for
+        # a field is either its initial (default) value or the last value
+        # entered by the user that has been successfully validated.  An input
+        # that fails validation is not returned by the validator from the
+        # window.  For a non-editable field, its initial value is returned.
+        # Blank input is returned as a value of None.
+        ret = []
+        for x in xrange(len(self.itemlist)):
+            ret.append(self.inputs[x].GetValidator().get_validated_value_alt())
+        return ret
+
+
+    def GetResults_Raw(self):
+        # Returns a list of strings corresponding to each input field.  These
+        # are the current values from the text control widgets which may have
         # failed validation.  All values are returned as strings (i.e., they
-        # are not converted to floats or ints).
+        # are not converted to floats or ints and whitespace is not stripped).
         ret = []
         for x in xrange(len(self.itemlist)):
             ret.append(str(self.inputs[x].GetValue()))
@@ -349,10 +385,13 @@ class ItemListDialog(wx.Dialog):
     or more 5-element lists where each list specifies a:
     - label string
     - default value
-    - datatype for validation (see ItemListValidator.Validate() for details)
+    - datatype for validation (see the ItemListValidator docstring for details)
     - list of values for a combo box or None for a simple data entry field
-    - flag to indicate that the field accepts user input (True) or the field is
-      grayed-out (False); grayed-out fields have their default values returned
+    - flags in the form of a string of characters to specify:
+      * input is required ('R') or is optional ('r') and therefore can be blank
+      * field is editable by the user ('E') or cannot be changed ('e) and is
+        grayed-out; a non-editable field has its default value returned
+      The default flags value is required and editable ('RE').
     """
 
     def __init__(self,
@@ -370,7 +409,7 @@ class ItemListDialog(wx.Dialog):
         self.itemlist = itemlist
 
         # Create the text controls for labels and associated input fields.
-        self._add_items_to_dialog_box()
+        self.add_items_to_dialog_box()
 
         # Create the button controls (OK and Cancel) and bind their events.
         ok_button = wx.Button(self, wx.ID_OK, "OK")
@@ -385,7 +424,7 @@ class ItemListDialog(wx.Dialog):
         # Create the grid sizer that organizes the labels and input fields.
         grid_sizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=10)
         grid_sizer.AddGrowableCol(1)
-        self._add_items_to_sizer(grid_sizer)
+        self.add_items_to_sizer(grid_sizer)
 
         # Add the grid sizer to the main sizer.
         main_sizer.Add(grid_sizer, 0, wx.EXPAND|wx.ALL, 20)
@@ -411,61 +450,80 @@ class ItemListDialog(wx.Dialog):
         main_sizer.Fit(self)
 
 
-    def _add_items_to_dialog_box(self):
+    def add_items_to_dialog_box(self):
         # Note that the validator will update self.itemlist upon successful
         # validation of user input.
         self.labels = []; self.inputs = []
         for x in xrange(len(self.itemlist)):
-            text, default, datatype, combolist, editable = self.itemlist[x]
+            text, default, datatype, combolist, flags = self.itemlist[x]
+            required = True
+            if flags.find('r') >= 0: required = False
+            editable = True
+            if flags.find('e') >= 0: editable = False
 
             self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text))
 
             if combolist is None:  # it is a simple data entry field
                 self.inputs.append(wx.TextCtrl(self, wx.ID_ANY,
                                    value=str(default),
-                                   validator=ItemListValidator(self.itemlist[x])))
+                                   validator=ItemListValidator(datatype, required)))
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
             else:                  # it is a drop down combo box list
                 self.inputs.append(wx.ComboBox(self, wx.ID_ANY,
                                    value=str(default),
-                                   validator=ItemListValidator(self.itemlist[x]),
+                                   validator=ItemListValidator(datatype, required),
                                    choices=combolist,
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY))
                 self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
 
             if not editable:
-                self.inputs[x].Enable(False)  # disallow edits to field
+                self.inputs[x].Enable(False)  # disallow edits to the field
 
 
-    def _add_items_to_sizer(self, sizer):
+    def add_items_to_sizer(self, sizer):
         for x in xrange(len(self.itemlist)):
             sizer.Add(self.labels[x], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             sizer.Add(self.inputs[x], 0, wx.EXPAND)
 
 
-    def _update_items_in_dialog_box(self, new_values):
+    def update_items_in_dialog_box(self, new_values):
         for x in xrange(len(self.inputs)):
             if new_values[x] is not None:
                 self.inputs[x].SetValue(str(new_values[x]))
 
 
     def GetResults(self):
-        # Return a list of values, one for each input field.  The value of for
+        # Returns a list of values, one for each input field.  The value for
         # a field is either its initial (default) value or the last value
         # entered by the user that has been successfully validated.  An input
         # that fails validation is not returned by the validator from the
         # window.  For a non-editable field, its initial value is returned.
+        # Blank input is converted to 0.0, 0, or a null string as appropriate
+        # for the datatype of the field
         ret = []
         for x in xrange(len(self.itemlist)):
-            ret.append(self.itemlist[x][1])
+            ret.append(self.inputs[x].GetValidator().get_validated_value())
         return ret
 
 
-    def GetRawValues(self):
-        # Return a list of strings corresponding to each input field.  These
-        # are the current values from the text control widgets when may have
+    def GetResults_Alt(self):
+        # Returns a list of values, one for each input field.  The value for
+        # a field is either its initial (default) value or the last value
+        # entered by the user that has been successfully validated.  An input
+        # that fails validation is not returned by the validator from the
+        # window.  For a non-editable field, its initial value is returned.
+        # Blank input is returned as a value of None.
+        ret = []
+        for x in xrange(len(self.itemlist)):
+            ret.append(self.inputs[x].GetValidator().get_validated_value_alt())
+        return ret
+
+
+    def GetResults_Raw(self):
+        # Returns a list of strings corresponding to each input field.  These
+        # are the current values from the text control widgets which may have
         # failed validation.  All values are returned as strings (i.e., they
-        # are not converted to floats or ints).
+        # are not converted to floats or ints and whitespace is not stripped).
         ret = []
         for x in xrange(len(self.itemlist)):
             ret.append(str(self.inputs[x].GetValue()))
@@ -481,7 +539,7 @@ class ItemListDialog(wx.Dialog):
         # Explicitly validate all input values before proceeding.  Although
         # char-by-char validation would have warned the user about any invalid
         # entries, the user could have pressed the OK button without making
-        # the corrections, so we'll do a full validation pass now.  Its only
+        # the corrections, so we'll do a full validation pass now.  The only
         # purpose is to display an explicit error if any input fails validation.
         if not self.Validate():
             wx.MessageBox(caption="Data Entry Error",
@@ -558,21 +616,26 @@ class AppTestFrame(wx.Frame):
 
     def __init__(self):
         wx.Frame.__init__(self, parent=None, id=wx.ID_ANY,
-                          title="ItemListInput Test", size=(260, 360))
+                          title="ItemListInput Test", size=(300, 540))
         panel = wx.Panel(self, wx.ID_ANY, style=wx.RAISED_BORDER)
         panel.SetBackgroundColour("PALE GREEN")
 
         # Define fields for both ItemListInput and ItemListDialog to display.
         self.fields = [
-            ["Integer:", 123, "int", None, True],
-            ["Floating Point:", 45.678, "float", None, True],
-            ["Non-editable field:", "Cannot be changed!", "str", None, False],
-            ["String (1 or more char):", "Error if blank", "str", None, True],
-            ["String (0 or more char):", "", "any", None, True],
-            ["ComboBox String:", "Two", "str", ("One", "Two", "Three"), True],
-            ["String (no validation):", "DANSE Project", "", None, True]
+            ["Integer (int, optional):", 12345, "int", None, 'rE'],
+            ["Integer (int, optional):", "", "int", None, 'rE'],
+            ["Integer (int, required):", -60, "int", None, 'RE'],
+            ["Floating Point (float, optional):", 2.34567e-5, "float", None, 'rE'],
+            ["Floating Point (float, optional):", "", "float", None, 'rE'],
+            ["Floating Point (float, required):", 1.0, "float", None, 'RE'],
+            ["String (str, optional):", "DANSE", "str", None, 'rE'],
+            ["String (str, reqiured):", "", "str", None, 'RE'],
+            # Pass in a null string for flags to test default values of 'RE'
+            ["String (str, required):", "delete me", "str", None, ''],
+            ["Non-editable field:", "Cannot be changed!", "foo", None, 're'],
+            ["ComboBox String:", "Two", "str", ("One", "Two", "Three"), 'RE'],
+            ["ComboBox String:", "", "int", ("100", "200", "300"), 'rE'],
                       ]
-
         # Create the scrolled window with input boxes.  Due to the size of the
         # frame and the parent panel, both scroll bars should be displayed.
         self.scrolled = ItemListInput(parent=panel, itemlist=self.fields)
@@ -606,13 +669,17 @@ class AppTestFrame(wx.Frame):
 
 
     def OnShow(self, event):
-        # Display the same fields shown in the frame in a a pop-up dialog box.
+        # Display the same fields shown in the frame in a pop-up dialog box.
         dlg = ItemListDialog(parent=None,
                              title="ItemListDialog Test",
                              itemlist=self.fields)
         if dlg.ShowModal() == wx.ID_OK:
-            print "Results from all input fields of the dialog box:"
+            print "****** Dialog Box results from validated input fields:"
             print "  ", dlg.GetResults()
+            print "****** Dialog Box results from validated input fields (or None):"
+            print "  ", dlg.GetResults_Alt()
+            print "****** Dialog Box results from raw input fields:"
+            print "  ", dlg.GetResults_Raw()
         dlg.Destroy()
 
 
@@ -626,8 +693,12 @@ class AppTestFrame(wx.Frame):
                 message="Please correct the highlighted fields in error.",
                 style=wx.ICON_ERROR|wx.OK)
             return  # keep the dialog box open
-        print "Results from all input fields of the scrolled panel:"
+        print "****** Scrolled Panel results from validated input fields:"
         print "  ", self.scrolled.GetResults()
+        print "****** Scrolled Panel results from validated input fields (or None):"
+        print "  ", self.scrolled.GetResults_Alt()
+        print "****** Scrolled Panel results from raw input fields:"
+        print "  ", self.scrolled.GetResults_Raw()
 
 
     def OnExit(self, event):

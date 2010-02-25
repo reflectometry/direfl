@@ -125,7 +125,7 @@ class AppFrame(wx.Frame):
         self.add_toolbar()
 
         # Initialize the status bar.
-        self.add_statusbar([-5, -1, -1, -1])
+        self.add_statusbar([-64, -16, -10, -10])
 
         # Initialize the notebook bar.
         self.add_notebookbar()
@@ -518,24 +518,24 @@ class SimulatedDataPage(wx.Panel):
         #----------------------------------------------------------------------
 
         fields = [
-                ###["SLD of Substrate:", 2.07, "float", None, True],
-                   ["SLD of Surface 1:", 0.0, "float", None, True],
-                   ["SLD of Surface 2:", 4.5, "float", None, True],
-                ###["Sample Thickness:", 1000, "float", None, True],
-                   ["Qmin:", 0.0, "float", None, True],
-                   ["Qmax:", 0.4, "float", None, True],
-                   ["# Profile Steps:", 128, "int", None, True],
-                   ["Over Sampling Factor:", 4, "int", None, True],
-                   ["# Inversion Iterations:", 6, "int", None, True],
-                   ["# Monte Carlo Trials:", 10, "int", None, True],
-                ###["Cosine Transform Smoothing:", 0.0, "float", None, True],
-                ###["Back Reflectivity:", "True", "str", ("True", "False"), True],
-                ###["Inversion Noise Factor:", 1, "int", None, True],
-                   ["Simulated Noise (as %):", 8.0, "float", None, True],
-                   ["Bound State Energy:", 0.0, "float", None, True],
-                   ["Perfect Reconstruction:", "False", "str", ("True", "False"), True],
-                ###["Show Iterations:", "False", "str", ("True", "False"), True]
-                ###["Monitor:", "None", "str", None, False]
+                ###["SLD of Substrate:", 2.07, "float", None, 'RE'],
+                   ["SLD of Surface 1:", 0.0, "float", None, 'RE'],
+                   ["SLD of Surface 2:", 4.5, "float", None, 'RE'],
+                ###["Sample Thickness:", 1000, "float", None, 'RE'],
+                   ["Qmin:", 0.0, "float", None, 'RE'],
+                   ["Qmax:", 0.4, "float", None, 'RE'],
+                   ["# Profile Steps:", 128, "int", None, 'RE'],
+                   ["Over Sampling Factor:", 4, "int", None, 'RE'],
+                   ["# Inversion Iterations:", 6, "int", None, 'RE'],
+                   ["# Monte Carlo Trials:", 10, "int", None, 'RE'],
+                ###["Cosine Transform Smoothing:", 0.0, "float", None, 'RE'],
+                ###["Back Reflectivity:", "True", "str", ("True", "False"), 'RE'],
+                ###["Inversion Noise Factor:", 1, "int", None, 'RE'],
+                   ["Simulated Noise (as %):", 8.0, "float", None, 'RE'],
+                   ["Bound State Energy:", 0.0, "float", None, 'RE'],
+                   ["Perfect Reconstruction:", "False", "str", ("True", "False"), 'RE'],
+                ###["Show Iterations:", "False", "str", ("True", "False"), 'RE']
+                ###["Monitor:", "", "str", None, 're']
                  ]
 
         self.inv_params = ItemListInput(parent=self.pan1, itemlist=fields)
@@ -685,9 +685,10 @@ from your model."""
         self.params.append(layers[-1][0])  # add SLD of substrate to list
         self.params.append(layers[-1][2])  # add roughness of substrate to list
 
-        # Get resolution parameters.
+        # Get resolution parameters.  Process based on whether the instrument
+        # is monochromatic and polychromatic.
         i = self.instmeta.get_inst_idx()
-        if i <= 3:
+        if i <= 3:  # monocromatic
             self.wavelength = self.instmeta.get_wavelength()
             self.dLoL = self.instmeta.get_dLoL()
             self.d_s1 = self.instmeta.get_d_s1()
@@ -702,7 +703,7 @@ from your model."""
             self.slit2_above = self.instmeta.get_slit2_above()
             self.sample_width = self.instmeta.get_sample_width()
             self.sample_broadening = self.instmeta.get_sample_broadening()
-        else:
+        else:  # polychromatic
             self.wavelength_lo = self.instmeta.get_wavelength_lo()
             self.wavelength_hi = self.instmeta.get_wavelength_hi()
             self.dLoL = self.instmeta.get_dLoL()
@@ -910,22 +911,22 @@ class CollectedDataPage(wx.Panel):
 
         #----------------------------------------------------------------------
 
-        fields = [ ["SLD of Substrate:", 2.07, "float", None, True],
-                   ["SLD of Surface 1:", 6.33, "float", None, True],
-                   ["SLD of Surface 2:", 0.0, "float", None, True],
-                   ["Sample Thickness:", 1000, "float", None, True],
-                   ["Qmin:", 0.0, "float", None, True],
-                   ["Qmax:", 0.2, "float", None, True],
-                   ["# Profile Steps:", 128, "int", None, True],
-                   ["Over Sampling Factor:", 4, "int", None, True],
-                   ["# Inversion Iterations:", 6, "int", None, True],
-                   ["# Monte Carlo Trials:", 10, "int", None, True],
-                ###["Cosine Transform Smoothing:", 0.0, "float", None, True],
-                ###["Back Reflectivity:", "True", "str", ("True", "False"), False],
-                ###["Inversion Noise Factor:", 1, "int", None, True],
-                   ["Bound State Energy:", 0.0, "float", None, True],
-                ###["Show Iterations:", "False", "str", ("True", "False"), True]
-                ###["Monitor:", "None", "str", None, False]
+        fields = [ ["SLD of Substrate:", 2.07, "float", None, 'RE'],
+                   ["SLD of Surface 1:", 6.33, "float", None, 'RE'],
+                   ["SLD of Surface 2:", 0.0, "float", None, 'RE'],
+                   ["Sample Thickness:", 1000, "float", None, 'RE'],
+                   ["Qmin:", 0.0, "float", None, 'RE'],
+                   ["Qmax:", 0.2, "float", None, 'RE'],
+                   ["# Profile Steps:", 128, "int", None, 'RE'],
+                   ["Over Sampling Factor:", 4, "int", None, 'RE'],
+                   ["# Inversion Iterations:", 6, "int", None, 'RE'],
+                   ["# Monte Carlo Trials:", 10, "int", None, 'RE'],
+                ###["Cosine Transform Smoothing:", 0.0, "float", None, 'RE'],
+                ###["Back Reflectivity:", "True", "str", ("True", "False"), 're'],
+                ###["Inversion Noise Factor:", 1, "int", None, 'RE'],
+                   ["Bound State Energy:", 0.0, "float", None, 'RE'],
+                ###["Show Iterations:", "False", "str", ("True", "False"), 'RE']
+                ###["Monitor:", "", "str", None, 're']
                  ]
 
         self.inv_params = ItemListInput(parent=self.pan1, itemlist=fields)
@@ -1202,27 +1203,50 @@ class InstrumentMetadata():
         self.inst_names = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
                            "SNS Liquids", "SNS Magnetic")
         self.inst_classes = ("ANDR", "NG1", "NG7", "Xray", "Liquids", "Magnetic")
-        self.radiation = ["unknown"] *6
-        self.wavelength = [[0.0] * 6, [0.0] * 6]
-        self.dLoL = [[0.0] * 6, [0.0] * 6]
-        self.d_s1 = [[0.0] * 6, [0.0] * 6]
-        self.d_s2 = [[0.0] * 6, [0.0] * 6]
-        self.Tlo = [[0.0] * 6, [0.0] * 6]
-        self.Thi = [[0.0] * 6, [0.0] * 6]
-        self.slit1_at_Tlo = [[0.0] * 6, [0.0] * 6]
-        self.slit2_at_Tlo = [[0.0] * 6, [0.0] * 6]
-        self.slit1_below = [[0.0] * 6, [0.0] * 6]
-        self.slit2_below = [[0.0] * 6, [0.0] * 6]
-        self.slit1_above = [[0.0] * 6, [0.0] * 6]
-        self.slit2_above = [[0.0] * 6, [0.0] * 6]
-        self.sample_width = [[0.0] * 6, [0.0] * 6]
-        self.sample_broadening = [[0.0] * 6, [0.0] * 6]
+        n = len(self.inst_names)
 
-        self.wavelength_lo = [[0.0] * 6, [0.0] * 6]
-        self.wavelength_hi = [[0.0] * 6, [0.0] * 6]
-        self.slit1_size = [[0.0] * 6, [0.0] * 6]
-        self.slit2_size = [[0.0] * 6, [0.0] * 6]
-        self.theta = [[0.0] * 6, [0.0] * 6]
+        # Editable parameters are stored in 2 x n lists where list [0] contains
+        # default values by instrument and list [1] contains current values.
+        # Non-editable parameters are stored in a list of n elements containing
+        # their fixed values.  n is the number of instruments supported.  For a
+        # given instrument only a subset of the parameters may apply.
+        self.radiation =         ["unknown"] * n
+        self.wavelength =        [[0.0] * n, [0.0] * n]
+        self.dLoL =              [[0.0] * n, [0.0] * n]
+        self.d_s1 =              [[0.0] * n, [0.0] * n]
+        self.d_s2 =              [[0.0] * n, [0.0] * n]
+        '''
+        self.Tlo =               [[0.0] * n, [0.0] * n]
+        self.Thi =               [[0.0] * n, [0.0] * n]
+        self.slit1_at_Tlo =      [[0.0] * n, [0.0] * n]
+        self.slit2_at_Tlo =      [[0.0] * n, [0.0] * n]
+        self.slit1_below =       [[0.0] * n, [0.0] * n]
+        self.slit2_below =       [[0.0] * n, [0.0] * n]
+        self.slit1_above =       [[0.0] * n, [0.0] * n]
+        self.slit2_above =       [[0.0] * n, [0.0] * n]
+        self.sample_width =      [[0.0] * n, [0.0] * n]
+        self.sample_broadening = [[0.0] * n, [0.0] * n]
+        '''
+        self.Tlo =               [[""]  * n, [0.0] * n]
+        self.Thi =               [[""]  * n, [0.0] * n]
+        self.slit1_at_Tlo =      [[""]  * n, [0.0] * n]
+        self.slit2_at_Tlo =      [[""]  * n, [0.0] * n]
+        self.slit1_below =       [[""]  * n, [0.0] * n]
+        self.slit2_below =       [[""]  * n, [0.0] * n]
+        self.slit1_above =       [[""]  * n, [0.0] * n]
+        self.slit2_above =       [[""]  * n, [0.0] * n]
+        self.sample_width =      [[""]  * n, [0.0] * n]
+        self.sample_broadening = [[""]  * n, [0.0] * n]
+
+        self.wavelength_lo =     [[0.0] * n, [0.0] * n]
+        self.wavelength_hi =     [[0.0] * n, [0.0] * n]
+        '''
+        self.slit1_size =        [[0.0] * n, [0.0] * n]
+        self.slit2_size =        [[0.0] * n, [0.0] * n]
+        '''
+        self.slit1_size =        [[""]  * n, [0.0] * n]
+        self.slit2_size =        [[""]  * n, [0.0] * n]
+        self.theta =             [[0.0] * n, [0.0] * n]
 
         self.set_attr_mono(ANDR, 0)
         self.set_attr_mono(NG1, 1)
@@ -1238,6 +1262,8 @@ class InstrumentMetadata():
         self.inst_idx = 0
 
     def set_attr_mono(self, iclass, idx):
+        """ Set default values for parameters of a monochromatic instrument."""
+
         if hasattr(iclass, 'radiation'):
             self.radiation[idx] = iclass.radiation
         if hasattr(iclass, 'wavelength'):
@@ -1252,6 +1278,7 @@ class InstrumentMetadata():
         self.init_metadata()
 
     def set_attr_poly(self, iclass, idx):
+        """ Set default values for parameters of a ploychromatic instrument."""
         if hasattr(iclass, 'radiation'):
             self.radiation[idx] = iclass.radiation
         if hasattr(iclass, 'wavelength'):
@@ -1268,7 +1295,7 @@ class InstrumentMetadata():
 
 
     def get_inst_names(self):
-        return self.inst_classes
+        return self.inst_names
     def get_inst_classes(self):
         return self.inst_classes
     def get_radiation(self):
@@ -1319,7 +1346,7 @@ class InstrumentMetadata():
 
     def set_inst_idx(self, index):
         self.inst_idx = index
-        self.init_metadata()
+        ###self.init_metadata()
 
 
     def init_metadata(self):
@@ -1355,23 +1382,38 @@ class InstrumentMetadata():
 
 
     def edit_metadata_mono(self):
+        """
+        Allow user to edit the values for parameters of a monochromatic
+        instrument.
+        """
+
         i = self.inst_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", None, False],
-                   ["Wavelength (A):", self.wavelength[1][i], "float", None, True],
-                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", None, True],
-                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", None, True],
-                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", None, True],
-                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", None, True],
-                   ["Theta Hi (degrees):", self.Thi[1][i], "float", None, True],
-                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", None, True],
-                   ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", None, True],
-                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", None, True],
-                   ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", None, True],
-                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", None, True],
-                   ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", None, True],
-                   ["Sample Width (mm):", self.sample_width[1][i], "float", None, True],
-                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, True],
+                   ["Radiation Type:", self.radiation[i], "str", None, 're'],
+                   ["Wavelength (A):", self.wavelength[1][i], "float", None, 'RE'],
+                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", None, 'RE'],
+                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", None, 'RE'],
+                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", None, 'RE'],
+                  #["Theta Lo (degrees):", self.Tlo[1][i], "float", None, 'RE'],
+                  #["Theta Hi (degrees):", self.Thi[1][i], "float", None, 'RE'],
+                  #["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", None, 'RE'],
+                  #["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", None, 'RE'],
+                  #["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", None, 'RE'],
+                  #["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", None, 'RE'],
+                  #["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", None, 'RE'],
+                  #["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", None, 'RE'],
+                  #["Sample Width (mm):", self.sample_width[1][i], "float", None, 'RE'],
+                  #["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, 'RE'],
+                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", None, 'RE'],
+                   ["Theta Hi (degrees):", self.Thi[1][i], "float", None, 'RE'],
+                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", None, 'RE'],
+                   ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", None, 'RE'],
+                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", None, 'RE'],
+                   ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", None, 'RE'],
+                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", None, 'RE'],
+                   ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", None, 'RE'],
+                   ["Sample Width (mm):", self.sample_width[1][i], "floa2t", None, 'RE'],
+                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, 'RE'],
                  ]
 
         title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
@@ -1381,8 +1423,8 @@ class InstrumentMetadata():
                              itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResults()
-            #print "Results from all input fields of the dialog box:"
-            #print "  ", results
+            print "Results from all input fields of the dialog box:"
+            print "  ", results
 
             # Skip results[0], the radiation value that is not editable
             i = self.inst_idx
@@ -1404,19 +1446,29 @@ class InstrumentMetadata():
 
 
     def edit_metadata_poly(self):
+        """
+        Allow user to edit the values for parameters of a polychromatic
+        instrument.
+        """
+
         i = self.inst_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", None, False],
-                   ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", None, True],
-                   ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", None, True],
-                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", None, True],
-                   ["Slit 1 Size (mm):", self.slit1_size[1][i], "float", None, True],
-                   ["Slit 2 Size (mm):", self.slit2_size[1][i], "float", None, True],
-                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", None, True],
-                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", None, True],
-                   ["Theta (degrees):", self.theta[1][i], "float", None, True],
-                   ["Sample Width (mm):", self.sample_width[1][i], "float", None, True],
-                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, True],
+                   ["Radiation Type:", self.radiation[i], "str", None, 're'],
+                   ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", None, 'RE'],
+                   ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", None, 'RE'],
+                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", None, 'RE'],
+                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", None, 'RE'],
+                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", None, 'RE'],
+                  #["Slit 1 Size (mm):", self.slit1_size[1][i], "float", None, 'RE'],
+                  #["Slit 2 Size (mm):", self.slit2_size[1][i], "float", None, 'RE'],
+                  #["Theta (degrees):", self.theta[1][i], "float", None, 'RE'],
+                  #["Sample Width (mm):", self.sample_width[1][i], "float", None, 'RE'],
+                  #["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, 'RE'],
+                   ["Slit 1 Size (mm):", self.slit1_size[1][i], "float", None, 'RE'],
+                   ["Slit 2 Size (mm):", self.slit2_size[1][i], "float", None, 'RE'],
+                   ["Theta (degrees):", self.theta[1][i], "float", None, 'RE'],
+                   ["Sample Width (mm):", self.sample_width[1][i], "float", None, 'RE'],
+                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, 'RE'],
                  ]
 
         title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
@@ -1428,15 +1480,16 @@ class InstrumentMetadata():
             results = dlg.GetResults()
             print "Results from all input fields of the dialog box:"
             print "  ", results
+
             # Skip results[0], the radiation value that is not editable
             i = self.inst_idx
             self.wavelength_lo [1][i] = results[1]
             self.wavelength_hi[1][i] = results[2]
             self.dLoL[1][i] = results[3]
-            self.slit1_size[1][i] = results[4]
-            self.slit2_size[1][i] = results[5]
-            self.d_s1[1][i] = results[6]
-            self.d_s2[1][i] = results[7]
+            self.d_s1[1][i] = results[4]
+            self.d_s2[1][i] = results[5]
+            self.slit1_size[1][i] = results[6]
+            self.slit2_size[1][i] = results[7]
             self.theta[1][i] = results[8]
             self.sample_width[1][i] = results[9]
             self.sample_broadening[1][i] = results[10]
