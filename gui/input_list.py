@@ -40,6 +40,9 @@ class ItemListValidator(wx.PyValidator):
       o 'int'       => signed or unsigned integer value
       o 'float'     => floating point value
       o 'str'       => string of characters
+      o 'str_alpha' => string of alphabetic characters {A-Z, a-z}
+      o 'str_alnum' => string of alphanumeric characters {A-Z, a-z, 0-9}
+      o 'str_id'    => string identifier consisting of {A-Z, a-z, 0-9, _, -}
       o '' or any unknown datatype is treated the same as 'str'
 
     - flag to indicate whether user input is required (True) or optional (False)
@@ -87,6 +90,40 @@ class ItemListValidator(wx.PyValidator):
                         raise RuntimeError("input required")
                 else:
                     self.value = self.value_alt = float(text)
+            elif self.datatype == 'str_alpha':
+                if len(text) == 0:
+                    self.value = ''
+                    self.value_alt = None
+                    if self.required:
+                        raise RuntimeError("input required")
+                else:
+                    if text.isalpha():
+                        self.value = self.value_alt = str(text)
+                    else:
+                        raise ValueError("input must be alphabetic")
+            elif self.datatype == 'str_alnum':
+                if len(text) == 0:
+                    self.value = ''
+                    self.value_alt = None
+                    if self.required:
+                        raise RuntimeError("input required")
+                else:
+                    if text.isalnum():
+                        self.value = self.value_alt = str(text)
+                    else:
+                        raise ValueError("input must be alphanumeric")
+            elif self.datatype == 'str_id':
+                if len(text) == 0:
+                    self.value = ''
+                    self.value_alt = None
+                    if self.required:
+                        raise RuntimeError("input required")
+                else:
+                    temp = text.replace('_', 'a').replace('-','a')
+                    if temp.isalnum():
+                        self.value = self.value_alt = str(text)
+                    else:
+                        raise ValueError("input must be alphanumeric, _, or -")
             else:  # For self.datatype of "str", "", or any unrecognized type.
                 if len(text) == 0:
                     self.value = ''
@@ -616,7 +653,7 @@ class AppTestFrame(wx.Frame):
 
     def __init__(self):
         wx.Frame.__init__(self, parent=None, id=wx.ID_ANY,
-                          title="ItemListInput Test", size=(300, 540))
+                          title="ItemListInput Test", size=(300, 600))
         panel = wx.Panel(self, wx.ID_ANY, style=wx.RAISED_BORDER)
         panel.SetBackgroundColour("PALE GREEN")
 
@@ -635,6 +672,9 @@ class AppTestFrame(wx.Frame):
             ["Non-editable field:", "Cannot be changed!", "foo", None, 're'],
             ["ComboBox String:", "Two", "str", ("One", "Two", "Three"), 'RE'],
             ["ComboBox String:", "", "int", ("100", "200", "300"), 'rE'],
+            ["String (alphabetic):", "Aa", "str_alpha", None, 'rE'],
+            ["String (alphanumeric):", "Aa1", "str_alnum", None, 'rE'],
+            ["String (A-Z, a-z, 0-9, _, -):", "A-1_a", "str_id", None, 'rE'],
                       ]
         # Create the scrolled window with input boxes.  Due to the size of the
         # frame and the parent panel, both scroll bars should be displayed.
