@@ -165,21 +165,22 @@ class ItemListValidator(wx.PyValidator):
         return True  # Default is False for failure
 
 
-    def get_validated_value(self):
+    def GetValidatedInput(self):
         # Return the validated value or zero or blank for a null input.
         return self.value
 
 
-    def get_validated_value_alt(self):
+    def GetValidatedInputAlt(self):
         # Return the validated value or None for a null input.
         return self.value_alt
 
 #==============================================================================
 
-class ItemListInput(ScrolledPanel):
+class InputListPanel(ScrolledPanel):
     """
-    This class implements the generic Item List Input Panel.
-    (See ItemListDialog that uses a dialog box instead of a scrolled window.)
+    This class implements a general purpose mechanism for obtaining and
+    validating user input from several fields in a window with scroll bars.
+    (See InputListDialog that uses a dialog box instead of a scrolled window.)
 
     It creates a scrolled window in which to display one or more input fields
     each preceded by a label.  The input fields can be a combination of simple
@@ -213,8 +214,8 @@ class ItemListInput(ScrolledPanel):
     - datatype for validation (see the ItemListValidator docstring for details)
     - list of values for a combo box or None for a simple data entry field
     - flags in the form of a string of characters to specify:
-      * input is required ('R') or is optional ('r') and therefore can be blank
-      * field is editable by the user ('E') or cannot be changed ('e) and is
+      o input is required ('R') or is optional ('r') and therefore can be blank
+      o field is editable by the user ('E') or cannot be changed ('e) and is
         grayed-out; a non-editable field has its default value returned
       The default flags value is required and editable ('RE').
     """
@@ -309,11 +310,11 @@ class ItemListInput(ScrolledPanel):
         # for the datatype of the field
         ret = []
         for x in xrange(len(self.itemlist)):
-            ret.append(self.inputs[x].GetValidator().get_validated_value())
+            ret.append(self.inputs[x].GetValidator().GetValidatedInput())
         return ret
 
 
-    def GetResults_Alt(self):
+    def GetResultsAltFormat(self):
         # Returns a list of values, one for each input field.  The value for
         # a field is either its initial (default) value or the last value
         # entered by the user that has been successfully validated.  An input
@@ -322,11 +323,11 @@ class ItemListInput(ScrolledPanel):
         # Blank input is returned as a value of None.
         ret = []
         for x in xrange(len(self.itemlist)):
-            ret.append(self.inputs[x].GetValidator().get_validated_value_alt())
+            ret.append(self.inputs[x].GetValidator().GetValidatedInputAlt())
         return ret
 
 
-    def GetResults_Raw(self):
+    def GetResultsRawInput(self):
         # Returns a list of strings corresponding to each input field.  These
         # are the current values from the text control widgets which may have
         # failed validation.  All values are returned as strings (i.e., they
@@ -366,7 +367,7 @@ class ItemListInput(ScrolledPanel):
     def OnComboBoxSelect(self, event):
         """
         This method captures combo box selection actions by the user from all
-        combo boxes instantiated by the ItemListDialog class.  This method
+        combo boxes instantiated by the InputListPanel class.  This method
         should be subclassed if the caller wants to perform some action in
         response to a selection event.  The sample code below shows how to
         obtain the index of the box, the index of the item selected, and the
@@ -386,10 +387,11 @@ class ItemListInput(ScrolledPanel):
 
 #==============================================================================
 
-class ItemListDialog(wx.Dialog):
+class InputListDialog(wx.Dialog):
     """
-    This class implements the generic Item List Dialog Box.
-    (See ItemListInput that uses a scrolled window instead of a dialog box.)
+    This class implements a general purpose mechanism for obtaining and
+    validating user input from several fields in a pop-up dialog box.
+    (See InputListPanel that uses a scrolled window instead of a dialog box.)
 
     It creates a pop-up dialog box in which to display one or more input fields
     each preceded by a label.  The input fields can be a combination of simple
@@ -539,11 +541,11 @@ class ItemListDialog(wx.Dialog):
         # for the datatype of the field
         ret = []
         for x in xrange(len(self.itemlist)):
-            ret.append(self.inputs[x].GetValidator().get_validated_value())
+            ret.append(self.inputs[x].GetValidator().GetValidatedInput())
         return ret
 
 
-    def GetResults_Alt(self):
+    def GetResultsAltFormat(self):
         # Returns a list of values, one for each input field.  The value for
         # a field is either its initial (default) value or the last value
         # entered by the user that has been successfully validated.  An input
@@ -552,11 +554,11 @@ class ItemListDialog(wx.Dialog):
         # Blank input is returned as a value of None.
         ret = []
         for x in xrange(len(self.itemlist)):
-            ret.append(self.inputs[x].GetValidator().get_validated_value_alt())
+            ret.append(self.inputs[x].GetValidator().GetValidatedInputAlt())
         return ret
 
 
-    def GetResults_Raw(self):
+    def GetResultsRawInput(self):
         # Returns a list of strings corresponding to each input field.  These
         # are the current values from the text control widgets which may have
         # failed validation.  All values are returned as strings (i.e., they
@@ -573,6 +575,11 @@ class ItemListDialog(wx.Dialog):
         It is intended to be subclassed if special processing is needed.
         """
 
+        MSG_TEXT = """\
+Please correct all highlighted fields in error.
+Yellow means an input value is required.
+Pink denotes a syntax error."""
+
         # Explicitly validate all input values before proceeding.  Although
         # char-by-char validation would have warned the user about any invalid
         # entries, the user could have pressed the OK button without making
@@ -580,8 +587,8 @@ class ItemListDialog(wx.Dialog):
         # purpose is to display an explicit error if any input fails validation.
         if not self.Validate():
             wx.MessageBox(caption="Data Entry Error",
-                message="Please correct the highlighted fields in error.",
-                style=wx.ICON_ERROR|wx.OK)
+                          message=MSG_TEXT,
+                          style=wx.ICON_ERROR|wx.OK)
             return  # keep the dialog box open
 
         # When the wx.ID_OK event is skipped (to allow handlers up the chain to
@@ -622,7 +629,7 @@ class ItemListDialog(wx.Dialog):
     def OnComboBoxSelect(self, event):
         """
         This method captures combo box selection actions by the user from all
-        combo boxes instantiated by the ItemListDialog class.  This method
+        combo boxes instantiated by the InputListDialog class.  This method
         should be subclassed if the caller wants to perform some action in
         response to a selection event.  The sample code below shows how to
         obtain the index of the box, the index of the item selected, and the
@@ -644,20 +651,20 @@ class ItemListDialog(wx.Dialog):
 
 class AppTestFrame(wx.Frame):
     """
-    Interactively test both the ItemListDialog and the ItemListInput classes.
+    Interactively test both the InputListPanel and the InputListDialog classes.
     Both will display the same input fields.  Enter invalid data to verify
-    char-by-char error processing.  Press the OK and Done buttons with an
+    char-by-char error processing.  Press the Submit and OK buttons with an
     uncorrected highlighted field in error to generate a pop-up error box.
     Resize the main window to see scroll bars disappear and reappear.
     """
 
     def __init__(self):
         wx.Frame.__init__(self, parent=None, id=wx.ID_ANY,
-                          title="ItemListInput Test", size=(300, 600))
+                          title="InputListPanel Test", size=(300, 600))
         panel = wx.Panel(self, wx.ID_ANY, style=wx.RAISED_BORDER)
         panel.SetBackgroundColour("PALE GREEN")
 
-        # Define fields for both ItemListInput and ItemListDialog to display.
+        # Define fields for both InputListPanel and InputListDialog to display.
         self.fields = [
             ["Integer (int, optional):", 12345, "int", None, 'rE'],
             ["Integer (int, optional):", "", "int", None, 'rE'],
@@ -678,7 +685,7 @@ class AppTestFrame(wx.Frame):
                       ]
         # Create the scrolled window with input boxes.  Due to the size of the
         # frame and the parent panel, both scroll bars should be displayed.
-        self.scrolled = ItemListInput(parent=panel, itemlist=self.fields)
+        self.scrolled = InputListPanel(parent=panel, itemlist=self.fields)
 
         # Create a button to request the popup dialog box.
         show_button = wx.Button(panel, wx.ID_ANY, "Show Pop-up Dialog Box")
@@ -710,16 +717,16 @@ class AppTestFrame(wx.Frame):
 
     def OnShow(self, event):
         # Display the same fields shown in the frame in a pop-up dialog box.
-        dlg = ItemListDialog(parent=None,
-                             title="ItemListDialog Test",
-                             itemlist=self.fields)
+        dlg = InputListDialog(parent=None,
+                              title="InputListDialog Test",
+                              itemlist=self.fields)
         if dlg.ShowModal() == wx.ID_OK:
             print "****** Dialog Box results from validated input fields:"
             print "  ", dlg.GetResults()
             print "****** Dialog Box results from validated input fields (or None):"
-            print "  ", dlg.GetResults_Alt()
+            print "  ", dlg.GetResultsAltFormat()
             print "****** Dialog Box results from raw input fields:"
-            print "  ", dlg.GetResults_Raw()
+            print "  ", dlg.GetResultsRawInput()
         dlg.Destroy()
 
 
@@ -736,9 +743,9 @@ class AppTestFrame(wx.Frame):
         print "****** Scrolled Panel results from validated input fields:"
         print "  ", self.scrolled.GetResults()
         print "****** Scrolled Panel results from validated input fields (or None):"
-        print "  ", self.scrolled.GetResults_Alt()
+        print "  ", self.scrolled.GetResultsAltFormat()
         print "****** Scrolled Panel results from raw input fields:"
-        print "  ", self.scrolled.GetResults_Raw()
+        print "  ", self.scrolled.GetResultsRawInput()
 
 
     def OnExit(self, event):
@@ -747,7 +754,7 @@ class AppTestFrame(wx.Frame):
 
 
 if __name__ == '__main__':
-    # Interactively test both the ItemListInput and the ItemListDialog classes.
+    # Interactively test both the InputListPanel and the InputListDialog classes.
     app = wx.PySimpleApp()
     frame = AppTestFrame()
     frame.Show(True)

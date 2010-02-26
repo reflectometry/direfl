@@ -68,7 +68,7 @@ from .about import (APP_NAME, APP_TITLE, APP_VERSION,
                     APP_PROJECT_URL, APP_PROJECT_TAG,
                     APP_TUTORIAL_URL, APP_TUTORIAL_TXT)
 from .images import getOpenBitmap
-from .input_list import ItemListDialog, ItemListInput
+from .input_list import InputListDialog, InputListPanel
 
 from inversion.core.ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
 from inversion.core.snsdata import Liquids, Magnetic
@@ -538,7 +538,7 @@ class SimulatedDataPage(wx.Panel):
                 ###["Monitor:", "", "str", None, 're']
                  ]
 
-        self.inv_params = ItemListInput(parent=self.pan1, itemlist=fields)
+        self.inv_params = InputListPanel(parent=self.pan1, itemlist=fields)
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
@@ -929,7 +929,7 @@ class CollectedDataPage(wx.Panel):
                 ###["Monitor:", "", "str", None, 're']
                  ]
 
-        self.inv_params = ItemListInput(parent=self.pan1, itemlist=fields)
+        self.inv_params = InputListPanel(parent=self.pan1, itemlist=fields)
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
@@ -1417,10 +1417,10 @@ class InstrumentMetadata():
                  ]
 
         title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
-        dlg = ItemListDialog(parent=None,
-                             title=title,
-                             pos=(500, 100),
-                             itemlist=fields)
+        dlg = InputListDialog(parent=None,
+                              title=title,
+                              pos=(500, 100),
+                              itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResults()
             print "Results from all input fields of the dialog box:"
@@ -1472,10 +1472,10 @@ class InstrumentMetadata():
                  ]
 
         title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
-        dlg = ItemListDialog(parent=None,
-                             title=title,
-                             pos=(500, 100),
-                             itemlist=fields)
+        dlg = InputListDialog(parent=None,
+                              title=title,
+                              pos=(500, 100),
+                              itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResults()
             print "Results from all input fields of the dialog box:"
