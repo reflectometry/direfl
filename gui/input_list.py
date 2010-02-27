@@ -21,22 +21,30 @@
 # Author: James Krycka
 
 """
-This module implements the generic Item List Input Box and a helper class for
-validating user input.
+This module implements InputListPanel, InputListDialog, and InputListValidator
+classes to provide general purpose mechanisms for obtaining and validating user
+input from a structured list of input fields.
 """
 
 import wx
 from wx.lib.scrolledpanel import ScrolledPanel
 
 BKGD_COLOUR_WINDOW = "#ECE9D8"
+PALE_YELLOW = "#FFFFB0"
+
+DATA_ENTRY_ERRMSG = """\
+Please correct any highlighted field in error.
+Yellow means an input value is required.
+Pink indicates a syntax error."""
 
 
 class ItemListValidator(wx.PyValidator):
     """
-    This class implements a custom item list validator.  Each instance of this
-    class services one data entry field of the display.  Parameters are:
+    This class implements a custom input field validator.  Each instance of
+    this class services one data entry field (typically implemented as
+    wx.TextCtrl or a wx.ComboBox widget).  Parameters are:
 
-    - datatype of the field used during input validation as follows:
+    - datatype of the field (used when validating user input) as follows:
       o 'int'       => signed or unsigned integer value
       o 'float'     => floating point value
       o 'str'       => string of characters
@@ -140,7 +148,7 @@ class ItemListValidator(wx.PyValidator):
             return True
 
         except RuntimeError:
-            text_ctrl.SetBackgroundColour("YELLOW")
+            text_ctrl.SetBackgroundColour(PALE_YELLOW)
             text_ctrl.SetFocus()
             text_ctrl.Refresh()
             return False
@@ -238,7 +246,7 @@ class InputListPanel(ScrolledPanel):
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Create the text controls for labels and associated input fields.
-        self.add_items_to_input_box()
+        self.add_items_to_panel()
 
         # Create the grid sizer that organizes the labels and input fields.
         grid_sizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=10)
@@ -258,9 +266,7 @@ class InputListPanel(ScrolledPanel):
         self.InitDialog()
 
 
-    def add_items_to_input_box(self):
-        # Note that the validator will update self.itemlist upon successful
-        # validation of user input.
+    def add_items_to_panel(self):
         self.labels = []; self.inputs = []
         for x in xrange(len(self.itemlist)):
             text, default, datatype, combolist, flags = self.itemlist[x]
@@ -284,8 +290,14 @@ class InputListPanel(ScrolledPanel):
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY))
                 self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
 
+
+            if required:
+                # Validate default value and highlight field if default is null
+                self.inputs[x].GetValidator().Validate(self.inputs[x])
+
             if not editable:
-                self.inputs[x].Enable(False)  # disallow edits to the field
+                # disallow edits to the field
+                self.inputs[x].Enable(False)
 
 
     def add_items_to_sizer(self, sizer):
@@ -301,13 +313,16 @@ class InputListPanel(ScrolledPanel):
 
 
     def GetResults(self):
-        # Returns a list of values, one for each input field.  The value for
-        # a field is either its initial (default) value or the last value
-        # entered by the user that has been successfully validated.  An input
-        # that fails validation is not returned by the validator from the
-        # window.  For a non-editable field, its initial value is returned.
-        # Blank input is converted to 0.0, 0, or a null string as appropriate
-        # for the datatype of the field
+        """
+        Returns a list of values, one for each input field.  The value for
+        a field is either its initial (default) value or the last value
+        entered by the user that has been successfully validated.  An input
+        that fails validation is not returned by the validator from the
+        window.  For a non-editable field, its initial value is returned.
+        Blank input is converted to 0.0, 0, or a null string as appropriate
+        for the datatype of the field
+        """
+
         ret = []
         for x in xrange(len(self.itemlist)):
             ret.append(self.inputs[x].GetValidator().GetValidatedInput())
@@ -315,12 +330,15 @@ class InputListPanel(ScrolledPanel):
 
 
     def GetResultsAltFormat(self):
-        # Returns a list of values, one for each input field.  The value for
-        # a field is either its initial (default) value or the last value
-        # entered by the user that has been successfully validated.  An input
-        # that fails validation is not returned by the validator from the
-        # window.  For a non-editable field, its initial value is returned.
-        # Blank input is returned as a value of None.
+        """
+        Returns a list of values, one for each input field.  The value for
+        a field is either its initial (default) value or the last value
+        entered by the user that has been successfully validated.  An input
+        that fails validation is not returned by the validator from the
+        window.  For a non-editable field, its initial value is returned.
+        Blank input is returned as a value of None.
+        """
+
         ret = []
         for x in xrange(len(self.itemlist)):
             ret.append(self.inputs[x].GetValidator().GetValidatedInputAlt())
@@ -328,10 +346,13 @@ class InputListPanel(ScrolledPanel):
 
 
     def GetResultsRawInput(self):
-        # Returns a list of strings corresponding to each input field.  These
-        # are the current values from the text control widgets which may have
-        # failed validation.  All values are returned as strings (i.e., they
-        # are not converted to floats or ints and whitespace is not stripped).
+        """
+        Returns a list of strings corresponding to each input field.  These
+        are the current values from the text control widgets which may have
+        failed validation.  All values are returned as strings (i.e., they
+        are not converted to floats or ints and whitespace is not stripped).
+        """
+
         ret = []
         for x in xrange(len(self.itemlist)):
             ret.append(str(self.inputs[x].GetValue()))
@@ -366,9 +387,8 @@ class InputListPanel(ScrolledPanel):
 
     def OnComboBoxSelect(self, event):
         """
-        This method captures combo box selection actions by the user from all
-        combo boxes instantiated by the InputListPanel class.  This method
-        should be subclassed if the caller wants to perform some action in
+        This method is called each time a selection is made in any combo box.
+        It should be subclassed if the caller wants to perform some action in
         response to a selection event.  The sample code below shows how to
         obtain the index of the box, the index of the item selected, and the
         value.  Note that the box's index is 0 to n, where n is the number of
@@ -383,6 +403,13 @@ class InputListPanel(ScrolledPanel):
                 break
         print "Combo:", box_idx, item_idx, self.itemlist[box_idx][3][item_idx]
         """
+
+        # Run the validator bound to the combo box that has a selection event.
+        # This should not fail unless the combo options were setup incorrectly.
+        # If the validation fails, the validator will highlight the input field
+        # to alert the user of the error.
+        combo_box = event.GetEventObject()
+        combo_box.GetValidator().Validate(combo_box)
         event.Skip()
 
 #==============================================================================
@@ -490,8 +517,6 @@ class InputListDialog(wx.Dialog):
 
 
     def add_items_to_dialog_box(self):
-        # Note that the validator will update self.itemlist upon successful
-        # validation of user input.
         self.labels = []; self.inputs = []
         for x in xrange(len(self.itemlist)):
             text, default, datatype, combolist, flags = self.itemlist[x]
@@ -515,8 +540,13 @@ class InputListDialog(wx.Dialog):
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY))
                 self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
 
+            if required:
+                # Validate default value and highlight field if default is null
+                self.inputs[x].GetValidator().Validate(self.inputs[x])
+
             if not editable:
-                self.inputs[x].Enable(False)  # disallow edits to the field
+                # disallow edits to the field
+                self.inputs[x].Enable(False)
 
 
     def add_items_to_sizer(self, sizer):
@@ -532,13 +562,16 @@ class InputListDialog(wx.Dialog):
 
 
     def GetResults(self):
-        # Returns a list of values, one for each input field.  The value for
-        # a field is either its initial (default) value or the last value
-        # entered by the user that has been successfully validated.  An input
-        # that fails validation is not returned by the validator from the
-        # window.  For a non-editable field, its initial value is returned.
-        # Blank input is converted to 0.0, 0, or a null string as appropriate
-        # for the datatype of the field
+        """
+        Returns a list of values, one for each input field.  The value for
+        a field is either its initial (default) value or the last value
+        entered by the user that has been successfully validated.  An input
+        that fails validation is not returned by the validator from the
+        window.  For a non-editable field, its initial value is returned.
+        Blank input is converted to 0.0, 0, or a null string as appropriate
+        for the datatype of the field
+        """
+
         ret = []
         for x in xrange(len(self.itemlist)):
             ret.append(self.inputs[x].GetValidator().GetValidatedInput())
@@ -546,12 +579,15 @@ class InputListDialog(wx.Dialog):
 
 
     def GetResultsAltFormat(self):
-        # Returns a list of values, one for each input field.  The value for
-        # a field is either its initial (default) value or the last value
-        # entered by the user that has been successfully validated.  An input
-        # that fails validation is not returned by the validator from the
-        # window.  For a non-editable field, its initial value is returned.
-        # Blank input is returned as a value of None.
+        """
+        Returns a list of values, one for each input field.  The value for
+        a field is either its initial (default) value or the last value
+        entered by the user that has been successfully validated.  An input
+        that fails validation is not returned by the validator from the
+        window.  For a non-editable field, its initial value is returned.
+        Blank input is returned as a value of None.
+        """
+
         ret = []
         for x in xrange(len(self.itemlist)):
             ret.append(self.inputs[x].GetValidator().GetValidatedInputAlt())
@@ -559,10 +595,13 @@ class InputListDialog(wx.Dialog):
 
 
     def GetResultsRawInput(self):
-        # Returns a list of strings corresponding to each input field.  These
-        # are the current values from the text control widgets which may have
-        # failed validation.  All values are returned as strings (i.e., they
-        # are not converted to floats or ints and whitespace is not stripped).
+        """
+        Returns a list of strings corresponding to each input field.  These
+        are the current values from the text control widgets which may have
+        failed validation.  All values are returned as strings (i.e., they
+        are not converted to floats or ints and whitespace is not stripped).
+        """
+
         ret = []
         for x in xrange(len(self.itemlist)):
             ret.append(str(self.inputs[x].GetValue()))
@@ -575,11 +614,6 @@ class InputListDialog(wx.Dialog):
         It is intended to be subclassed if special processing is needed.
         """
 
-        MSG_TEXT = """\
-Please correct all highlighted fields in error.
-Yellow means an input value is required.
-Pink denotes a syntax error."""
-
         # Explicitly validate all input values before proceeding.  Although
         # char-by-char validation would have warned the user about any invalid
         # entries, the user could have pressed the OK button without making
@@ -587,7 +621,7 @@ Pink denotes a syntax error."""
         # purpose is to display an explicit error if any input fails validation.
         if not self.Validate():
             wx.MessageBox(caption="Data Entry Error",
-                          message=MSG_TEXT,
+                          message=DATA_ENTRY_ERRMSG,
                           style=wx.ICON_ERROR|wx.OK)
             return  # keep the dialog box open
 
@@ -628,9 +662,8 @@ Pink denotes a syntax error."""
 
     def OnComboBoxSelect(self, event):
         """
-        This method captures combo box selection actions by the user from all
-        combo boxes instantiated by the InputListDialog class.  This method
-        should be subclassed if the caller wants to perform some action in
+        This method is called each time a selection is made in any combo box.
+        It should be subclassed if the caller wants to perform some action in
         response to a selection event.  The sample code below shows how to
         obtain the index of the box, the index of the item selected, and the
         value.  Note that the box's index is 0 to n, where n is the number of
@@ -645,6 +678,13 @@ Pink denotes a syntax error."""
                 break
         print "Combo:", box_idx, item_idx, self.itemlist[box_idx][3][item_idx]
         """
+
+        # Run the validator bound to the combo box that has a selection event.
+        # This should not fail unless the combo options were setup incorrectly.
+        # If the validation fails, the validator will highlight the input field
+        # to alert the user of the error.
+        combo_box = event.GetEventObject()
+        combo_box.GetValidator().Validate(combo_box)
         event.Skip()
 
 #==============================================================================

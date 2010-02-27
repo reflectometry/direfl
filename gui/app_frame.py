@@ -93,6 +93,12 @@ BKGD_COLOUR_WINDOW = "#ECE9D8"
 PALE_YELLOW = "#FFFFB0"
 PALE_GREEN = "#B0FFB0"
 
+DATA_ENTRY_ERRMSG = """\
+Please correct any highlighted field in error,
+then retry the operation.
+Yellow means an input value is required.
+Pink indicates a syntax error."""
+
 #==============================================================================
 
 class AppFrame(wx.Frame):
@@ -644,8 +650,7 @@ from your model."""
         # entries, the user could have pressed the Compute button without
         # making the corrections, so a full validation pass must be done now.
         if not self.inv_params.Validate():
-            display_error_message(self, "Data Entry Error",
-                "Please correct the highlighted fields in error.")
+            display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
             return
 
         # Get the validated parameters.
@@ -1039,8 +1044,7 @@ from the data files."""
         # entries, the user could have pressed the Compute button without
         # making the corrections, so a full validation pass must be done now.
         if not self.inv_params.Validate():
-            display_error_message(self, "Data Entry Error",
-                "Please correct the highlighted fields in error.")
+            display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
             return
 
         self.args = [self.data_file_1, self.data_file_2]
@@ -1394,16 +1398,6 @@ class InstrumentMetadata():
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", None, 'RE'],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", None, 'RE'],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", None, 'RE'],
-                  #["Theta Lo (degrees):", self.Tlo[1][i], "float", None, 'RE'],
-                  #["Theta Hi (degrees):", self.Thi[1][i], "float", None, 'RE'],
-                  #["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", None, 'RE'],
-                  #["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", None, 'RE'],
-                  #["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", None, 'RE'],
-                  #["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", None, 'RE'],
-                  #["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", None, 'RE'],
-                  #["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", None, 'RE'],
-                  #["Sample Width (mm):", self.sample_width[1][i], "float", None, 'RE'],
-                  #["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, 'RE'],
                    ["Theta Lo (degrees):", self.Tlo[1][i], "float", None, 'RE'],
                    ["Theta Hi (degrees):", self.Thi[1][i], "float", None, 'RE'],
                    ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", None, 'RE'],
@@ -1412,7 +1406,7 @@ class InstrumentMetadata():
                    ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", None, 'RE'],
                    ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", None, 'RE'],
                    ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", None, 'RE'],
-                   ["Sample Width (mm):", self.sample_width[1][i], "floa2t", None, 'RE'],
+                   ["Sample Width (mm):", self.sample_width[1][i], "float", None, 'RE'],
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, 'RE'],
                  ]
 
