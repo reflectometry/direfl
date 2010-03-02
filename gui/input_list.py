@@ -232,6 +232,11 @@ class InputListPanel(ScrolledPanel):
     - header string to be displayed above the label string of the input field
       (this list element is optional; if given it can be a text string or None)
 
+    The align flag determines whether input fields are aligned across sections
+    when the input fields are grouped into sections.  If True, the widest text
+    label determines the space allocated for all labels; if False, the text
+    label width is determined separately for each section.
+
     See the AppTestFrame class for a comprehensive example.
     """
 
@@ -242,11 +247,13 @@ class InputListPanel(ScrolledPanel):
                  size     = wx.DefaultSize,
                  style    =(wx.BORDER_RAISED|wx.TAB_TRAVERSAL),
                  name     = "",
-                 itemlist = []
+                 itemlist = [],
+                 align    = False
                 ):
         ScrolledPanel.__init__(self, parent, id, pos, size, style, name)
 
         self.SetBackgroundColour(BKGD_COLOUR_WINDOW)
+        self.align = align
         self.itemlist = itemlist
         self.item_cnt = len(self.itemlist)
         if self.item_cnt == 0:
@@ -300,6 +307,7 @@ class InputListPanel(ScrolledPanel):
         """
 
         self.headers = []; self.labels = []; self.inputs = []
+        self.widest = 0
 
         for x in xrange(self.item_cnt):
             params = len(self.itemlist[x])
@@ -308,6 +316,8 @@ class InputListPanel(ScrolledPanel):
             elif params == 5:
                 text, default, datatype, flags, plist = self.itemlist[x]
                 header = None
+
+            # Process the flags parameter.
             required = False
             if flags.find('R') >= 0: required = True
             editable = False
@@ -326,8 +336,13 @@ class InputListPanel(ScrolledPanel):
                 hdr.SetFont(wx.Font(font_size, wx.SWISS, wx.NORMAL, wx.BOLD))
                 self.headers.append(hdr)
 
-            self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text))
+            # Create text label widget.
+            self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text,
+                               style=wx.ALIGN_RIGHT))
+            w, h = self.labels[x].GetSize()
+            if w > self.widest: self.widest = w
 
+            # Create the input box widget (combo box or simple data entry box)
             if combo:              # it is a drop down combo box list
                 self.inputs.append(wx.ComboBox(self, wx.ID_ANY,
                                    value=str(default),
@@ -341,13 +356,18 @@ class InputListPanel(ScrolledPanel):
                                    validator=ItemListValidator(datatype, required)))
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
 
+            # Verfiy that field is editable, otherwise don't allow user to edit
             if not editable:
-                # disallow edits to the field
                 self.inputs[x].Enable(False)
 
             # Validate the default value and highlight the field if the value is
             # in error or if input is required and the value is a null string.
             self.inputs[x].GetValidator().Validate(self.inputs[x])
+
+        # Determine if all input boxes should be aligned across sections.
+        if self.align:
+            for x in xrange(self.item_cnt):
+                self.labels[x].SetMinSize((self.widest, -1))
 
 
     def add_items_to_sizer(self, start, end):
@@ -517,6 +537,11 @@ class InputListDialog(wx.Dialog):
     - header string to be displayed above the label string of the input field
       (this list element is optional; if given it can be a text string or None)
 
+    The align flag determines whether input fields are aligned across sections
+    when the input fields are grouped into sections.  If True, the widest text
+    label determines the space allocated for all labels; if False, the text
+    label width is determined separately for each section.
+
     See the AppTestFrame class for a comprehensive example.
     """
 
@@ -528,10 +553,12 @@ class InputListDialog(wx.Dialog):
                  size     = (300, -1),  # x is min_width; y will be calculated
                  style    = wx.DEFAULT_DIALOG_STYLE,
                  name     = "",
-                 itemlist = []
+                 itemlist = [],
+                 align    = False
                 ):
         wx.Dialog.__init__(self, parent, id, title, pos, size, style, name)
 
+        self.align = align
         self.itemlist = itemlist
         self.item_cnt = len(self.itemlist)
         if self.item_cnt == 0:
@@ -606,6 +633,7 @@ class InputListDialog(wx.Dialog):
         """
 
         self.headers = []; self.labels = []; self.inputs = []
+        self.widest = 0
 
         for x in xrange(self.item_cnt):
             params = len(self.itemlist[x])
@@ -614,6 +642,8 @@ class InputListDialog(wx.Dialog):
             elif params == 5:
                 text, default, datatype, flags, plist = self.itemlist[x]
                 header = None
+
+            # Process the flags parameter.
             required = False
             if flags.find('R') >= 0: required = True
             editable = False
@@ -632,8 +662,13 @@ class InputListDialog(wx.Dialog):
                 hdr.SetFont(wx.Font(font_size, wx.SWISS, wx.NORMAL, wx.BOLD))
                 self.headers.append(hdr)
 
-            self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text))
+            # Create text label widget.
+            self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text,
+                               style=wx.ALIGN_RIGHT))
+            w, h = self.labels[x].GetSize()
+            if w > self.widest: self.widest = w
 
+            # Create the input box widget (combo box or simple data entry box)
             if combo:              # it is a drop down combo box list
                 self.inputs.append(wx.ComboBox(self, wx.ID_ANY,
                                    value=str(default),
@@ -647,13 +682,18 @@ class InputListDialog(wx.Dialog):
                                    validator=ItemListValidator(datatype, required)))
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
 
+            # Verfiy that field is editable, otherwise don't allow user to edit
             if not editable:
-                # disallow edits to the field
                 self.inputs[x].Enable(False)
 
             # Validate the default value and highlight the field if the value is
             # in error or if input is required and the value is a null string.
             self.inputs[x].GetValidator().Validate(self.inputs[x])
+
+        # Determine if all input boxes should be aligned across sections.
+        if self.align:
+            for x in xrange(self.item_cnt):
+                self.labels[x].SetMinSize((self.widest, -1))
 
 
     def add_items_to_sizer(self, start, end):
@@ -817,18 +857,18 @@ class AppTestFrame(wx.Frame):
         # Define fields for both InputListPanel and InputListDialog to display.
         self.fields = [
             ["Integer (int, optional):", 12345, "int", 'EL', None,
-                "Test Header INT (10-pt)"],
+                "Test Header (10-pt)"],
             # Test specification of integer default value as a string
             ["Integer (int, optional):", "-60", "int", 'E', None],
             # Default value is null, so the required field should be highlighted
             ["Integer (int, required):", "", "int", 'RE', None],
             ["Floating Point (float, optional):", 2.34567e-5, "float", 'EM', None,
-                "Test Header FP (9-pt)"],
+                "Test Header (9-pt)"],
             ["Floating Point (float, optional):", "", "float", 'E', None],
             ["Floating Point (float, required):", 1.0, "float", 'RE', None],
             # Test unknown datatype which should be treated as 'str'
             ["String (str, optional):", "DANSE", "foo", 'ES', None,
-                "Test Header STR (8-pt)"],
+                "Test Header (8-pt)"],
             ["String (str, reqiured):", "delete me", "str", 'RE', None],
             ["Non-editable field:", "Cannot be changed!", "str", '', None],
             ["ComboBox String:", "Two", "str", 'CRE', ("One", "Two", "Three")],
@@ -841,7 +881,8 @@ class AppTestFrame(wx.Frame):
 
         # Create the scrolled window with input boxes.  Due to the size of the
         # frame and the parent panel, both scroll bars should be displayed.
-        self.scrolled = InputListPanel(parent=panel, itemlist=self.fields)
+        self.scrolled = InputListPanel(parent=panel, itemlist=self.fields,
+                                       align=False)
 
         # Create a button to request the popup dialog box.
         show_button = wx.Button(panel, wx.ID_ANY, "Show Pop-up Dialog Box")
@@ -875,7 +916,8 @@ class AppTestFrame(wx.Frame):
         # Display the same fields shown in the frame in a pop-up dialog box.
         dlg = InputListDialog(parent=None,
                               title="InputListDialog Test",
-                              itemlist=self.fields)
+                              itemlist=self.fields,
+                              align=True)
         if dlg.ShowModal() == wx.ID_OK:
             print "****** Dialog Box results from validated input fields:"
             print "  ", dlg.GetResults()
