@@ -524,24 +524,24 @@ class SimulatedDataPage(wx.Panel):
         #----------------------------------------------------------------------
 
         fields = [
-                ###["SLD of Substrate:", 2.07, "float", None, 'RE'],
-                   ["SLD of Surface 1:", 0.0, "float", None, 'RE'],
-                   ["SLD of Surface 2:", 4.5, "float", None, 'RE'],
-                ###["Sample Thickness:", 1000, "float", None, 'RE'],
-                   ["Qmin:", 0.0, "float", None, 'RE'],
-                   ["Qmax:", 0.4, "float", None, 'RE'],
-                   ["# Profile Steps:", 128, "int", None, 'RE'],
-                   ["Over Sampling Factor:", 4, "int", None, 'RE'],
-                   ["# Inversion Iterations:", 6, "int", None, 'RE'],
-                   ["# Monte Carlo Trials:", 10, "int", None, 'RE'],
-                ###["Cosine Transform Smoothing:", 0.0, "float", None, 'RE'],
-                ###["Back Reflectivity:", "True", "str", ("True", "False"), 'RE'],
-                ###["Inversion Noise Factor:", 1, "int", None, 'RE'],
-                   ["Simulated Noise (as %):", 8.0, "float", None, 'RE'],
-                   ["Bound State Energy:", 0.0, "float", None, 'RE'],
-                   ["Perfect Reconstruction:", "False", "str", ("True", "False"), 'RE'],
-                ###["Show Iterations:", "False", "str", ("True", "False"), 'RE']
-                ###["Monitor:", "", "str", None, 're']
+                ###["SLD of Substrate:", 2.07, "float", 'RE', None],
+                   ["SLD of Surface 1:", 0.0, "float", 'RE', None],
+                   ["SLD of Surface 2:", 4.5, "float", 'RE', None],
+                ###["Sample Thickness:", 1000, "float", 'RE', None],
+                   ["Qmin:", 0.0, "float", 'RE', None],
+                   ["Qmax:", 0.4, "float", 'RE', None],
+                   ["# Profile Steps:", 128, "int", 'RE', None],
+                   ["Over Sampling Factor:", 4, "int", 'RE', None],
+                   ["# Inversion Iterations:", 6, "int", 'RE', None],
+                   ["# Monte Carlo Trials:", 10, "int", 'RE', None],
+                ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
+                ###["Back Reflectivity:", "True", "str", 'RE', ("True", "False")],
+                ###["Inversion Noise Factor:", 1, "int", 'RE', None],
+                   ["Simulated Noise (as %):", 8.0, "float", 'RE', None],
+                   ["Bound State Energy:", 0.0, "float", 'RE', None],
+                   ["Perfect Reconstruction:", "False", "str", 'RE', ("True", "False")],
+                ###["Show Iterations:", "False", "str", 'RE', ("True", "False")]
+                ###["Monitor:", "", "str", 'RE', None]
                  ]
 
         self.inv_params = InputListPanel(parent=self.pan1, itemlist=fields)
@@ -916,22 +916,22 @@ class CollectedDataPage(wx.Panel):
 
         #----------------------------------------------------------------------
 
-        fields = [ ["SLD of Substrate:", 2.07, "float", None, 'RE'],
-                   ["SLD of Surface 1:", 6.33, "float", None, 'RE'],
-                   ["SLD of Surface 2:", 0.0, "float", None, 'RE'],
-                   ["Sample Thickness:", 1000, "float", None, 'RE'],
-                   ["Qmin:", 0.0, "float", None, 'RE'],
-                   ["Qmax:", 0.2, "float", None, 'RE'],
-                   ["# Profile Steps:", 128, "int", None, 'RE'],
-                   ["Over Sampling Factor:", 4, "int", None, 'RE'],
-                   ["# Inversion Iterations:", 6, "int", None, 'RE'],
-                   ["# Monte Carlo Trials:", 10, "int", None, 'RE'],
-                ###["Cosine Transform Smoothing:", 0.0, "float", None, 'RE'],
-                ###["Back Reflectivity:", "True", "str", ("True", "False"), 're'],
-                ###["Inversion Noise Factor:", 1, "int", None, 'RE'],
-                   ["Bound State Energy:", 0.0, "float", None, 'RE'],
-                ###["Show Iterations:", "False", "str", ("True", "False"), 'RE']
-                ###["Monitor:", "", "str", None, 're']
+        fields = [ ["SLD of Substrate:", 2.07, "float", 'RE', None],
+                   ["SLD of Surface 1:", 6.33, "float", 'RE', None],
+                   ["SLD of Surface 2:", 0.0, "float", 'RE', None],
+                   ["Sample Thickness:", 1000, "float", 'RE', None],
+                   ["Qmin:", 0.0, "float", 'RE', None],
+                   ["Qmax:", 0.2, "float", 'RE', None],
+                   ["# Profile Steps:", 128, "int", 'RE', None],
+                   ["Over Sampling Factor:", 4, "int", 'RE', None],
+                   ["# Inversion Iterations:", 6, "int", 'RE', None],
+                   ["# Monte Carlo Trials:", 10, "int", 'RE', None],
+                ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
+                ###["Back Reflectivity:", "True", "str", '', ("True", "False")],
+                ###["Inversion Noise Factor:", 1, "int", 'RE', None],
+                   ["Bound State Energy:", 0.0, "float", 'RE', None],
+                ###["Show Iterations:", "False", "str", ,RE', ("True", "False")]
+                ###["Monitor:", "", "str", 'RE', None]
                  ]
 
         self.inv_params = InputListPanel(parent=self.pan1, itemlist=fields)
@@ -1393,21 +1393,21 @@ class InstrumentMetadata():
 
         i = self.inst_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", None, 're'],
-                   ["Wavelength (A):", self.wavelength[1][i], "float", None, 'RE'],
-                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", None, 'RE'],
-                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", None, 'RE'],
-                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", None, 'RE'],
-                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", None, 'RE'],
-                   ["Theta Hi (degrees):", self.Thi[1][i], "float", None, 'RE'],
-                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", None, 'RE'],
-                   ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", None, 'RE'],
-                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", None, 'RE'],
-                   ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", None, 'RE'],
-                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", None, 'RE'],
-                   ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", None, 'RE'],
-                   ["Sample Width (mm):", self.sample_width[1][i], "float", None, 'RE'],
-                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, 'RE'],
+                   ["Radiation Type:", self.radiation[i], "str", 'RE', None],
+                   ["Wavelength (A):", self.wavelength[1][i], "float", 'RE', None],
+                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
+                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
+                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
+                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", 'RE', None],
+                   ["Theta Hi (degrees):", self.Thi[1][i], "float", 'RE', None],
+                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", 'RE', None],
+                   ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", 'RE', None],
+                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", 'RE', None],
+                   ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", 'RE', None],
+                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", 'RE', None],
+                   ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", 'RE', None],
+                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'RE', None],
+                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'RE', None],
                  ]
 
         title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
@@ -1447,22 +1447,22 @@ class InstrumentMetadata():
 
         i = self.inst_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", None, 're'],
-                   ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", None, 'RE'],
-                   ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", None, 'RE'],
-                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", None, 'RE'],
-                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", None, 'RE'],
-                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", None, 'RE'],
-                  #["Slit 1 Size (mm):", self.slit1_size[1][i], "float", None, 'RE'],
-                  #["Slit 2 Size (mm):", self.slit2_size[1][i], "float", None, 'RE'],
-                  #["Theta (degrees):", self.theta[1][i], "float", None, 'RE'],
-                  #["Sample Width (mm):", self.sample_width[1][i], "float", None, 'RE'],
-                  #["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, 'RE'],
-                   ["Slit 1 Size (mm):", self.slit1_size[1][i], "float", None, 'RE'],
-                   ["Slit 2 Size (mm):", self.slit2_size[1][i], "float", None, 'RE'],
-                   ["Theta (degrees):", self.theta[1][i], "float", None, 'RE'],
-                   ["Sample Width (mm):", self.sample_width[1][i], "float", None, 'RE'],
-                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", None, 'RE'],
+                   ["Radiation Type:", self.radiation[i], "str", 'RE', None],
+                   ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", 'RE', None],
+                   ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", 'RE', None],
+                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
+                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
+                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
+                  #["Slit 1 Size (mm):", self.slit1_size[1][i], "float", 'RE', None],
+                  #["Slit 2 Size (mm):", self.slit2_size[1][i], "float", 'RE', None],
+                  #["Theta (degrees):", self.theta[1][i], "float", 'RE', None],
+                  #["Sample Width (mm):", self.sample_width[1][i], "float", 'RE', None],
+                  #["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'RE', None],
+                   ["Slit 1 Size (mm):", self.slit1_size[1][i], "float", 'RE', None],
+                   ["Slit 2 Size (mm):", self.slit2_size[1][i], "float", 'RE', None],
+                   ["Theta (degrees):", self.theta[1][i], "float", 'RE', None],
+                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'RE', None],
+                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'RE', None],
                  ]
 
         title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"

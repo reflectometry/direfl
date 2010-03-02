@@ -216,16 +216,21 @@ class InputListPanel(ScrolledPanel):
     +-------------------------------------+-+
 
     The itemlist parameter controls the display.  It is a list containing one
-    or more 5-element lists where each list specifies a:
+    or more 5-element or 6-element lists where each list specifies a:
+
     - label string
     - default value
     - datatype for validation (see the ItemListValidator docstring for details)
-    - list of values for a combo box or None for a simple data entry field
-    - flags in the form of a string of characters to specify:
-      o input is required ('R') or is optional ('r') and therefore can be blank
-      o field is editable by the user ('E') or cannot be changed ('e) and is
+    - flags parameter in the form of a string of characters to specify:
+      o input is required ('R'),otherwise optional and therefore can be blank
+      o field is editable by the user ('E'), otherwise non-editable and box is
         grayed-out; a non-editable field has its default value returned
-      The default flags value is required and editable ('RE').
+      Options can be combined in the flags string such as 'RE'.
+    - list of values for a combo box or None for a simple data entry field
+    - header string to be displayed above the label string of the input field
+      (this list element is optional; if given it can be a text string or None)
+
+    See the AppTestFrame class for a comprehensive example.
     """
 
     def __init__(self,
@@ -239,22 +244,40 @@ class InputListPanel(ScrolledPanel):
                 ):
         ScrolledPanel.__init__(self, parent, id, pos, size, style, name)
 
-        self.itemlist = itemlist
         self.SetBackgroundColour(BKGD_COLOUR_WINDOW)
+        self.itemlist = itemlist
+        self.item_cnt = len(self.itemlist)
+        if self.item_cnt == 0:
+            return
 
         # Specify the widget layout using sizers.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Create the text controls for labels and associated input fields.
+        # Create the text controls for labels and associated input fields
+        # and any optional headers.
         self.add_items_to_panel()
 
-        # Create the grid sizer that organizes the labels and input fields.
-        grid_sizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=10)
-        grid_sizer.AddGrowableCol(1)
-        self.add_items_to_sizer(grid_sizer)
+        # Divide the input items into sections prefaced by header text (except
+        # that the first section is not required to have a header).  A section
+        # list is created that contains the index of the item that starts a new
+        # section plus a final entry that is one beyond the last item.
+        sect = [0]  # declare item 0 to be start of a new section
+        for i in xrange(self.item_cnt):
+            if i > 0 and self.headers[i] is not None:
+                sect.append(i)
+        sect.append(self.item_cnt)
 
-        # Add the grid sizer to the main sizer.
-        main_sizer.Add(grid_sizer, 1, wx.EXPAND|wx.ALL, border=10)
+        # Place the items for each section in its own flex grid sizer.
+        for i in xrange(len(sect)-1):
+            j = sect[i]; k = sect[i+1] - 1
+            fg_sizer = self.add_items_to_sizer(j, k)
+
+            # Add the flex grid sizer to the main sizer.
+            if self.headers[j] is not None:  # self.headers[0] could be None
+                main_sizer.Add(self.headers[j], 0, border=10,
+                               flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
+            main_sizer.Add(fg_sizer, 0, border=10,
+                           flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
 
         # Finalize the sizer and establish the dimensions of the input box.
         self.SetSizer(main_sizer)
@@ -267,13 +290,34 @@ class InputListPanel(ScrolledPanel):
 
 
     def add_items_to_panel(self):
-        self.labels = []; self.inputs = []
-        for x in xrange(len(self.itemlist)):
-            text, default, datatype, combolist, flags = self.itemlist[x]
-            required = True
-            if flags.find('r') >= 0: required = False
-            editable = True
-            if flags.find('e') >= 0: editable = False
+        """
+        For each input item, create a header (optional), label, and input box
+        widget to instantiate it.  Put the handles for these widgets in the
+        headers, labels, and inputs lists where the length of each list is the
+        same as the number of input boxes.
+        """
+
+        self.headers = []; self.labels = []; self.inputs = []
+
+        for x in xrange(self.item_cnt):
+            params = len(self.itemlist[x])
+            if params == 6:
+                text, default, datatype, flags, combolist, header = self.itemlist[x]
+            elif params == 5:
+                text, default, datatype, flags, combolist = self.itemlist[x]
+                header = None
+            required = False
+            if flags.find('R') >= 0: required = True
+            editable = False
+            if flags.find('E') >= 0: editable = True
+
+            if header is None:
+                self.headers.append(None)
+            else:
+                hdr = wx.StaticText(self, wx.ID_ANY, label=header,
+                                    style=wx.ALIGN_CENTER)
+                hdr.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+                self.headers.append(hdr)
 
             self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text))
 
@@ -290,23 +334,25 @@ class InputListPanel(ScrolledPanel):
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY))
                 self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
 
-
-            if required:
-                # Validate default value and highlight field if default is null
-                self.inputs[x].GetValidator().Validate(self.inputs[x])
-
             if not editable:
                 # disallow edits to the field
                 self.inputs[x].Enable(False)
 
+            # Validate the default value and highlight the field if the value is
+            # in error or if input is required and the value is a null string.
+            self.inputs[x].GetValidator().Validate(self.inputs[x])
 
-    def add_items_to_sizer(self, sizer):
-        for x in xrange(len(self.itemlist)):
+
+    def add_items_to_sizer(self, start, end):
+        sizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=10)
+        for x in xrange(start, end+1):
             sizer.Add(self.labels[x], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             sizer.Add(self.inputs[x], 0, wx.EXPAND)
+        sizer.AddGrowableCol(1)
+        return sizer
 
 
-    def update_items_in_input_box(self, new_values):
+    def update_items_in_panel(self, new_values):
         for x in xrange(len(self.inputs)):
             if new_values[x] is not None:
                 self.inputs[x].SetValue(str(new_values[x]))
@@ -324,7 +370,7 @@ class InputListPanel(ScrolledPanel):
         """
 
         ret = []
-        for x in xrange(len(self.itemlist)):
+        for x in xrange(self.item_cnt):
             ret.append(self.inputs[x].GetValidator().GetValidatedInput())
         return ret
 
@@ -340,7 +386,7 @@ class InputListPanel(ScrolledPanel):
         """
 
         ret = []
-        for x in xrange(len(self.itemlist)):
+        for x in xrange(self.item_cnt):
             ret.append(self.inputs[x].GetValidator().GetValidatedInputAlt())
         return ret
 
@@ -354,7 +400,7 @@ class InputListPanel(ScrolledPanel):
         """
 
         ret = []
-        for x in xrange(len(self.itemlist)):
+        for x in xrange(self.item_cnt):
             ret.append(str(self.inputs[x].GetValue()))
         return ret
 
@@ -448,16 +494,21 @@ class InputListDialog(wx.Dialog):
     +-------------------------------------+
 
     The itemlist parameter controls the display.  It is a list containing one
-    or more 5-element lists where each list specifies a:
+    or more 5-element or 6-element lists where each list specifies a:
+
     - label string
     - default value
     - datatype for validation (see the ItemListValidator docstring for details)
-    - list of values for a combo box or None for a simple data entry field
-    - flags in the form of a string of characters to specify:
-      * input is required ('R') or is optional ('r') and therefore can be blank
-      * field is editable by the user ('E') or cannot be changed ('e) and is
+    - flags parameter in the form of a string of characters to specify:
+      o input is required ('R'),otherwise optional and therefore can be blank
+      o field is editable by the user ('E'), otherwise non-editable and box is
         grayed-out; a non-editable field has its default value returned
-      The default flags value is required and editable ('RE').
+      Options can be combined in the flags string such as 'RE'.
+    - list of values for a combo box or None for a simple data entry field
+    - header string to be displayed above the label string of the input field
+      (this list element is optional; if given it can be a text string or None)
+
+    See the AppTestFrame class for a comprehensive example.
     """
 
     def __init__(self,
@@ -473,9 +524,9 @@ class InputListDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, id, title, pos, size, style, name)
 
         self.itemlist = itemlist
-
-        # Create the text controls for labels and associated input fields.
-        self.add_items_to_dialog_box()
+        self.item_cnt = len(self.itemlist)
+        if self.item_cnt == 0:
+            return
 
         # Create the button controls (OK and Cancel) and bind their events.
         ok_button = wx.Button(self, wx.ID_OK, "OK")
@@ -487,13 +538,33 @@ class InputListDialog(wx.Dialog):
         # Specify the widget layout using sizers.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Create the grid sizer that organizes the labels and input fields.
-        grid_sizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=10)
-        grid_sizer.AddGrowableCol(1)
-        self.add_items_to_sizer(grid_sizer)
+        # Create the text controls for labels and associated input fields
+        # and any optional headers.
+        self.add_items_to_dialog_box()
 
-        # Add the grid sizer to the main sizer.
-        main_sizer.Add(grid_sizer, 0, wx.EXPAND|wx.ALL, 20)
+        # Divide the input items into sections prefaced by header text (except
+        # that the first section is not required to have a header).  A section
+        # list is created that contains the index of the item that starts a new
+        # section plus a final entry that is one beyond the last item.
+        sect = [0]  # declare item 0 to be start of a new section
+        for i in xrange(self.item_cnt):
+            if i > 0 and self.headers[i] is not None:
+                sect.append(i)
+        sect.append(self.item_cnt)
+        #print "Section index list:", sect
+
+        # Place the items for each section in its own flex grid sizer.
+        for i in xrange(len(sect)-1):
+            j = sect[i]; k = sect[i+1] - 1
+            #print "Items per section:", j, "to", k
+            fg_sizer = self.add_items_to_sizer(j, k)
+
+            # Add the flex grid sizer to the main sizer.
+            if self.headers[j] is not None:  # self.headers[0] could be None
+                main_sizer.Add(self.headers[j], 0, border=10,
+                               flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
+            main_sizer.Add(fg_sizer, 0, border=10,
+                           flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
 
         # Create the button sizer that will put the buttons in a row, right
         # justified, and with a fixed amount of space between them.  This
@@ -506,7 +577,8 @@ class InputListDialog(wx.Dialog):
         button_sizer.Add(cancel_button, 0)
 
         # Add the button sizer to the main sizer.
-        main_sizer.Add(button_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.RIGHT, border=20)
+        main_sizer.Add(button_sizer, 0, border=10,
+                       flag=wx.EXPAND|wx.TOP|wx.BOTTOM|wx.RIGHT)
 
         # Finalize the sizer and establish the dimensions of the dialog box.
         # The minimum width is explicitly set because the sizer is not able to
@@ -517,13 +589,34 @@ class InputListDialog(wx.Dialog):
 
 
     def add_items_to_dialog_box(self):
-        self.labels = []; self.inputs = []
-        for x in xrange(len(self.itemlist)):
-            text, default, datatype, combolist, flags = self.itemlist[x]
-            required = True
-            if flags.find('r') >= 0: required = False
-            editable = True
-            if flags.find('e') >= 0: editable = False
+        """
+        For each input item, create a header (optional), label, and input box
+        widget to instantiate it.  Put the handles for these widgets in the
+        headers, labels, and inputs lists where the length of each list is the
+        same as the number of input boxes.
+        """
+
+        self.headers = []; self.labels = []; self.inputs = []
+
+        for x in xrange(self.item_cnt):
+            params = len(self.itemlist[x])
+            if params == 6:
+                text, default, datatype, flags, combolist, header = self.itemlist[x]
+            elif params == 5:
+                text, default, datatype, flags, combolist = self.itemlist[x]
+                header = None
+            required = False
+            if flags.find('R') >= 0: required = True
+            editable = False
+            if flags.find('E') >= 0: editable = True
+
+            if header is None:
+                self.headers.append(None)
+            else:
+                hdr = wx.StaticText(self, wx.ID_ANY, label=header,
+                                    style=wx.ALIGN_CENTER)
+                hdr.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+                self.headers.append(hdr)
 
             self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text))
 
@@ -540,19 +633,22 @@ class InputListDialog(wx.Dialog):
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY))
                 self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
 
-            if required:
-                # Validate default value and highlight field if default is null
-                self.inputs[x].GetValidator().Validate(self.inputs[x])
-
             if not editable:
                 # disallow edits to the field
                 self.inputs[x].Enable(False)
 
+            # Validate the default value and highlight the field if the value is
+            # in error or if input is required and the value is a null string.
+            self.inputs[x].GetValidator().Validate(self.inputs[x])
 
-    def add_items_to_sizer(self, sizer):
-        for x in xrange(len(self.itemlist)):
+
+    def add_items_to_sizer(self, start, end):
+        sizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=10)
+        for x in xrange(start, end+1):
             sizer.Add(self.labels[x], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             sizer.Add(self.inputs[x], 0, wx.EXPAND)
+        sizer.AddGrowableCol(1)
+        return sizer
 
 
     def update_items_in_dialog_box(self, new_values):
@@ -573,7 +669,7 @@ class InputListDialog(wx.Dialog):
         """
 
         ret = []
-        for x in xrange(len(self.itemlist)):
+        for x in xrange(self.item_cnt):
             ret.append(self.inputs[x].GetValidator().GetValidatedInput())
         return ret
 
@@ -589,7 +685,7 @@ class InputListDialog(wx.Dialog):
         """
 
         ret = []
-        for x in xrange(len(self.itemlist)):
+        for x in xrange(self.item_cnt):
             ret.append(self.inputs[x].GetValidator().GetValidatedInputAlt())
         return ret
 
@@ -603,7 +699,7 @@ class InputListDialog(wx.Dialog):
         """
 
         ret = []
-        for x in xrange(len(self.itemlist)):
+        for x in xrange(self.item_cnt):
             ret.append(str(self.inputs[x].GetValue()))
         return ret
 
@@ -706,23 +802,29 @@ class AppTestFrame(wx.Frame):
 
         # Define fields for both InputListPanel and InputListDialog to display.
         self.fields = [
-            ["Integer (int, optional):", 12345, "int", None, 'rE'],
-            ["Integer (int, optional):", "", "int", None, 'rE'],
-            ["Integer (int, required):", -60, "int", None, 'RE'],
-            ["Floating Point (float, optional):", 2.34567e-5, "float", None, 'rE'],
-            ["Floating Point (float, optional):", "", "float", None, 'rE'],
-            ["Floating Point (float, required):", 1.0, "float", None, 'RE'],
-            ["String (str, optional):", "DANSE", "str", None, 'rE'],
-            ["String (str, reqiured):", "", "str", None, 'RE'],
-            # Pass in a null string for flags to test default values of 'RE'
-            ["String (str, required):", "delete me", "str", None, ''],
-            ["Non-editable field:", "Cannot be changed!", "foo", None, 're'],
-            ["ComboBox String:", "Two", "str", ("One", "Two", "Three"), 'RE'],
-            ["ComboBox String:", "", "int", ("100", "200", "300"), 'rE'],
-            ["String (alphabetic):", "Aa", "str_alpha", None, 'rE'],
-            ["String (alphanumeric):", "Aa1", "str_alnum", None, 'rE'],
-            ["String (A-Z, a-z, 0-9, _, -):", "A-1_a", "str_id", None, 'rE'],
+            ["Integer (int, optional):", 12345, "int", 'E', None,
+                "Test Header INT"],
+            # Test specification of integer default value as a string
+            ["Integer (int, optional):", "-60", "int", 'E', None],
+            # Default value is null, so the required field should be highlighted
+            ["Integer (int, required):", "", "int", 'RE', None],
+            ["Floating Point (float, optional):", 2.34567e-5, "float", 'E', None,
+                "Test Header FP"],
+            ["Floating Point (float, optional):", "", "float", 'E', None],
+            ["Floating Point (float, required):", 1.0, "float", 'RE', None],
+            # Test unknown datatype which should be treated as 'str'
+            ["String (str, optional):", "DANSE", "foo", 'E', None,
+                "Test Header STR"],
+            ["String (str, reqiured):", "delete me", "str", 'RE', None],
+            ["Non-editable field:", "Cannot be changed!", "str", '', None],
+            ["ComboBox String:", "Two", "str", 'RE', ("One", "Two", "Three")],
+            # ComboBox items must be specified as strings
+            ["ComboBox String:", "", "int", 'E', ("100", "200", "300")],
+            ["String (alphabetic):", "Aa", "str_alpha", 'E', None],
+            ["String (alphanumeric):", "Aa1", "str_alnum", 'E', None],
+            ["String (A-Z, a-z, 0-9, _, -):", "A-1_a", "str_id", 'E', None],
                       ]
+
         # Create the scrolled window with input boxes.  Due to the size of the
         # frame and the parent panel, both scroll bars should be displayed.
         self.scrolled = InputListPanel(parent=panel, itemlist=self.fields)
@@ -763,7 +865,8 @@ class AppTestFrame(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             print "****** Dialog Box results from validated input fields:"
             print "  ", dlg.GetResults()
-            print "****** Dialog Box results from validated input fields (or None):"
+            print "****** Dialog Box results from validated input fields" +\
+                  " (None if no input):"
             print "  ", dlg.GetResultsAltFormat()
             print "****** Dialog Box results from raw input fields:"
             print "  ", dlg.GetResultsRawInput()
@@ -782,7 +885,8 @@ class AppTestFrame(wx.Frame):
             return  # keep the dialog box open
         print "****** Scrolled Panel results from validated input fields:"
         print "  ", self.scrolled.GetResults()
-        print "****** Scrolled Panel results from validated input fields (or None):"
+        print "****** Scrolled Panel results from validated input fields" +\
+              " (None if no input):"
         print "  ", self.scrolled.GetResultsAltFormat()
         print "****** Scrolled Panel results from raw input fields:"
         print "  ", self.scrolled.GetResultsRawInput()
