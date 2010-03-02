@@ -56,7 +56,7 @@ class ItemListValidator(wx.PyValidator):
     - flag to indicate whether user input is required (True) or optional (False)
     """
 
-    def __init__(self, datatype='str', required=True):
+    def __init__(self, datatype='str', required=False):
         wx.PyValidator.__init__(self)
         self.datatype = datatype
         self.required = required
@@ -225,6 +225,8 @@ class InputListPanel(ScrolledPanel):
       o input is required ('R'),otherwise optional and therefore can be blank
       o field is editable by the user ('E'), otherwise non-editable and box is
         grayed-out; a non-editable field has its default value returned
+      o field is a combobox ('C'), otherwise is it a simple data entry box
+      o font size for header: small ('S'), medium ('M') default, or large ('L')
       Options can be combined in the flags string such as 'RE'.
     - list of values for a combo box or None for a simple data entry field
     - header string to be displayed above the label string of the input field
@@ -302,37 +304,42 @@ class InputListPanel(ScrolledPanel):
         for x in xrange(self.item_cnt):
             params = len(self.itemlist[x])
             if params == 6:
-                text, default, datatype, flags, combolist, header = self.itemlist[x]
+                text, default, datatype, flags, plist, header = self.itemlist[x]
             elif params == 5:
-                text, default, datatype, flags, combolist = self.itemlist[x]
+                text, default, datatype, flags, plist = self.itemlist[x]
                 header = None
             required = False
             if flags.find('R') >= 0: required = True
             editable = False
             if flags.find('E') >= 0: editable = True
+            combo = False
+            if flags.find('C') >= 0: combo = True
+            font_size = 8  # small
+            if flags.find('M') >= 0: font_size = 9
+            if flags.find('L') >= 0: font_size = 10
 
             if header is None:
                 self.headers.append(None)
             else:
                 hdr = wx.StaticText(self, wx.ID_ANY, label=header,
                                     style=wx.ALIGN_CENTER)
-                hdr.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+                hdr.SetFont(wx.Font(font_size, wx.SWISS, wx.NORMAL, wx.BOLD))
                 self.headers.append(hdr)
 
             self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text))
 
-            if combolist is None:  # it is a simple data entry field
+            if combo:              # it is a drop down combo box list
+                self.inputs.append(wx.ComboBox(self, wx.ID_ANY,
+                                   value=str(default),
+                                   validator=ItemListValidator(datatype, required),
+                                   choices=plist,
+                                   style=wx.CB_DROPDOWN|wx.CB_READONLY))
+                self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
+            else:                  # it is a simple data entry field
                 self.inputs.append(wx.TextCtrl(self, wx.ID_ANY,
                                    value=str(default),
                                    validator=ItemListValidator(datatype, required)))
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
-            else:                  # it is a drop down combo box list
-                self.inputs.append(wx.ComboBox(self, wx.ID_ANY,
-                                   value=str(default),
-                                   validator=ItemListValidator(datatype, required),
-                                   choices=combolist,
-                                   style=wx.CB_DROPDOWN|wx.CB_READONLY))
-                self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
 
             if not editable:
                 # disallow edits to the field
@@ -503,6 +510,8 @@ class InputListDialog(wx.Dialog):
       o input is required ('R'),otherwise optional and therefore can be blank
       o field is editable by the user ('E'), otherwise non-editable and box is
         grayed-out; a non-editable field has its default value returned
+      o field is a combobox ('C'), otherwise is it a simple data entry box
+      o font size for header: small ('S'), medium ('M') default, or large ('L')
       Options can be combined in the flags string such as 'RE'.
     - list of values for a combo box or None for a simple data entry field
     - header string to be displayed above the label string of the input field
@@ -601,37 +610,42 @@ class InputListDialog(wx.Dialog):
         for x in xrange(self.item_cnt):
             params = len(self.itemlist[x])
             if params == 6:
-                text, default, datatype, flags, combolist, header = self.itemlist[x]
+                text, default, datatype, flags, plist, header = self.itemlist[x]
             elif params == 5:
-                text, default, datatype, flags, combolist = self.itemlist[x]
+                text, default, datatype, flags, plist = self.itemlist[x]
                 header = None
             required = False
             if flags.find('R') >= 0: required = True
             editable = False
             if flags.find('E') >= 0: editable = True
+            combo = False
+            if flags.find('C') >= 0: combo = True
+            font_size = 8  # small
+            if flags.find('M') >= 0: font_size = 9
+            if flags.find('L') >= 0: font_size = 10
 
             if header is None:
                 self.headers.append(None)
             else:
                 hdr = wx.StaticText(self, wx.ID_ANY, label=header,
                                     style=wx.ALIGN_CENTER)
-                hdr.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+                hdr.SetFont(wx.Font(font_size, wx.SWISS, wx.NORMAL, wx.BOLD))
                 self.headers.append(hdr)
 
             self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text))
 
-            if combolist is None:  # it is a simple data entry field
+            if combo:              # it is a drop down combo box list
+                self.inputs.append(wx.ComboBox(self, wx.ID_ANY,
+                                   value=str(default),
+                                   validator=ItemListValidator(datatype, required),
+                                   choices=plist,
+                                   style=wx.CB_DROPDOWN|wx.CB_READONLY))
+                self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
+            else:                  # it is a simple data entry field
                 self.inputs.append(wx.TextCtrl(self, wx.ID_ANY,
                                    value=str(default),
                                    validator=ItemListValidator(datatype, required)))
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
-            else:                  # it is a drop down combo box list
-                self.inputs.append(wx.ComboBox(self, wx.ID_ANY,
-                                   value=str(default),
-                                   validator=ItemListValidator(datatype, required),
-                                   choices=combolist,
-                                   style=wx.CB_DROPDOWN|wx.CB_READONLY))
-                self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
 
             if not editable:
                 # disallow edits to the field
@@ -802,24 +816,24 @@ class AppTestFrame(wx.Frame):
 
         # Define fields for both InputListPanel and InputListDialog to display.
         self.fields = [
-            ["Integer (int, optional):", 12345, "int", 'E', None,
-                "Test Header INT"],
+            ["Integer (int, optional):", 12345, "int", 'EL', None,
+                "Test Header INT (10-pt)"],
             # Test specification of integer default value as a string
             ["Integer (int, optional):", "-60", "int", 'E', None],
             # Default value is null, so the required field should be highlighted
             ["Integer (int, required):", "", "int", 'RE', None],
-            ["Floating Point (float, optional):", 2.34567e-5, "float", 'E', None,
-                "Test Header FP"],
+            ["Floating Point (float, optional):", 2.34567e-5, "float", 'EM', None,
+                "Test Header FP (9-pt)"],
             ["Floating Point (float, optional):", "", "float", 'E', None],
             ["Floating Point (float, required):", 1.0, "float", 'RE', None],
             # Test unknown datatype which should be treated as 'str'
-            ["String (str, optional):", "DANSE", "foo", 'E', None,
-                "Test Header STR"],
+            ["String (str, optional):", "DANSE", "foo", 'ES', None,
+                "Test Header STR (8-pt)"],
             ["String (str, reqiured):", "delete me", "str", 'RE', None],
             ["Non-editable field:", "Cannot be changed!", "str", '', None],
-            ["ComboBox String:", "Two", "str", 'RE', ("One", "Two", "Three")],
+            ["ComboBox String:", "Two", "str", 'CRE', ("One", "Two", "Three")],
             # ComboBox items must be specified as strings
-            ["ComboBox String:", "", "int", 'E', ("100", "200", "300")],
+            ["ComboBox String:", "", "int", 'CE', ("100", "200", "300")],
             ["String (alphabetic):", "Aa", "str_alpha", 'E', None],
             ["String (alphanumeric):", "Aa1", "str_alnum", 'E', None],
             ["String (A-Z, a-z, 0-9, _, -):", "A-1_a", "str_id", 'E', None],
