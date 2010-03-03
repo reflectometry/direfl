@@ -221,21 +221,26 @@ class InputListPanel(ScrolledPanel):
     - label string
     - default value
     - datatype for validation (see the ItemListValidator docstring for details)
-    - flags parameter in the form of a string of characters to specify:
-      o input is required ('R'),otherwise optional and therefore can be blank
-      o field is editable by the user ('E'), otherwise non-editable and box is
-        grayed-out; a non-editable field has its default value returned
-      o field is a combobox ('C'), otherwise is it a simple data entry box
-      o font size for header: small ('S'), medium ('M') default, or large ('L')
-      Options can be combined in the flags string such as 'RE'.
+    - flags parameter in the form of a string of characters as follows:
+      R - input is required, otherwise it is optional and therefore can be blank
+      E - field is editable by the user, otherwise it is non-editable and box
+          is grayed-out; a non-editable field has its default value returned
+      C - field is a combobox; by default it is a simple data entry box
+      L - field is preceded by a line separator
+      H - field is preceded by a header given in the 6th element of the list
+      8 - font size of header is 8-pt (small)
+      9 - font size of header is 9-pt (medium, default)
+      0 - font size of header is 10-pt (large)
+      Options can be combined in the flags string such as 'REH8'.
+      Options 8, 9, and 10 are mutually exclusive, and ignored without H.
     - list of values for a combo box or None for a simple data entry field
-    - header string to be displayed above the label string of the input field
-      (this list element is optional; if given it can be a text string or None)
+    - header string to be displayed above the label string of the input field;
+      if 'H' is not specified, this list element can be omitted or can be None
 
-    The align flag determines whether input fields are aligned across sections
-    when the input fields are grouped into sections.  If True, the widest text
-    label determines the space allocated for all labels; if False, the text
-    label width is determined separately for each section.
+    The align parameter determines whether input fields are aligned across when
+    the input fields are grouped into sections.  If True, the widest text label
+    determines the space allocated for all labels; if False, the text label
+    width is determined separately for each section.
 
     See the AppTestFrame class for a comprehensive example.
     """
@@ -324,17 +329,21 @@ class InputListPanel(ScrolledPanel):
             if flags.find('E') >= 0: editable = True
             combo = False
             if flags.find('C') >= 0: combo = True
-            font_size = 8  # small
-            if flags.find('M') >= 0: font_size = 9
-            if flags.find('L') >= 0: font_size = 10
+            hdr = False
+            if flags.find('H') >= 0 and header is not None: hdr = True
+            hdr_fontsize = 9
+            if flags.find('8') >= 0: hdr_fontsize = 8  # small
+            if flags.find('9') >= 0: hdr_fontsize = 9  # medium
+            if flags.find('0') >= 0: hdr_fontsize = 10 # large
 
-            if header is None:
-                self.headers.append(None)
-            else:
+            if hdr:
                 hdr = wx.StaticText(self, wx.ID_ANY, label=header,
                                     style=wx.ALIGN_CENTER)
-                hdr.SetFont(wx.Font(font_size, wx.SWISS, wx.NORMAL, wx.BOLD))
+                hdr.SetFont(wx.Font(hdr_fontsize, wx.SWISS, wx.NORMAL, wx.BOLD))
+                hdr.SetForegroundColour("BLUE")
                 self.headers.append(hdr)
+            else:
+                self.headers.append(None)
 
             # Create text label widget.
             self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text,
@@ -359,6 +368,7 @@ class InputListPanel(ScrolledPanel):
             # Verfiy that field is editable, otherwise don't allow user to edit
             if not editable:
                 self.inputs[x].Enable(False)
+                self.inputs[x].SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
             # Validate the default value and highlight the field if the value is
             # in error or if input is required and the value is a null string.
@@ -526,21 +536,26 @@ class InputListDialog(wx.Dialog):
     - label string
     - default value
     - datatype for validation (see the ItemListValidator docstring for details)
-    - flags parameter in the form of a string of characters to specify:
-      o input is required ('R'),otherwise optional and therefore can be blank
-      o field is editable by the user ('E'), otherwise non-editable and box is
-        grayed-out; a non-editable field has its default value returned
-      o field is a combobox ('C'), otherwise is it a simple data entry box
-      o font size for header: small ('S'), medium ('M') default, or large ('L')
-      Options can be combined in the flags string such as 'RE'.
+    - flags parameter in the form of a string of characters as follows:
+      R - input is required, otherwise it is optional and therefore can be blank
+      E - field is editable by the user, otherwise it is non-editable and box
+          is grayed-out; a non-editable field has its default value returned
+      C - field is a combobox; by default it is a simple data entry box
+      L - field is preceded by a line separator
+      H - field is preceded by a header given in the 6th element of the list
+      8 - font size of header is 8-pt (small)
+      9 - font size of header is 9-pt (medium, default)
+      0 - font size of header is 10-pt (large)
+      Options can be combined in the flags string such as 'REH8'.
+      Options 8, 9, and 10 are mutually exclusive, and ignored without H.
     - list of values for a combo box or None for a simple data entry field
-    - header string to be displayed above the label string of the input field
-      (this list element is optional; if given it can be a text string or None)
+    - header string to be displayed above the label string of the input field;
+      if 'H' is not specified, this list element can be omitted or can be None
 
-    The align flag determines whether input fields are aligned across sections
-    when the input fields are grouped into sections.  If True, the widest text
-    label determines the space allocated for all labels; if False, the text
-    label width is determined separately for each section.
+    The align parameter determines whether input fields are aligned across when
+    the input fields are grouped into sections.  If True, the widest text label
+    determines the space allocated for all labels; if False, the text label
+    width is determined separately for each section.
 
     See the AppTestFrame class for a comprehensive example.
     """
@@ -650,17 +665,21 @@ class InputListDialog(wx.Dialog):
             if flags.find('E') >= 0: editable = True
             combo = False
             if flags.find('C') >= 0: combo = True
-            font_size = 8  # small
-            if flags.find('M') >= 0: font_size = 9
-            if flags.find('L') >= 0: font_size = 10
+            hdr = False
+            if flags.find('H') >= 0 and header is not None: hdr = True
+            hdr_fontsize = 9
+            if flags.find('8') >= 0: hdr_fontsize = 8  # small
+            if flags.find('9') >= 0: hdr_fontsize = 9  # medium
+            if flags.find('0') >= 0: hdr_fontsize = 10 # large
 
-            if header is None:
-                self.headers.append(None)
-            else:
+            if hdr:
                 hdr = wx.StaticText(self, wx.ID_ANY, label=header,
                                     style=wx.ALIGN_CENTER)
-                hdr.SetFont(wx.Font(font_size, wx.SWISS, wx.NORMAL, wx.BOLD))
+                hdr.SetFont(wx.Font(hdr_fontsize, wx.SWISS, wx.NORMAL, wx.BOLD))
+                hdr.SetForegroundColour("BLUE")
                 self.headers.append(hdr)
+            else:
+                self.headers.append(None)
 
             # Create text label widget.
             self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text,
@@ -685,6 +704,7 @@ class InputListDialog(wx.Dialog):
             # Verfiy that field is editable, otherwise don't allow user to edit
             if not editable:
                 self.inputs[x].Enable(False)
+                self.inputs[x].SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
             # Validate the default value and highlight the field if the value is
             # in error or if input is required and the value is a null string.
@@ -856,18 +876,18 @@ class AppTestFrame(wx.Frame):
 
         # Define fields for both InputListPanel and InputListDialog to display.
         self.fields = [
-            ["Integer (int, optional):", 12345, "int", 'EL', None,
+            ["Integer (int, optional):", 12345, "int", 'EH0', None,
                 "Test Header (10-pt)"],
             # Test specification of integer default value as a string
             ["Integer (int, optional):", "-60", "int", 'E', None],
             # Default value is null, so the required field should be highlighted
             ["Integer (int, required):", "", "int", 'RE', None],
-            ["Floating Point (float, optional):", 2.34567e-5, "float", 'EM', None,
+            ["Floating Point (float, optional):", 2.34567e-5, "float", 'EH', None,
                 "Test Header (9-pt)"],
             ["Floating Point (float, optional):", "", "float", 'E', None],
             ["Floating Point (float, required):", 1.0, "float", 'RE', None],
             # Test unknown datatype which should be treated as 'str'
-            ["String (str, optional):", "DANSE", "foo", 'ES', None,
+            ["String (str, optional):", "DANSE", "foo", 'EH8', None,
                 "Test Header (8-pt)"],
             ["String (str, reqiured):", "delete me", "str", 'RE', None],
             ["Non-editable field:", "Cannot be changed!", "str", '', None],

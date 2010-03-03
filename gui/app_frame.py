@@ -1393,27 +1393,30 @@ class InstrumentMetadata():
 
         i = self.inst_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", 'RE', None],
-                   ["Wavelength (A):", self.wavelength[1][i], "float", 'RE', None],
+                   ["Radiation Type:", self.radiation[i], "str", 'R', None],
+                   ["Wavelength (A):", self.wavelength[1][i], "float", 'REH9', None,
+                       "Required Parameters"],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
-                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", 'RE', None],
-                   ["Theta Hi (degrees):", self.Thi[1][i], "float", 'RE', None],
-                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", 'RE', None],
-                   ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", 'RE', None],
-                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", 'RE', None],
-                   ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", 'RE', None],
-                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", 'RE', None],
-                   ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", 'RE', None],
-                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'RE', None],
-                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'RE', None],
+                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", 'EH9', None,
+                      "Optional Parameters"],
+                   ["Theta Hi (degrees):", self.Thi[1][i], "float", 'E', None],
+                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", 'E', None],
+                   ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", 'E', None],
+                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", 'E', None],
+                   ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", 'E', None],
+                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", 'E', None],
+                   ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", 'E', None],
+                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'E', None],
+                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
                  ]
 
         title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
         dlg = InputListDialog(parent=None,
                               title=title,
                               pos=(500, 100),
+                              align=True,
                               itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResults()
@@ -1447,28 +1450,26 @@ class InstrumentMetadata():
 
         i = self.inst_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", 'RE', None],
-                   ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", 'RE', None],
+                   ["Radiation Type:", self.radiation[i], "str", 'R', None],
+                   ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", 'REH9', None,
+                       "Required Parameters"],
                    ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", 'RE', None],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
+                   ["Theta (degrees):", self.theta[1][i], "float", 'RE', None],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
-                  #["Slit 1 Size (mm):", self.slit1_size[1][i], "float", 'RE', None],
-                  #["Slit 2 Size (mm):", self.slit2_size[1][i], "float", 'RE', None],
-                  #["Theta (degrees):", self.theta[1][i], "float", 'RE', None],
-                  #["Sample Width (mm):", self.sample_width[1][i], "float", 'RE', None],
-                  #["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'RE', None],
                    ["Slit 1 Size (mm):", self.slit1_size[1][i], "float", 'RE', None],
                    ["Slit 2 Size (mm):", self.slit2_size[1][i], "float", 'RE', None],
-                   ["Theta (degrees):", self.theta[1][i], "float", 'RE', None],
-                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'RE', None],
-                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'RE', None],
+                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'EH9', None,
+                      "Optional Parameters"],
+                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
                  ]
 
         title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
         dlg = InputListDialog(parent=None,
                               title=title,
                               pos=(500, 100),
+                              align=True,
                               itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResults()
