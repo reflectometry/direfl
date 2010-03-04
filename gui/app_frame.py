@@ -113,7 +113,6 @@ class AppFrame(wx.Frame):
         # the frame and it inherits its size from the frame which is useful
         # during resize operations (as it provides a minimal size to sizers).
         self.panel = wx.Panel(self, wx.ID_ANY, style=wx.RAISED_BORDER)
-        #self.panel = wx.Panel(self, wx.ID_ANY, style=wx.SUNKEN_BORDER)
         self.panel.SetBackgroundColour("WHITE")
 
         # Display the DiRefl icon in the title bar.
@@ -353,14 +352,18 @@ class AppFrame(wx.Frame):
     def OnLoadData(self, event):
         """Load reflectometry data files for measurements 1 and 2."""
 
-        self.page1.col_tab_OnLoadData(event)  # TODO: create menu in dest class
+        n_files = self.page1.OnSelFile1(event)
+        if n_files == 1:
+            self.page1.OnSelFile2(event)
 
 
     # For debug - jak
     def OnLoadData_res(self, event):
         """Load reflectometry data files for measurements 1 and 2."""
 
-        self.page3.col_tab_OnLoadData(event)  # TODO: create menu in dest class
+        n_files = self.page3.OnSelFile1(event)
+        if n_files == 1:
+            self.page3.OnSelFile2(event)
 
 
     def OnLoadModel(self, event):
@@ -384,7 +387,7 @@ class AppFrame(wx.Frame):
                                                  APP_TUTORIAL_URL,
                                                  500, wx.ClientDC(self)),
                               caption = 'Tutorial',
-                              style=wx.OK | wx.CENTRE)
+                              style=wx.OK|wx.CENTRE)
         dlg.ShowModal()
         dlg.Destroy()
 
@@ -430,15 +433,19 @@ class SimulatedDataPage(wx.Panel):
     def init_param_panel(self):
         """Initialize the parameter input panel of the SimulatedDataPage."""
 
-        self.instmeta = InstrumentMetadata()
+        #----------------------------------------------------------------------
+        # Part 1 - Model Parameters
 
         # Create instructions for using the model description input box.
         line1 = wx.StaticText(self.pan1, wx.ID_ANY,
-                    label="Define the Surface, Sample Layers, and Substrate")
+                    label="Define the Surface, Sample, and Substrate")
+        line1.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
         line2 = wx.StaticText(self.pan1, wx.ID_ANY,
-                    label="components of your model (one layer per line):")
+                    label="layers of your model (one layer per line):")
+        line2.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
         #line3 = wx.StaticText(self.pan1, wx.ID_ANY,
         #           label="    as shown below (roughness defaults to 0):")
+        #line3.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         # Read in demo model parameters.
         # Note that the number of lines determines the height of the box.
@@ -453,14 +460,13 @@ class SimulatedDataPage(wx.Panel):
             display_warning_message(self, "Load Model Error",
                 "Error loading demo model from file "+DEMO_MODEL_DESC)
             demo_model_params = \
-                "# SLDensity  Thickness  Roughness  comments" + \
+                "# SLDensity  Thickness  Roughness" + \
                 NEWLINES_2 + NEWLINES_2 + NEWLINES_2 + NEWLINE
 
         # Create an input box to enter and edit the model description and
         # populate it with the contents of the demo file.
-        self.model = wx.TextCtrl(self.pan1, wx.ID_ANY,
-                                 value=demo_model_params,
-                                 style=wx.TE_MULTILINE|wx.TE_WORDWRAP)
+        self.model = wx.TextCtrl(self.pan1, wx.ID_ANY, value=demo_model_params,
+                         style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.RAISED_BORDER)
         self.model.SetBackgroundColour(BKGD_COLOUR_WINDOW)
         #self.model.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
@@ -471,19 +477,23 @@ class SimulatedDataPage(wx.Panel):
         sbox1_sizer.Add(line1, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sbox1_sizer.Add(line2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         #sbox1_sizer.Add(line3, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        sbox1_sizer.Add((10,4), 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         sbox1_sizer.Add(self.model, 1,
                         wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
         #----------------------------------------------------------------------
+        # Part 2 - Instrument Data
+
+        self.instmeta = InstrumentMetadata()
 
         # Create a panel for gathering instrument metadata.
-        self.pan11 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
-        self.pan11.SetBackgroundColour(BKGD_COLOUR_WINDOW)
+        self.pan12 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
+        self.pan12.SetBackgroundColour(BKGD_COLOUR_WINDOW)
 
         # Present a combobox with instrument choices.
-        cb_label = wx.StaticText(self.pan11, wx.ID_ANY, "Choose Instrument:")
+        cb_label = wx.StaticText(self.pan12, wx.ID_ANY, "Choose Instrument:")
         inst_names = self.instmeta.get_inst_names()
-        cb = wx.ComboBox(self.pan11, wx.ID_ANY,
+        cb = wx.ComboBox(self.pan12, wx.ID_ANY,
                          value=inst_names[self.instmeta.get_inst_idx()],
                          choices=inst_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
@@ -497,8 +507,8 @@ class SimulatedDataPage(wx.Panel):
         hbox1_sizer.Add(cb, 1, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, border=10)
 
         # Associate the sizer with its container.
-        self.pan11.SetSizer(hbox1_sizer)
-        hbox1_sizer.Fit(self.pan11)
+        self.pan12.SetSizer(hbox1_sizer)
+        hbox1_sizer.Fit(self.pan12)
 
         # Create button controls.
         btn_edit = wx.Button(self.pan1, wx.ID_ANY, "Edit")
@@ -517,11 +527,12 @@ class SimulatedDataPage(wx.Panel):
         # manage them with a static box sizer.
         sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Metadata")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.pan11, 0,
+        sbox2_sizer.Add(self.pan12, 0,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
 
         #----------------------------------------------------------------------
+        # Part 3 - Inversion and Reconstruction Parameters
 
         fields = [
                 ###["SLD of Substrate:", 2.07, "float", 'RE', None],
@@ -539,7 +550,8 @@ class SimulatedDataPage(wx.Panel):
                 ###["Inversion Noise Factor:", 1, "int", 'RE', None],
                    ["Simulated Noise (as %):", 8.0, "float", 'RE', None],
                    ["Bound State Energy:", 0.0, "float", 'RE', None],
-                   ["Perfect Reconstruction:", "False", "str", 'RE', ("True", "False")],
+                   ["Perfect Reconstruction:", "False", "str", 'RE',
+                        ("True", "False")],
                 ###["Show Iterations:", "False", "str", 'RE', ("True", "False")]
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
@@ -554,6 +566,7 @@ class SimulatedDataPage(wx.Panel):
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
         #----------------------------------------------------------------------
+        # Finalize the layout of the panel.
 
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
@@ -867,16 +880,71 @@ class CollectedDataPage(wx.Panel):
     def init_param_panel(self):
         """Initialize the parameter input panel of the CollectedDataPage."""
 
-        self.instmeta = InstrumentMetadata()
+        #----------------------------------------------------------------------
+        # Part 1 - Input Data Files
 
-        # Create a panel for gathering instrument metadata.
+        # Create a panel for obtaining input file selections.
         self.pan11 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
         self.pan11.SetBackgroundColour(BKGD_COLOUR_WINDOW)
 
+        # Create file name entry boxes and labels.
+        label1 = wx.StaticText(self.pan11, wx.ID_ANY, label="File 1:")
+        label2 = wx.StaticText(self.pan11, wx.ID_ANY, label="File 2:")
+
+        # Locate the demo data files.
+        root = get_appdir()
+        self.data_file_1 = os.path.join(root, DEMO_REFLDATA_1)
+        self.data_file_2 = os.path.join(root, DEMO_REFLDATA_2)
+
+        self.file1 = wx.TextCtrl(self.pan11, wx.ID_ANY, value=self.data_file_1)
+        self.file2 = wx.TextCtrl(self.pan11, wx.ID_ANY, value=self.data_file_2)
+
+        # Create file selector button controls.
+        btn_sel1 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, -1))
+        self.Bind(wx.EVT_BUTTON, self.OnSelFile1, btn_sel1)
+        btn_sel2 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, -1))
+        self.Bind(wx.EVT_BUTTON, self.OnSelFile2, btn_sel2)
+
+        # Create horizontal box sizers for the file selection widgets.
+        hbox4_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox4_sizer.Add(label1, 0, border=5,
+                        flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT)
+        hbox4_sizer.Add(self.file1, 1, wx.EXPAND|wx.RIGHT, border=10)
+        hbox4_sizer.Add(btn_sel1, 0)
+        hbox5_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox5_sizer.Add(label2, 0, border=5,
+                        flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT)
+        hbox5_sizer.Add(self.file2, 1, wx.EXPAND|wx.RIGHT, border=10)
+        hbox5_sizer.Add(btn_sel2, 0)
+
+        # Create a vertical box sizer for the input file selectors.
+        vbox1_sizer = wx.BoxSizer(wx.VERTICAL)
+        vbox1_sizer.Add(hbox4_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        vbox1_sizer.Add(hbox5_sizer, 0, wx.EXPAND|wx.ALL, border=10)
+
+        # Associate the sizer with its container.
+        self.pan11.SetSizer(vbox1_sizer)
+        vbox1_sizer.Fit(self.pan11)
+
+        # Group file selection widgets into a labelled section and
+        # manage them with a static box sizer.
+        sbox1 = wx.StaticBox(self.pan1, wx.ID_ANY, "Reflectometry Data Files")
+        sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
+        sbox1_sizer.Add(self.pan11, 0, wx.EXPAND|wx.ALL, border=10)
+
+        #----------------------------------------------------------------------
+        # Part 2 - Instrument Data
+
+        self.instmeta = InstrumentMetadata()
+
+        # Create a panel for gathering instrument metadata.
+        self.pan12 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
+        self.pan12.SetBackgroundColour(BKGD_COLOUR_WINDOW)
+
         # Present a combobox with instrument choices.
-        cb_label = wx.StaticText(self.pan11, wx.ID_ANY, "Choose Instrument:")
+        cb_label = wx.StaticText(self.pan12, wx.ID_ANY, "Choose Instrument:")
         inst_names = self.instmeta.get_inst_names()
-        cb = wx.ComboBox(self.pan11, wx.ID_ANY,
+        cb = wx.ComboBox(self.pan12, wx.ID_ANY,
                          value=inst_names[self.instmeta.get_inst_idx()],
                          choices=inst_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
@@ -890,8 +958,8 @@ class CollectedDataPage(wx.Panel):
         hbox1_sizer.Add(cb, 1, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, border=10)
 
         # Associate the sizer with its container.
-        self.pan11.SetSizer(hbox1_sizer)
-        hbox1_sizer.Fit(self.pan11)
+        self.pan12.SetSizer(hbox1_sizer)
+        hbox1_sizer.Fit(self.pan12)
 
         # Create button controls.
         btn_edit = wx.Button(self.pan1, wx.ID_ANY, "Edit")
@@ -908,13 +976,14 @@ class CollectedDataPage(wx.Panel):
 
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
-        sbox1 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Metadata")
-        sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
-        sbox1_sizer.Add(self.pan11, 0,
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Metadata")
+        sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
+        sbox2_sizer.Add(self.pan12, 0,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        sbox1_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
+        sbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
 
         #----------------------------------------------------------------------
+        # Part 3 - Inversion and Reconstruction Parameters
 
         fields = [ ["SLD of Substrate:", 2.07, "float", 'RE', None],
                    ["SLD of Surface 1:", 6.33, "float", 'RE', None],
@@ -938,28 +1007,29 @@ class CollectedDataPage(wx.Panel):
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
-        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
-        sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.inv_params, 1,
+        sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
+        sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
+        sbox3_sizer.Add(self.inv_params, 1,
                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
         #----------------------------------------------------------------------
+        # Finalize the layout of the panel.
 
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
         self.Bind(wx.EVT_BUTTON, self.OnCompute, btn_compute)
 
         # Create a horizontal box sizer for the buttons.
-        box_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        box_sizer.Add((10,20), 1)  # stretchable whitespace
-        box_sizer.Add(btn_compute, 0)
+        hbox3_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox3_sizer.Add((10,20), 1)  # stretchable whitespace
+        hbox3_sizer.Add(btn_compute, 0)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
-        #sizer.Add(intro, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sizer.Add(sbox1_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        sizer.Add(sbox2_sizer, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        sizer.Add(box_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.ALL, border=10)
+        sizer.Add(sbox2_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(sbox3_sizer, 1, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sizer.Add(hbox3_sizer, 0, wx.EXPAND|wx.BOTTOM|wx.ALL, border=10)
 
         # Associate the sizer with its container.
         self.pan1.SetSizer(sizer)
@@ -1008,10 +1078,6 @@ from two surround measurements:"""
         self.pan2.SetSizer(sizer)
         sizer.Fit(self.pan2)
 
-        root = get_appdir()
-        self.data_file_1 = os.path.join(root, DEMO_REFLDATA_1)
-        self.data_file_2 = os.path.join(root, DEMO_REFLDATA_2)
-
 
     def active_page(self):
         """This method is called when user selects (makes current) the page."""
@@ -1047,7 +1113,30 @@ from the data files."""
             display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
             return
 
-        self.args = [self.data_file_1, self.data_file_2]
+        # Get the names of the data files.
+        # Note that we must get the names from the text control box because the
+        # user may have edited the names directly and not used the file
+        # selection dialog box (or edited after using the file selection box).
+        #self.args = [self.data_file_1, self.data_file_2]
+        self.args = [self.file1.GetValue(), self.file2.GetValue()]
+
+        # Make sure the files are accessible so we can display a proper error
+        # message without getting a Python runtime error.
+        try:
+            fd = open(self.args[0], 'r')
+            fd.close()
+        except:
+            display_error_message(self, "Load Data Error",
+                "Cannot access file "+self.args[0])
+            return
+
+        try:
+            fd = open(self.args[1], 'r')
+            fd.close()
+        except:
+            display_error_message(self, "Load Data Error",
+                "Cannot access file "+self.args[1])
+            return
 
         # Get the validated parameters.
         self.params = self.inv_params.GetResults()
@@ -1088,45 +1177,66 @@ from the data files."""
         self.instmeta.init_metadata()
 
 
-    def col_tab_OnLoadData(self, event):
-    #def OnLoadData(self, event):  # TODO: reorganize menu to call directly
-        """Load reflectometry data files for measurement 1 and 2."""
+    def OnSelFile1(self, event):
+        """Load reflectometry data files for measurements 1 and 2."""
 
         dlg = wx.FileDialog(self,
-                            message="Load Data for Measurement 1",
+                            message="Select the 1st Data File or Both",
                             defaultDir=os.getcwd(),
                             defaultFile="",
                             wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
-                            style=wx.OPEN)
+                            style=wx.OPEN|wx.MULTIPLE|wx.CHANGE_DIR)
         # Wait for user to close the dialog.
         sts = dlg.ShowModal()
         if sts == wx.ID_OK:
-            pathname  = dlg.GetDirectory()
-            filename = dlg.GetFilename()
-            filespec = os.path.join(pathname, filename)
+            paths = dlg.GetPaths()
         dlg.Destroy()
         if sts == wx.ID_CANCEL:
             return  # Do nothing
 
-        self.data_file_1 = filespec
+        num_files = len(paths)
+        if num_files > 2:
+            display_error_message(self, "Too Many Files Selected",
+                "You can only select two data files, please try again.")
+            return 0
+        elif num_files == 2:
+            self.data_file_1 = paths[1]  # files are returned in reverse order!
+            self.data_file_2 = paths[0]  # files are returned in reverse order!
+            self.file1.SetValue(self.data_file_1)
+            self.file2.SetValue(self.data_file_2)
+            return 2
+        elif num_files == 1:
+            self.data_file_1 = paths[0]
+            self.file1.SetValue(self.data_file_1)
+            return 1
+        else:
+            return 0
+
+
+    def OnSelFile2(self, event):
+        """Load reflectometry data files for measurements 1 and 2."""
 
         dlg = wx.FileDialog(self,
-                            message="Load Data for Measurement 2",
-                            defaultDir=pathname,  # directory of 1st file
+                            message="Select the 2nd Data File",
+                            defaultDir=os.getcwd(),
                             defaultFile="",
                             wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
-                            style=wx.OPEN)
+                            style=wx.OPEN|wx.CHANGE_DIR)
         # Wait for user to close the dialog.
         sts = dlg.ShowModal()
         if sts == wx.ID_OK:
-            pathname  = dlg.GetDirectory()
-            filename = dlg.GetFilename()
-            filespec = os.path.join(pathname, filename)
+            paths = dlg.GetPaths()
         dlg.Destroy()
         if sts == wx.ID_CANCEL:
             return  # Do nothing
 
-        self.data_file_2 = filespec
+        num_files = len(paths)
+        if num_files == 1:
+            self.data_file_2 = paths[0]
+            self.file2.SetValue(self.data_file_2)
+            return 1
+        else:
+            return 0
 
 #==============================================================================
 

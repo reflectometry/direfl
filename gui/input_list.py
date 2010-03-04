@@ -250,7 +250,7 @@ class InputListPanel(ScrolledPanel):
                  id       = wx.ID_ANY,
                  pos      = wx.DefaultPosition,
                  size     = wx.DefaultSize,
-                 style    =(wx.BORDER_RAISED|wx.TAB_TRAVERSAL),
+                 style    =(wx.RAISED_BORDER|wx.TAB_TRAVERSAL),
                  name     = "",
                  itemlist = [],
                  align    = False
