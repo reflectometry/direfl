@@ -189,14 +189,6 @@ class AppFrame(wx.Frame):
 
         mb.Append(file_menu, "&File")
 
-        # Add an 'Edit' menu to the menu bar and define its options.
-        edit_menu = wx.Menu()
-
-        ret_id = edit_menu.Append(wx.ID_ANY, "&Instrument ...")
-        self.Bind(wx.EVT_MENU, self.OnInstrument, ret_id)
-
-        mb.Append(edit_menu, "&Edit")
-
         # Add a 'Help' menu to the menu bar and define its options.
         help_menu = wx.Menu()
 
@@ -325,12 +317,6 @@ class AppFrame(wx.Frame):
     def OnExit(self, event):
         """Terminate the program."""
         self.Close()
-
-
-    def OnInstrument(self, event):
-        """Edit instrument metadata."""
-
-        self.page0.OnEdit(event)
 
 
     def OnLicense(self, evt):
@@ -649,6 +635,9 @@ from your model."""
         sel = event.GetEventObject().GetSelection()
         self.instmeta.set_inst_idx(sel)
 
+        # Show the instrument data to the user and allow edits.
+        self.instmeta.edit_metadata()
+
 
     def OnCompute(self, event):
         """Perform the operation."""
@@ -704,7 +693,7 @@ from your model."""
         self.params.append(layers[-1][2])  # add roughness of substrate to list
 
         # Get resolution parameters.  Process based on whether the instrument
-        # is monochromatic and polychromatic.
+        # is monochromatic or polychromatic.
         i = self.instmeta.get_inst_idx()
         if i <= 3:  # monocromatic
             self.wavelength = self.instmeta.get_wavelength()
@@ -760,10 +749,12 @@ from your model."""
 
 
     def OnEdit(self, event):
+        # Show the instrument data to the user and allow edits.
         self.instmeta.edit_metadata()
 
 
     def OnReset(self, event):
+        # Restore default parameters for the currently selected instrument.
         self.instmeta.init_metadata()
 
 
@@ -1096,6 +1087,9 @@ from the data files."""
         sel = event.GetEventObject().GetSelection()
         self.instmeta.set_inst_idx(sel)
 
+        # Show the instrument data to the user and allow edits.
+        self.instmeta.edit_metadata()
+
 
     def OnCompute(self, event):
         """Perform the operation."""
@@ -1170,10 +1164,12 @@ from the data files."""
 
 
     def OnEdit(self, event):
+        # Show the instrument data to the user and allow edits.
         self.instmeta.edit_metadata()
 
 
     def OnReset(self, event):
+        # Restore default parameters for the currently selected instrument.
         self.instmeta.init_metadata()
 
 
@@ -1479,7 +1475,9 @@ class InstrumentMetadata():
 
         i = self.inst_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", 'R', None],
+                   ["Radiation Type:", self.radiation[i], "str", 'RH9', None,
+                       self.inst_names[self.inst_idx]+" Scanning Reflectometer"],
+                   ["Instrument location:", self.inst_location[i], "str", 'R', None],
                    ["Wavelength (A):", self.wavelength[1][i], "float", 'REH9', None,
                        "Instrument Parameters"],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
@@ -1498,9 +1496,8 @@ class InstrumentMetadata():
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
                  ]
 
-        title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
         dlg = InputListDialog(parent=None,
-                              title=title,
+                              title="Edit Instrument Attribues",
                               pos=(500, 100),
                               align=True,
                               itemlist=fields)
@@ -1510,21 +1507,23 @@ class InstrumentMetadata():
             print "  ", results
 
             # Skip results[0], the radiation value that is not editable
+            # Skip results[1], the location value that is not editable
             i = self.inst_idx
-            self.wavelength[1][i] = results[1]
-            self.dLoL[1][i] = results[2]
-            self.d_s1[1][i] = results[3]
-            self.d_s2[1][i] = results[4]
-            self.Tlo[1][i] = results[5]
-            self.Thi[1][i] = results[6]
-            self.slit1_at_Tlo[1][i] = results[7]
-            self.slit2_at_Tlo[1][i] = results[8]
-            self.slit1_below[1][i] = results[9]
-            self.slit2_below[1][i] = results[10]
-            self.slit1_above[1][i] = results[11]
-            self.slit2_above[1][i] = results[12]
-            self.sample_width[1][i] = results[13]
-            self.sample_broadening[1][i] = results[14]
+            (self.wavelength[1][i],
+             self.dLoL[1][i],
+             self.d_s1[1][i],
+             self.d_s2[1][i],
+             self.Tlo[1][i],
+             self.Thi[1][i],
+             self.slit1_at_Tlo[1][i],
+             self.slit2_at_Tlo[1][i],
+             self.slit1_below[1][i],
+             self.slit2_below[1][i],
+             self.slit1_above[1][i],
+             self.slit2_above[1][i],
+             self.sample_width[1][i],
+             self.sample_broadening[1][i]
+            ) = results[2:]
         dlg.Destroy()
 
 
@@ -1536,7 +1535,9 @@ class InstrumentMetadata():
 
         i = self.inst_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", 'R', None],
+                   ["Radiation Type:", self.radiation[i], "str", 'RH9', None,
+                       self.inst_names[self.inst_idx]+" Time-of-Flight Reflectometer"],
+                   ["Instrument location:", self.inst_location[i], "str", 'R', None],
                    ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", 'REH9', None,
                        "Instrument Parameters"],
                    ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", 'RE', None],
@@ -1551,29 +1552,29 @@ class InstrumentMetadata():
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
                  ]
 
-        title = "Edit " + self.inst_names[self.inst_idx] + " Attribues"
         dlg = InputListDialog(parent=None,
-                              title=title,
+                              title="Edit Instrument Attribues",
                               pos=(500, 100),
                               align=True,
                               itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResults()
-            print "Results from all input fields of the dialog box:"
-            print "  ", results
 
             # Skip results[0], the radiation value that is not editable
+            # Skip results[1], the location value that is not editable
             i = self.inst_idx
-            self.wavelength_lo [1][i] = results[1]
-            self.wavelength_hi[1][i] = results[2]
-            self.dLoL[1][i] = results[3]
-            self.d_s1[1][i] = results[4]
-            self.d_s2[1][i] = results[5]
-            self.slit1_size[1][i] = results[6]
-            self.slit2_size[1][i] = results[7]
-            self.theta[1][i] = results[8]
-            self.sample_width[1][i] = results[9]
-            self.sample_broadening[1][i] = results[10]
+            (self.wavelength_lo[1][i],
+             self.wavelength_hi[1][i],
+             self.dLoL[1][i],
+             self.d_s1[1][i],
+             self.d_s2[1][i],
+             self.slit1_size[1][i],
+             self.slit2_size[1][i],
+             self.theta[1][i],
+             self.sample_width[1][i],
+             self.sample_broadening[1][i]
+            ) = results[2:]
+
         dlg.Destroy()
 
 #==============================================================================
@@ -1734,17 +1735,6 @@ def perform_simulation_res(sample, params):
     from inversion.core.simulate import Simulation
     from numpy import linspace
     import pylab
-
-    if sample is None:
-        # Roughness parameters (surface, sample, substrate)
-        sv, s, su = 3, 5, 2
-        # Surround parameters
-        u, v1, v2 = 2.07, 0, 4.5
-        # Default sample
-        sample = ([5,100,s], [1,123,s], [3,47,s], [-1,25,s])
-        sample[0][2] = sv
-    else:
-        su = 2
 
     # Run the simulation
     _perfect_reconstruction = True if params[10] == "True" else False
