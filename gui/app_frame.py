@@ -478,10 +478,10 @@ class SimulatedDataPage(wx.Panel):
 
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan12, wx.ID_ANY, "Choose Instrument:")
-        inst_names = self.instmeta.get_inst_names()
+        instr_names = self.instmeta.get_instr_names()
         cb = wx.ComboBox(self.pan12, wx.ID_ANY,
-                         value=inst_names[self.instmeta.get_inst_idx()],
-                         choices=inst_names,
+                         value=instr_names[self.instmeta.get_instr_idx()],
+                         choices=instr_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
 
@@ -542,13 +542,13 @@ class SimulatedDataPage(wx.Panel):
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
 
-        self.inv_params = InputListPanel(parent=self.pan1, itemlist=fields)
+        self.inver_param_pan = InputListPanel(parent=self.pan1, itemlist=fields)
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
         sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
         sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
-        sbox3_sizer.Add(self.inv_params, 1,
+        sbox3_sizer.Add(self.inver_param_pan, 1,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
         #----------------------------------------------------------------------
@@ -633,7 +633,7 @@ from your model."""
         """Process the user's choice of instrument."""
 
         sel = event.GetEventObject().GetSelection()
-        self.instmeta.set_inst_idx(sel)
+        self.instmeta.set_instr_idx(sel)
 
         # Show the instrument data to the user and allow edits.
         self.instmeta.edit_metadata()
@@ -651,12 +651,12 @@ from your model."""
         # char-by-char validation would have warned the user about any invalid
         # entries, the user could have pressed the Compute button without
         # making the corrections, so a full validation pass must be done now.
-        if not self.inv_params.Validate():
+        if not self.inver_param_pan.Validate():
             display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
             return
 
         # Get the validated parameters.
-        self.params = self.inv_params.GetResults()
+        self.params = self.inver_param_pan.GetResults()
 
         # Validate and convert the model description into a list of layers.
         lines = self.model.GetValue().splitlines()
@@ -694,33 +694,32 @@ from your model."""
 
         # Get resolution parameters.  Process based on whether the instrument
         # is monochromatic or polychromatic.
-        i = self.instmeta.get_inst_idx()
-        if i <= 3:  # monocromatic
-            self.wavelength = self.instmeta.get_wavelength()
-            self.dLoL = self.instmeta.get_dLoL()
-            self.d_s1 = self.instmeta.get_d_s1()
-            self.d_s2 = self.instmeta.get_d_s2()
-            self.Tlo = self.instmeta.get_Tlo()
-            self.Thi = self.instmeta.get_Thi()
-            self.slit1_at_Tlo = self.instmeta.get_slit1_at_Tlo()
-            self.slit2_at_Tlo = self.instmeta.get_slit2_at_Tlo()
-            self.slit1_below = self.instmeta.get_slit1_below()
-            self.slit2_below = self.instmeta.get_slit2_below()
-            self.slit1_above = self.instmeta.get_slit1_above()
-            self.slit2_above = self.instmeta.get_slit2_above()
-            self.sample_width = self.instmeta.get_sample_width()
-            self.sample_broadening = self.instmeta.get_sample_broadening()
+        if self.instmeta.get_instr_idx() <= 3:  # monocromatic
+            wavelength = self.instmeta.get_wavelength()
+            dLoL = self.instmeta.get_dLoL()
+            d_s1 = self.instmeta.get_d_s1()
+            d_s2 = self.instmeta.get_d_s2()
+            Tlo = self.instmeta.get_Tlo()
+            Thi = self.instmeta.get_Thi()
+            slit1_at_Tlo = self.instmeta.get_slit1_at_Tlo()
+            slit2_at_Tlo = self.instmeta.get_slit2_at_Tlo()
+            slit1_below = self.instmeta.get_slit1_below()
+            slit2_below = self.instmeta.get_slit2_below()
+            slit1_above = self.instmeta.get_slit1_above()
+            slit2_above = self.instmeta.get_slit2_above()
+            sample_width = self.instmeta.get_sample_width()
+            sample_broadening = self.instmeta.get_sample_broadening()
         else:  # polychromatic
-            self.wavelength_lo = self.instmeta.get_wavelength_lo()
-            self.wavelength_hi = self.instmeta.get_wavelength_hi()
-            self.dLoL = self.instmeta.get_dLoL()
-            self.slit1_size = self.instmeta.get_slit1_size()
-            self.slit2_size = self.instmeta.get_slit2_size()
-            self.d_s1 = self.instmeta.get_d_s1()
-            self.d_s2 = self.instmeta.get_d_s2()
-            self.theta = self.instmeta.get_theta()
-            self.sample_width = self.instmeta.get_sample_width()
-            self.sample_broadening = self.instmeta.get_sample_broadening()
+            wavelength_lo = self.instmeta.get_wavelength_lo()
+            wavelength_hi = self.instmeta.get_wavelength_hi()
+            dLoL = self.instmeta.get_dLoL()
+            slit1_size = self.instmeta.get_slit1_size()
+            slit2_size = self.instmeta.get_slit2_size()
+            d_s1 = self.instmeta.get_d_s1()
+            d_s2 = self.instmeta.get_d_s2()
+            T = self.instmeta.get_T()
+            sample_width = self.instmeta.get_sample_width()
+            sample_broadening = self.instmeta.get_sample_broadening()
 
         # Inform the user that we're entering a period of high computation.
         write_to_statusbar("Generating new plots ...", 1)
@@ -934,10 +933,10 @@ class CollectedDataPage(wx.Panel):
 
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan12, wx.ID_ANY, "Choose Instrument:")
-        inst_names = self.instmeta.get_inst_names()
+        instr_names = self.instmeta.get_instr_names()
         cb = wx.ComboBox(self.pan12, wx.ID_ANY,
-                         value=inst_names[self.instmeta.get_inst_idx()],
-                         choices=inst_names,
+                         value=instr_names[self.instmeta.get_instr_idx()],
+                         choices=instr_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
 
@@ -994,13 +993,13 @@ class CollectedDataPage(wx.Panel):
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
 
-        self.inv_params = InputListPanel(parent=self.pan1, itemlist=fields)
+        self.inver_param_pan = InputListPanel(parent=self.pan1, itemlist=fields)
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
         sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
         sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
-        sbox3_sizer.Add(self.inv_params, 1,
+        sbox3_sizer.Add(self.inver_param_pan, 1,
                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
         #----------------------------------------------------------------------
@@ -1085,7 +1084,7 @@ from the data files."""
         """Process the user's choice of instrument."""
 
         sel = event.GetEventObject().GetSelection()
-        self.instmeta.set_inst_idx(sel)
+        self.instmeta.set_instr_idx(sel)
 
         # Show the instrument data to the user and allow edits.
         self.instmeta.edit_metadata()
@@ -1103,7 +1102,7 @@ from the data files."""
         # char-by-char validation would have warned the user about any invalid
         # entries, the user could have pressed the Compute button without
         # making the corrections, so a full validation pass must be done now.
-        if not self.inv_params.Validate():
+        if not self.inver_param_pan.Validate():
             display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
             return
 
@@ -1133,7 +1132,7 @@ from the data files."""
             return
 
         # Get the validated parameters.
-        self.params = self.inv_params.GetResults()
+        self.params = self.inver_param_pan.GetResults()
         #print "Results from %d input fields:" %(len(self.params))
         #print "  ", self.params
 
@@ -1177,7 +1176,7 @@ from the data files."""
         """Load reflectometry data files for measurements 1 and 2."""
 
         dlg = wx.FileDialog(self,
-                            message="Select the 1st Data File or Both",
+                            message="Select 1st Data File or Both Data Files",
                             defaultDir=os.getcwd(),
                             defaultFile="",
                             wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
@@ -1213,7 +1212,7 @@ from the data files."""
         """Load reflectometry data files for measurements 1 and 2."""
 
         dlg = wx.FileDialog(self,
-                            message="Select the 2nd Data File",
+                            message="Select 2nd Data File",
                             defaultDir=os.getcwd(),
                             defaultFile="",
                             wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
@@ -1310,26 +1309,31 @@ class InstrumentMetadata():
     """This class is responsible for processing the instrument metadata."""
 
     def __init__(self):
-        self.inst_classes = [ANDR, NG1, NG7, XRay, Liquids, Magnetic]
-        self.inst_location = ["NCNR", "NCNR", "NCNR", "NCNR", "SNS", "SNS"]
+        self.instr_classes = [ANDR, NG1, NG7, XRay, Liquids, Magnetic]
+        self.instr_location = ["NCNR", "NCNR", "NCNR", "NCNR", "SNS", "SNS"]
 
         # Get the instrument name and radiation type for each instrument.
-        self.inst_names = []; self.radiation = []
-        for classname in self.inst_classes:
-            self.inst_names.append(classname.instrument)
+        self.instr_names = []; self.radiation = []
+        for classname in self.instr_classes:
+            self.instr_names.append(classname.instrument)
             self.radiation.append(classname.radiation)
-        n = len(self.inst_classes)
+        n = len(self.instr_classes)
 
         # Editable parameters are stored in 2 x n lists where list[0] contains
         # default values by instrument and list[1] holds their current values.
         # n is the number of instruments supported.  For a given instrument
         # only a subset of the parameters may be applicable.
         self.wavelength =        [[0.0] * n, [0.0] * n]
+        self.wavelength_lo =     [[0.0] * n, [0.0] * n]
+        self.wavelength_hi =     [[0.0] * n, [0.0] * n]
         self.dLoL =              [[0.0] * n, [0.0] * n]
         self.d_s1 =              [[0.0] * n, [0.0] * n]
         self.d_s2 =              [[0.0] * n, [0.0] * n]
+        self.T =                 [[0.0] * n, [0.0] * n]
         self.Tlo =               [[""]  * n, [0.0] * n]
         self.Thi =               [[""]  * n, [0.0] * n]
+        self.slit1_size =        [[""]  * n, [0.0] * n]
+        self.slit2_size =        [[""]  * n, [0.0] * n]
         self.slit1_at_Tlo =      [[""]  * n, [0.0] * n]
         self.slit2_at_Tlo =      [[""]  * n, [0.0] * n]
         self.slit1_below =       [[""]  * n, [0.0] * n]
@@ -1339,17 +1343,20 @@ class InstrumentMetadata():
         self.sample_width =      [[""]  * n, [0.0] * n]
         self.sample_broadening = [[""]  * n, [0.0] * n]
 
-        self.wavelength_lo =     [[0.0] * n, [0.0] * n]
-        self.wavelength_hi =     [[0.0] * n, [0.0] * n]
-        self.slit1_size =        [[""]  * n, [0.0] * n]
-        self.slit2_size =        [[""]  * n, [0.0] * n]
-        self.theta =             [[0.0] * n, [0.0] * n]
-
-        for i, classname in enumerate(self.inst_classes):
+        for i, classname in enumerate(self.instr_classes):
             if i <= 3: self.set_attr_monochromatic(classname, i)
             else:      self.set_attr_polychromatic(classname, i)
 
-        self.inst_idx = 0
+        self.instr_idx = 0
+
+
+    def get_instr_idx(self):
+        return self.instr_idx
+
+
+    def set_instr_idx(self, index):
+        self.instr_idx = index
+
 
     def set_attr_monochromatic(self, iclass, i):
         """ Set default values for parameters of a monochromatic instrument."""
@@ -1362,8 +1369,10 @@ class InstrumentMetadata():
             self.d_s1[0][i] = iclass.d_s1
         if hasattr(iclass, 'd_s2') and iclass.d_s2 is not None:  # temp check
             self.d_s2[0][i] = iclass.d_s2
-        self.inst_idx = i
+
+        self.instr_idx = i
         self.init_metadata()
+
 
     def set_attr_polychromatic(self, iclass, i):
         """ Set default values for parameters of a ploychromatic instrument."""
@@ -1376,74 +1385,25 @@ class InstrumentMetadata():
             self.d_s1[0][i] = iclass.d_s1
         if hasattr(iclass, 'd_s2'):
             self.d_s2[0][i] = iclass.d_s2
-        self.inst_idx = i
+
+        self.instr_idx = i
         self.init_metadata()
-
-
-    def get_inst_names(self):
-        return self.inst_names
-    def get_inst_classes(self):
-        return self.inst_classes
-    def get_radiation(self):
-        return self.radiation[self.inst_idx]
-    def get_wavelength(self):
-        return self.wavelength[1][self.inst_idx]
-    def get_dLoL(self):
-        return self.dLoL[1][self.inst_idx]
-    def get_d_s1(self):
-        return self.d_s1[1][self.inst_idx]
-    def get_d_s2(self):
-        return self.d_s2[1][self.inst_idx]
-    def get_Tlo(self):
-        return self.Tlo[1][self.inst_idx]
-    def get_Thi(self):
-        return self.Thi[1][self.inst_idx]
-    def get_slit1_at_Tlo(self):
-        return self.slit1_at_Tlo[1][self.inst_idx]
-    def get_slit2_at_Tlo(self):
-        return self.slit2_at_Tlo[1][self.inst_idx]
-    def get_slit1_below(self):
-        return self.slit1_below[1][self.inst_idx]
-    def get_slit2_below(self):
-        return self.slit2_below[1][self.inst_idx]
-    def get_slit1_above(self):
-        return self.slit1_above[1][self.inst_idx]
-    def get_slit2_above(self):
-        return self.slit2_above[1][self.inst_idx]
-    def get_sample_width(self):
-        return self.sample_width[1][self.inst_idx]
-    def get_sample_broadening(self):
-        return self.sample_broadening[1][self.inst_idx]
-    def get_wavelength_lo(self):
-        return self.wavelength_lo[1][self.inst_idx]
-    def get_wavelength_hi(self):
-        return self.wavelength_hi[1][self.inst_idx]
-    def get_slit1_size(self):
-        return self.slit1_size[1][self.inst_idx]
-    def get_slit2_size(self):
-        return self.slit2_size[1][self.inst_idx]
-    def get_theta(self):
-        self.theta[1][self.inst_idx]
-
-
-    def get_inst_idx(self):
-        return self.inst_idx
-
-
-    def set_inst_idx(self, index):
-        self.inst_idx = index
-        ###self.init_metadata()
 
 
     def init_metadata(self):
         # Set current metadata values for insturment to their default values.
-        i = self.inst_idx
+        i = self.instr_idx
         self.wavelength[1][i] = self.wavelength[0][i]
+        self.wavelength_lo[1][i] = self.wavelength_lo[0][i]
+        self.wavelength_hi[1][i] = self.wavelength_hi[0][i]
         self.dLoL[1][i] = self.dLoL[0][i]
         self.d_s1[1][i] = self.d_s1[0][i]
         self.d_s2[1][i] = self.d_s2[0][i]
+        self.T[1][i] = self.T[0][i]
         self.Tlo[1][i] = self.Tlo[0][i]
         self.Thi[1][i] = self.Thi[0][i]
+        self.slit1_size[1][i] = self.slit1_size[0][i]
+        self.slit2_size[1][i] = self.slit2_size[0][i]
         self.slit1_at_Tlo[1][i] = self.slit1_at_Tlo[0][i]
         self.slit2_at_Tlo[1][i] = self.slit2_at_Tlo[0][i]
         self.slit1_below[1][i] = self.slit1_below[0][i]
@@ -1453,15 +1413,9 @@ class InstrumentMetadata():
         self.sample_width[1][i] = self.sample_width[0][i]
         self.sample_broadening[1][i] = self.sample_broadening[0][i]
 
-        self.wavelength_lo[1][i] = self.wavelength_lo[0][i]
-        self.wavelength_hi[1][i] = self.wavelength_hi[0][i]
-        self.slit1_size[1][i] = self.slit1_size[0][i]
-        self.slit2_size[1][i] = self.slit2_size[0][i]
-        self.theta[1][i] = self.Tlo[0][i]
-
 
     def edit_metadata(self):
-        if self.inst_idx <= 3:
+        if self.instr_idx <= 3:
             self.edit_metadata_monochromatic()
         else:
             self.edit_metadata_polychromatic()
@@ -1473,11 +1427,11 @@ class InstrumentMetadata():
         scanning instrument.
         """
 
-        i = self.inst_idx
+        i = self.instr_idx
         fields = [
                    ["Radiation Type:", self.radiation[i], "str", 'RH9', None,
-                       self.inst_names[self.inst_idx]+" Scanning Reflectometer"],
-                   ["Instrument location:", self.inst_location[i], "str", 'R', None],
+                       self.instr_names[i]+" Scanning Reflectometer"],
+                   ["Instrument location:", self.instr_location[i], "str", 'R', None],
                    ["Wavelength (A):", self.wavelength[1][i], "float", 'REH9', None,
                        "Instrument Parameters"],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
@@ -1508,7 +1462,6 @@ class InstrumentMetadata():
 
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable
-            i = self.inst_idx
             (self.wavelength[1][i],
              self.dLoL[1][i],
              self.d_s1[1][i],
@@ -1533,18 +1486,18 @@ class InstrumentMetadata():
         time-of-flight instrument.
         """
 
-        i = self.inst_idx
+        i = self.instr_idx
         fields = [
                    ["Radiation Type:", self.radiation[i], "str", 'RH9', None,
-                       self.inst_names[self.inst_idx]+" Time-of-Flight Reflectometer"],
-                   ["Instrument location:", self.inst_location[i], "str", 'R', None],
+                       self.instr_names[i]+" Time-of-Flight Reflectometer"],
+                   ["Instrument location:", self.instr_location[i], "str", 'R', None],
                    ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", 'REH9', None,
                        "Instrument Parameters"],
                    ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", 'RE', None],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
-                   ["Theta (degrees):", self.theta[1][i], "float", 'REH9', None,
+                   ["Theta (degrees):", self.T[1][i], "float", 'REH9', None,
                       "Measurement Parameters"],
                    ["Size of Slit 1 (mm):", self.slit1_size[1][i], "float", 'RE', None],
                    ["Size of Slit 2 (mm):", self.slit2_size[1][i], "float", 'RE', None],
@@ -1562,7 +1515,6 @@ class InstrumentMetadata():
 
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable
-            i = self.inst_idx
             (self.wavelength_lo[1][i],
              self.wavelength_hi[1][i],
              self.dLoL[1][i],
@@ -1570,12 +1522,63 @@ class InstrumentMetadata():
              self.d_s2[1][i],
              self.slit1_size[1][i],
              self.slit2_size[1][i],
-             self.theta[1][i],
+             self.T[1][i],
              self.sample_width[1][i],
              self.sample_broadening[1][i]
             ) = results[2:]
 
         dlg.Destroy()
+
+
+    def get_instr_names(self):
+        return self.instr_names
+    def get_instr_classes(self):
+        return self.instr_classes
+    def get_radiation(self):
+        return self.radiation[self.instr_idx]
+
+    def get_wavelength(self):
+        return self.wavelength[1][self.instr_idx]
+    def get_wavelength_lo(self):
+        return self.wavelength_lo[1][self.instr_idx]
+    def get_wavelength_hi(self):
+        return self.wavelength_hi[1][self.instr_idx]
+    def get_dLoL(self):
+        return self.dLoL[1][self.instr_idx]
+
+    def get_d_s1(self):
+        return self.d_s1[1][self.instr_idx]
+    def get_d_s2(self):
+        return self.d_s2[1][self.instr_idx]
+
+    def get_T(self):
+        return self.T[1][self.instr_idx]
+    def get_Tlo(self):
+        return self.Tlo[1][self.instr_idx]
+    def get_Thi(self):
+        return self.Thi[1][self.instr_idx]
+
+    def get_slit1_size(self):
+        return self.slit1_size[1][self.instr_idx]
+    def get_slit2_size(self):
+        return self.slit2_size[1][self.instr_idx]
+    def get_slit1_at_Tlo(self):
+        return self.slit1_at_Tlo[1][self.instr_idx]
+    def get_slit2_at_Tlo(self):
+        return self.slit2_at_Tlo[1][self.instr_idx]
+    def get_slit1_below(self):
+        return self.slit1_below[1][self.instr_idx]
+    def get_slit2_below(self):
+        return self.slit2_below[1][self.instr_idx]
+    def get_slit1_above(self):
+        return self.slit1_above[1][self.instr_idx]
+    def get_slit2_above(self):
+        return self.slit2_above[1][self.instr_idx]
+
+    def get_sample_width(self):
+        return self.sample_width[1][self.instr_idx]
+    def get_sample_broadening(self):
+        return self.sample_broadening[1][self.instr_idx]
 
 #==============================================================================
 
