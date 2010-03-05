@@ -71,7 +71,7 @@ from .images import getOpenBitmap
 from .input_list import InputListDialog, InputListPanel
 
 from inversion.core.ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
-from inversion.core.snsdata import Liquids, Magnetic
+from inversion.core.snsdata import Liquids, Magnetic, SNSLoader
 
 # Text strings for use in file selection dialog boxes.
 REFL_FILES = "Refl files (*.refl)|*.refl"
@@ -1314,33 +1314,24 @@ class InstrumentMetadata():
     """This class is responsible for processing the instrument metadata."""
 
     def __init__(self):
-        self.inst_names = ("NCNR ANDR", "NCNR NG1", "NCNR NG7", "NCNR Xray",
-                           "SNS Liquids", "SNS Magnetic")
-        self.inst_classes = ("ANDR", "NG1", "NG7", "Xray", "Liquids", "Magnetic")
-        n = len(self.inst_names)
+        self.inst_classes = [ANDR, NG1, NG7, XRay, Liquids, Magnetic]
+        self.inst_location = ["NCNR", "NCNR", "NCNR", "NCNR", "SNS", "SNS"]
 
-        # Editable parameters are stored in 2 x n lists where list [0] contains
-        # default values by instrument and list [1] contains current values.
-        # Non-editable parameters are stored in a list of n elements containing
-        # their fixed values.  n is the number of instruments supported.  For a
-        # given instrument only a subset of the parameters may apply.
-        self.radiation =         ["unknown"] * n
+        # Get the instrument name and radiation type for each instrument.
+        self.inst_names = []; self.radiation = []
+        for classname in self.inst_classes:
+            self.inst_names.append(classname.instrument)
+            self.radiation.append(classname.radiation)
+        n = len(self.inst_classes)
+
+        # Editable parameters are stored in 2 x n lists where list[0] contains
+        # default values by instrument and list[1] holds their current values.
+        # n is the number of instruments supported.  For a given instrument
+        # only a subset of the parameters may be applicable.
         self.wavelength =        [[0.0] * n, [0.0] * n]
         self.dLoL =              [[0.0] * n, [0.0] * n]
         self.d_s1 =              [[0.0] * n, [0.0] * n]
         self.d_s2 =              [[0.0] * n, [0.0] * n]
-        '''
-        self.Tlo =               [[0.0] * n, [0.0] * n]
-        self.Thi =               [[0.0] * n, [0.0] * n]
-        self.slit1_at_Tlo =      [[0.0] * n, [0.0] * n]
-        self.slit2_at_Tlo =      [[0.0] * n, [0.0] * n]
-        self.slit1_below =       [[0.0] * n, [0.0] * n]
-        self.slit2_below =       [[0.0] * n, [0.0] * n]
-        self.slit1_above =       [[0.0] * n, [0.0] * n]
-        self.slit2_above =       [[0.0] * n, [0.0] * n]
-        self.sample_width =      [[0.0] * n, [0.0] * n]
-        self.sample_broadening = [[0.0] * n, [0.0] * n]
-        '''
         self.Tlo =               [[""]  * n, [0.0] * n]
         self.Thi =               [[""]  * n, [0.0] * n]
         self.slit1_at_Tlo =      [[""]  * n, [0.0] * n]
@@ -1354,57 +1345,42 @@ class InstrumentMetadata():
 
         self.wavelength_lo =     [[0.0] * n, [0.0] * n]
         self.wavelength_hi =     [[0.0] * n, [0.0] * n]
-        '''
-        self.slit1_size =        [[0.0] * n, [0.0] * n]
-        self.slit2_size =        [[0.0] * n, [0.0] * n]
-        '''
         self.slit1_size =        [[""]  * n, [0.0] * n]
         self.slit2_size =        [[""]  * n, [0.0] * n]
         self.theta =             [[0.0] * n, [0.0] * n]
 
-        self.set_attr_mono(ANDR, 0)
-        self.set_attr_mono(NG1, 1)
-        self.set_attr_mono(NG7, 2)
-        self.set_attr_mono(XRay, 3)
-        self.set_attr_poly(Liquids, 4)
-        self.set_attr_poly(Magnetic, 5)
-        '''
-        for i, name in iter(self.inst_names):
-            if i <= 3: self.set_attr_mono(name, i)
-            else:      self.set_attr_poly(name, i)
-        '''
+        for i, classname in enumerate(self.inst_classes):
+            if i <= 3: self.set_attr_monochromatic(classname, i)
+            else:      self.set_attr_polychromatic(classname, i)
+
         self.inst_idx = 0
 
-    def set_attr_mono(self, iclass, idx):
+    def set_attr_monochromatic(self, iclass, i):
         """ Set default values for parameters of a monochromatic instrument."""
 
-        if hasattr(iclass, 'radiation'):
-            self.radiation[idx] = iclass.radiation
         if hasattr(iclass, 'wavelength'):
-            self.wavelength[0][idx] = iclass.wavelength
+            self.wavelength[0][i] = iclass.wavelength
         if hasattr(iclass, 'dLoL'):
-            self.dLoL[0][idx] = iclass.dLoL
+            self.dLoL[0][i] = iclass.dLoL
         if hasattr(iclass, 'd_s1') and iclass.d_s1 is not None:  # temp check
-            self.d_s1[0][idx] = iclass.d_s1
+            self.d_s1[0][i] = iclass.d_s1
         if hasattr(iclass, 'd_s2') and iclass.d_s2 is not None:  # temp check
-            self.d_s2[0][idx] = iclass.d_s2
-        self.inst_idx = idx
+            self.d_s2[0][i] = iclass.d_s2
+        self.inst_idx = i
         self.init_metadata()
 
-    def set_attr_poly(self, iclass, idx):
+    def set_attr_polychromatic(self, iclass, i):
         """ Set default values for parameters of a ploychromatic instrument."""
-        if hasattr(iclass, 'radiation'):
-            self.radiation[idx] = iclass.radiation
         if hasattr(iclass, 'wavelength'):
-            self.wavelength_lo[0][idx], \
-            self.wavelength_hi[0][idx] = iclass.wavelength
+            self.wavelength_lo[0][i], \
+            self.wavelength_hi[0][i] = iclass.wavelength
         if hasattr(iclass, 'dLoL'):
-            self.dLoL[0][idx] = iclass.dLoL
+            self.dLoL[0][i] = iclass.dLoL
         if hasattr(iclass, 'd_s1'):
-            self.d_s1[0][idx] = iclass.d_s1
+            self.d_s1[0][i] = iclass.d_s1
         if hasattr(iclass, 'd_s2'):
-            self.d_s2[0][idx] = iclass.d_s2
-        self.inst_idx = idx
+            self.d_s2[0][i] = iclass.d_s2
+        self.inst_idx = i
         self.init_metadata()
 
 
@@ -1490,31 +1466,31 @@ class InstrumentMetadata():
 
     def edit_metadata(self):
         if self.inst_idx <= 3:
-            self.edit_metadata_mono()
+            self.edit_metadata_monochromatic()
         else:
-            self.edit_metadata_poly()
+            self.edit_metadata_polychromatic()
 
 
-    def edit_metadata_mono(self):
+    def edit_metadata_monochromatic(self):
         """
         Allow user to edit the values for parameters of a monochromatic
-        instrument.
+        scanning instrument.
         """
 
         i = self.inst_idx
         fields = [
                    ["Radiation Type:", self.radiation[i], "str", 'R', None],
                    ["Wavelength (A):", self.wavelength[1][i], "float", 'REH9', None,
-                       "Required Parameters"],
+                       "Instrument Parameters"],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
-                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", 'EH9', None,
-                      "Optional Parameters"],
+                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", 'REH9', None,
+                      "Measurement Parameters"],
                    ["Theta Hi (degrees):", self.Thi[1][i], "float", 'E', None],
-                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", 'E', None],
+                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", 'RE', None],
                    ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", 'E', None],
-                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", 'E', None],
+                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", 'RE', None],
                    ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", 'E', None],
                    ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", 'E', None],
                    ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", 'E', None],
@@ -1552,26 +1528,26 @@ class InstrumentMetadata():
         dlg.Destroy()
 
 
-    def edit_metadata_poly(self):
+    def edit_metadata_polychromatic(self):
         """
         Allow user to edit the values for parameters of a polychromatic
-        instrument.
+        time-of-flight instrument.
         """
 
         i = self.inst_idx
         fields = [
                    ["Radiation Type:", self.radiation[i], "str", 'R', None],
                    ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", 'REH9', None,
-                       "Required Parameters"],
+                       "Instrument Parameters"],
                    ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", 'RE', None],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
-                   ["Theta (degrees):", self.theta[1][i], "float", 'RE', None],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
-                   ["Slit 1 Size (mm):", self.slit1_size[1][i], "float", 'RE', None],
-                   ["Slit 2 Size (mm):", self.slit2_size[1][i], "float", 'RE', None],
-                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'EH9', None,
-                      "Optional Parameters"],
+                   ["Theta (degrees):", self.theta[1][i], "float", 'REH9', None,
+                      "Measurement Parameters"],
+                   ["Size of Slit 1 (mm):", self.slit1_size[1][i], "float", 'RE', None],
+                   ["Size of Slit 2 (mm):", self.slit2_size[1][i], "float", 'RE', None],
+                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'E', None],
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
                  ]
 
