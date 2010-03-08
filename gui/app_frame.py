@@ -233,32 +233,32 @@ class AppFrame(wx.Frame):
                                          style=wx.NB_TOP|wx.NB_FIXEDWIDTH)
 
         # Create page windows as children of the notebook.
-        self.page0 = SimulatedDataPage(nb, colour=PALE_YELLOW, fignum=0)
-        self.page1 = CollectedDataPage(nb, colour=PALE_GREEN, fignum=1)
+        self.page0 = SimulateDataPage(nb, colour=PALE_YELLOW, fignum=0)
+        self.page1 = AnalyzeDataPage(nb, colour=PALE_GREEN, fignum=1)
 
         # Add the pages to the notebook with a label to show on the tab.
-        nb.AddPage(self.page0, "Simulated Data")
-        nb.AddPage(self.page1, "Collected Data")
+        nb.AddPage(self.page0, "Simulate Data")
+        nb.AddPage(self.page1, "Analyze Data")
 
         # For debug - jak
         # Create test page windows and add them to notebook if requested.
         if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:]:
-            self.page2 = SimulatedDataPage(nb, colour="YELLOW", fignum=2)
-            self.page3 = CollectedDataPage(nb, colour="GREEN", fignum=3)
+            self.page2 = SimulateDataPage(nb, colour=PALE_YELLOW, fignum=2)
+            self.page3 = AnalyzeDataPage(nb, colour=PALE_GREEN, fignum=3)
 
             nb.AddPage(self.page2, "Simulation Test")
             nb.AddPage(self.page3, "Analysis Test")
 
         if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
-            self.page2 = TestPlotPage(nb, colour="GREEN", fignum=2)
-            self.page3 = TestPlotPage(nb, colour="BLUE", fignum=3)
-            self.page4 = TestPlotPage(nb, colour="YELLOW", fignum=4)
-            self.page5 = TestPlotPage(nb, colour="RED", fignum=5)
+            self.page4 = TestPlotPage(nb, colour="FIREBRICK", fignum=4)
+            self.page5 = TestPlotPage(nb, colour="BLUE", fignum=5)
+            self.page6 = TestPlotPage(nb, colour="GREEN", fignum=6)
+            self.page7 = TestPlotPage(nb, colour="WHITE", fignum=7)
 
-            nb.AddPage(self.page2, "Test 1")
-            nb.AddPage(self.page3, "Test 2")
-            nb.AddPage(self.page4, "Test 3")
-            nb.AddPage(self.page5, "Test 4")
+            nb.AddPage(self.page4, "Test 1")
+            nb.AddPage(self.page5, "Test 2")
+            nb.AddPage(self.page6, "Test 3")
+            nb.AddPage(self.page7, "Test 4")
 
         # Put the notebook in a sizer attached to the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -379,7 +379,7 @@ class AppFrame(wx.Frame):
 
 #==============================================================================
 
-class SimulatedDataPage(wx.Panel):
+class SimulateDataPage(wx.Panel):
     """
     This class implements phase reconstruction and direct inversion analysis
     of two simulated surround variation data sets (generated from a model)
@@ -417,7 +417,7 @@ class SimulatedDataPage(wx.Panel):
 
 
     def init_param_panel(self):
-        """Initialize the parameter input panel of the SimulatedDataPage."""
+        """Initialize the parameter input panel of the SimulateDataPage."""
 
         #----------------------------------------------------------------------
         # Part 1 - Model Parameters
@@ -576,7 +576,7 @@ class SimulatedDataPage(wx.Panel):
 
 
     def init_plot_panel(self):
-        """Initialize the plotting panel of the SimulatedDataPage."""
+        """Initialize the plotting panel of the SimulateDataPage."""
 
         INTRO_TEXT = """\
 Results from phase reconstruction and inversion of simulated data files \
@@ -657,6 +657,9 @@ from your model."""
 
         # Get the validated parameters.
         self.params = self.inver_param_pan.GetResults()
+        if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
+            print "Results from all inversion parameter fields:"
+            print "  ", self.params
 
         # Validate and convert the model description into a list of layers.
         lines = self.model.GetValue().splitlines()
@@ -829,7 +832,7 @@ from your model."""
 
 #==============================================================================
 
-class CollectedDataPage(wx.Panel):
+class AnalyzeDataPage(wx.Panel):
     """
     This class implements phase reconstruction and direct inversion analysis
     of two surround variation data sets (i.e., experimentally collected data)
@@ -868,7 +871,7 @@ class CollectedDataPage(wx.Panel):
 
 
     def init_param_panel(self):
-        """Initialize the parameter input panel of the CollectedDataPage."""
+        """Initialize the parameter input panel of the AnalyzeDataPage."""
 
         #----------------------------------------------------------------------
         # Part 1 - Input Data Files
@@ -1027,7 +1030,7 @@ class CollectedDataPage(wx.Panel):
 
 
     def init_plot_panel(self):
-        """Initialize the plotting panel of the CollectedDataPage."""
+        """Initialize the plotting panel of the AnalyzeDataPage."""
 
         INTRO_TEXT = """\
 Results from phase reconstruction and inversion of reflectometry data files \
@@ -1133,8 +1136,9 @@ from the data files."""
 
         # Get the validated parameters.
         self.params = self.inver_param_pan.GetResults()
-        #print "Results from %d input fields:" %(len(self.params))
-        #print "  ", self.params
+        if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
+            print "Results from all inversion parameter fields:"
+            print "  ", self.params
 
         # Inform the user that we're entering a period of high computation.
         write_to_statusbar("Generating new plots ...", 1)
@@ -1289,11 +1293,11 @@ class TestPlotPage(wx.Panel):
 
         # Execute tests associated with the test tabs.
         # For debug - jak
-        if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:]:
-            if (self.fignum==2 and '-test1' in sys.argv[1:]): test1()
-            if (self.fignum==3 and '-test2' in sys.argv[1:]): test2()
-        if self.fignum==4: test3()
-        if self.fignum==5: test4(figure)
+        if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
+            if (self.fignum==4 and '-test1' in sys.argv[1:]): test1()
+            if (self.fignum==5 and '-test2' in sys.argv[1:]): test2()
+        if self.fignum==6: test3()
+        if self.fignum==7: test4(figure)
 
 
     def active_page(self):
@@ -1450,15 +1454,17 @@ class InstrumentMetadata():
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
                  ]
 
+        x, y = wx.FindWindowByName("AppFrame").GetPositionTuple()
         dlg = InputListDialog(parent=None,
                               title="Edit Instrument Attribues",
-                              pos=(500, 100),
+                              pos=(x+350, y+100),
                               align=True,
                               itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResults()
-            print "Results from all input fields of the dialog box:"
-            print "  ", results
+            if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
+                print "Results from all instrument parameter fields:"
+                print "  ", results
 
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable
@@ -1505,13 +1511,17 @@ class InstrumentMetadata():
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
                  ]
 
+        x, y = wx.FindWindowByName("AppFrame").GetPositionTuple()
         dlg = InputListDialog(parent=None,
                               title="Edit Instrument Attribues",
-                              pos=(500, 100),
+                              pos=(x+350, y+100),
                               align=True,
                               itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResults()
+            if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
+                print "Results from all instrument parameter fields:"
+                print "  ", results
 
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable

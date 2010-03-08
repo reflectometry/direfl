@@ -31,7 +31,6 @@ DISPLAY_WIDTH = 1200
 DISPLAY_HEIGHT = 900
 TASKBAR_HEIGHT = 32
 
-
 #==============================================================================
 
 class InversionApp(wx.App):
@@ -41,7 +40,7 @@ class InversionApp(wx.App):
         # Compute the size of the application frame such that it fits on the
         # user's screen without obstructing (or being obstructed by) the
         # Windows launch bar.  The maximum initial size in pixels is bounded by
-        # DISPLAY_WIDTH x DISPLAY_HEIGTH.
+        # DISPLAY_WIDTH x DISPLAY_HEIGHT.
         xpos = ypos = 0
         x, y = wx.DisplaySize()
         y -= TASKBAR_HEIGHT  # avoid obscuring the Windows task bar
