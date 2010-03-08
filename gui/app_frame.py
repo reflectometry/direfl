@@ -446,7 +446,7 @@ class SimulateDataPage(wx.Panel):
             display_warning_message(self, "Load Model Error",
                 "Error loading demo model from file "+DEMO_MODEL_DESC)
             demo_model_params = \
-                "# SLDensity  Thickness  Roughness" + \
+                "# SLDensity  Thickness  Roughness (optional)" + \
                 NEWLINES_2 + NEWLINES_2 + NEWLINES_2 + NEWLINE
 
         # Create an input box to enter and edit the model description and
@@ -468,9 +468,9 @@ class SimulateDataPage(wx.Panel):
                         wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
         #----------------------------------------------------------------------
-        # Part 2 - Instrument Data
+        # Part 2 - Instrument Parameters
 
-        self.instmeta = InstrumentMetadata()
+        self.instr_param = InstrumentParameters()
 
         # Create a panel for gathering instrument metadata.
         self.pan12 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
@@ -478,9 +478,9 @@ class SimulateDataPage(wx.Panel):
 
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan12, wx.ID_ANY, "Choose Instrument:")
-        instr_names = self.instmeta.get_instr_names()
+        instr_names = self.instr_param.get_instr_names()
         cb = wx.ComboBox(self.pan12, wx.ID_ANY,
-                         value=instr_names[self.instmeta.get_instr_idx()],
+                         value=instr_names[self.instr_param.get_instr_idx()],
                          choices=instr_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
@@ -511,7 +511,7 @@ class SimulateDataPage(wx.Panel):
 
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
-        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Metadata")
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Parameters")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
         sbox2_sizer.Add(self.pan12, 0,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
@@ -522,8 +522,8 @@ class SimulateDataPage(wx.Panel):
 
         fields = [
                 ###["SLD of Substrate:", 2.07, "float", 'RE', None],
-                   ["SLD of Surface 1:", 0.0, "float", 'RE', None],
-                   ["SLD of Surface 2:", 4.5, "float", 'RE', None],
+                   ["SLD of Surface for Exp 1:", 0.0, "float", 'RE', None],
+                   ["SLD of Surface for Exp 2:", 4.5, "float", 'RE', None],
                 ###["Sample Thickness:", 1000, "float", 'RE', None],
                    ["Qmin:", 0.0, "float", 'RE', None],
                    ["Qmax:", 0.4, "float", 'RE', None],
@@ -542,17 +542,17 @@ class SimulateDataPage(wx.Panel):
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
 
-        self.inver_param_pan = InputListPanel(parent=self.pan1, itemlist=fields)
+        self.inver_param = InputListPanel(parent=self.pan1, itemlist=fields)
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
         sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
         sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
-        sbox3_sizer.Add(self.inver_param_pan, 1,
+        sbox3_sizer.Add(self.inver_param, 1,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
         #----------------------------------------------------------------------
-        # Finalize the layout of the panel.
+        # Finalize the layout of the simulation parameter panel.
 
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
@@ -633,10 +633,10 @@ from your model."""
         """Process the user's choice of instrument."""
 
         sel = event.GetEventObject().GetSelection()
-        self.instmeta.set_instr_idx(sel)
+        self.instr_param.set_instr_idx(sel)
 
         # Show the instrument data to the user and allow edits.
-        self.instmeta.edit_metadata()
+        self.instr_param.edit_metadata()
 
 
     def OnCompute(self, event):
@@ -645,21 +645,7 @@ from your model."""
         import pylab
         import time
 
-        # Explicitly validate all input parameters before proceeding.  The
-        # panel's Validate method will invoke all validators associated with
-        # its top-level input objects and transfer data from them.  Although
-        # char-by-char validation would have warned the user about any invalid
-        # entries, the user could have pressed the Compute button without
-        # making the corrections, so a full validation pass must be done now.
-        if not self.inver_param_pan.Validate():
-            display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
-            return
-
-        # Get the validated parameters.
-        self.params = self.inver_param_pan.GetResults()
-        if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
-            print "Results from all inversion parameter fields:"
-            print "  ", self.params
+        # Part 1 - Process model parameters.
 
         # Validate and convert the model description into a list of layers.
         lines = self.model.GetValue().splitlines()
@@ -689,40 +675,65 @@ from your model."""
                  "Substrate layer for your model."))
             return
 
-        sample = layers[1:-1]
-        #print "=== layers", layers
-        #print "=== sample", sample
-        self.params.append(layers[-1][0])  # add SLD of substrate to list
-        self.params.append(layers[-1][2])  # add roughness of substrate to list
+        # Part 2 - Process instrument parameters.
 
-        # Get resolution parameters.  Process based on whether the instrument
-        # is monochromatic or polychromatic.
-        if self.instmeta.get_instr_idx() <= 3:  # monocromatic
-            wavelength = self.instmeta.get_wavelength()
-            dLoL = self.instmeta.get_dLoL()
-            d_s1 = self.instmeta.get_d_s1()
-            d_s2 = self.instmeta.get_d_s2()
-            Tlo = self.instmeta.get_Tlo()
-            Thi = self.instmeta.get_Thi()
-            slit1_at_Tlo = self.instmeta.get_slit1_at_Tlo()
-            slit2_at_Tlo = self.instmeta.get_slit2_at_Tlo()
-            slit1_below = self.instmeta.get_slit1_below()
-            slit2_below = self.instmeta.get_slit2_below()
-            slit1_above = self.instmeta.get_slit1_above()
-            slit2_above = self.instmeta.get_slit2_above()
-            sample_width = self.instmeta.get_sample_width()
-            sample_broadening = self.instmeta.get_sample_broadening()
+        # Get instrument parameters (mainly used for resolution calculation)
+        # based on whether the instrument is monochromatic or polychromatic.
+        # Note that these parameters have already been validated.
+        ip = self.instr_param
+        if ip.get_instr_idx() <= 3:  # monocromatic
+            wavelength = ip.get_wavelength()
+            dLoL = ip.get_dLoL()
+            d_s1 = ip.get_d_s1()
+            d_s2 = ip.get_d_s2()
+            Tlo = ip.get_Tlo()
+            Thi = ip.get_Thi()
+            slit1_at_Tlo = ip.get_slit1_at_Tlo()
+            slit2_at_Tlo = ip.get_slit2_at_Tlo()
+            slit1_below = ip.get_slit1_below()
+            slit2_below = ip.get_slit2_below()
+            slit1_above = ip.get_slit1_above()
+            slit2_above = ip.get_slit2_above()
+            sample_width = ip.get_sample_width()
+            sample_broadening = ip.get_sample_broadening()
         else:  # polychromatic
-            wavelength_lo = self.instmeta.get_wavelength_lo()
-            wavelength_hi = self.instmeta.get_wavelength_hi()
-            dLoL = self.instmeta.get_dLoL()
-            slit1_size = self.instmeta.get_slit1_size()
-            slit2_size = self.instmeta.get_slit2_size()
-            d_s1 = self.instmeta.get_d_s1()
-            d_s2 = self.instmeta.get_d_s2()
-            T = self.instmeta.get_T()
-            sample_width = self.instmeta.get_sample_width()
-            sample_broadening = self.instmeta.get_sample_broadening()
+            wavelength_lo = ip.get_wavelength_lo()
+            wavelength_hi = ip.get_wavelength_hi()
+            dLoL = ip.get_dLoL()
+            slit1_size = ip.get_slit1_size()
+            slit2_size = ip.get_slit2_size()
+            d_s1 = ip.get_d_s1()
+            d_s2 = ip.get_d_s2()
+            T = ip.get_T()
+            sample_width = ip.get_sample_width()
+            sample_broadening = ip.get_sample_broadening()
+
+        # Part 3 - Process inversion parameters.
+
+        # Explicitly validate all inversion parameters before proceeding.  The
+        # panel's Validate method will invoke all validators associated with
+        # its top-level input objects and transfer data from them.  Although
+        # char-by-char validation would have warned the user about any invalid
+        # entries, the user could have pressed the Compute button without
+        # making the corrections, so a full validation pass must be done now.
+        if not self.inver_param.Validate():
+            display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
+            return
+
+        # Get the validated inversion parameters.
+        params = self.inver_param.GetResults()
+        if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
+            print "Results from all inversion parameter fields:"
+            print "  ", params
+
+        sample = layers[1:-1]
+        params.append(layers[-1][0])  # add SLD of substrate to list
+        params.append(layers[-1][2])  # add roughness of substrate to list
+        if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
+            print "Layers:"; print "  ", layers
+            print "Sample:"; print "  ", sample
+
+        # Part 4 - Perform the simulation, reconstruction, and inversion.
 
         # Inform the user that we're entering a period of high computation.
         write_to_statusbar("Generating new plots ...", 1)
@@ -738,10 +749,14 @@ from your model."""
         # simulated reflectivity datasets.
         t0 = time.time()
         if self.fignum == 0:
-            perform_simulation(sample, self.params)
+            perform_simulation(sample, params)
         # For debug - jak
         if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:] and self.fignum == 2:
-            perform_simulation_res(sample, self.params)
+            iclasses = self.instr_param.get_instr_classes()
+            iclass = iclasses[self.instr_param.get_instr_idx()]
+            instrument = iclass(Tlo=0.5, slits_at_Tlo=0.2, slits_below=0.1)
+            res = instrument.resolution(Q=np.linspace(params[2], params[3], params[4]))
+            perform_simulation_res(sample, params, res.dQ)
         pylab.draw()
         secs = time.time() - t0
 
@@ -752,12 +767,12 @@ from your model."""
 
     def OnEdit(self, event):
         # Show the instrument data to the user and allow edits.
-        self.instmeta.edit_metadata()
+        self.instr_param.edit_metadata()
 
 
     def OnReset(self, event):
         # Restore default parameters for the currently selected instrument.
-        self.instmeta.init_metadata()
+        self.instr_param.init_metadata()
 
 
     def sim_tab_OnLoadModel(self, event):
@@ -926,9 +941,9 @@ class AnalyzeDataPage(wx.Panel):
         sbox1_sizer.Add(self.pan11, 0, wx.EXPAND|wx.ALL, border=10)
 
         #----------------------------------------------------------------------
-        # Part 2 - Instrument Data
+        # Part 2 - Instrument Parameters
 
-        self.instmeta = InstrumentMetadata()
+        self.instr_param = InstrumentParameters()
 
         # Create a panel for gathering instrument metadata.
         self.pan12 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
@@ -936,9 +951,9 @@ class AnalyzeDataPage(wx.Panel):
 
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan12, wx.ID_ANY, "Choose Instrument:")
-        instr_names = self.instmeta.get_instr_names()
+        instr_names = self.instr_param.get_instr_names()
         cb = wx.ComboBox(self.pan12, wx.ID_ANY,
-                         value=instr_names[self.instmeta.get_instr_idx()],
+                         value=instr_names[self.instr_param.get_instr_idx()],
                          choices=instr_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
@@ -969,7 +984,7 @@ class AnalyzeDataPage(wx.Panel):
 
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
-        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Metadata")
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Parameters")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
         sbox2_sizer.Add(self.pan12, 0,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
@@ -996,17 +1011,17 @@ class AnalyzeDataPage(wx.Panel):
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
 
-        self.inver_param_pan = InputListPanel(parent=self.pan1, itemlist=fields)
+        self.inver_param = InputListPanel(parent=self.pan1, itemlist=fields)
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
         sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
         sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
-        sbox3_sizer.Add(self.inver_param_pan, 1,
-                       wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        sbox3_sizer.Add(self.inver_param, 1,
+                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
         #----------------------------------------------------------------------
-        # Finalize the layout of the panel.
+        # Finalize the layout of the analysis parameter panel.
 
         # Create button controls.
         btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
@@ -1087,10 +1102,10 @@ from the data files."""
         """Process the user's choice of instrument."""
 
         sel = event.GetEventObject().GetSelection()
-        self.instmeta.set_instr_idx(sel)
+        self.instr_param.set_instr_idx(sel)
 
         # Show the instrument data to the user and allow edits.
-        self.instmeta.edit_metadata()
+        self.instr_param.edit_metadata()
 
 
     def OnCompute(self, event):
@@ -1099,15 +1114,7 @@ from the data files."""
         import pylab
         import time
 
-        # Explicitly validate all input parameters before proceeding.  The
-        # panel's Validate method will invoke all validators associated with
-        # its top-level input objects and transfer data from them.  Although
-        # char-by-char validation would have warned the user about any invalid
-        # entries, the user could have pressed the Compute button without
-        # making the corrections, so a full validation pass must be done now.
-        if not self.inver_param_pan.Validate():
-            display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
-            return
+        # Part 1 - Process reflectometry data files.
 
         # Get the names of the data files.
         # Note that we must get the names from the text control box because the
@@ -1117,7 +1124,7 @@ from the data files."""
         self.args = [self.file1.GetValue(), self.file2.GetValue()]
 
         # Make sure the files are accessible so we can display a proper error
-        # message without getting a Python runtime error.
+        # message instead of getting a Python runtime error later on.
         try:
             fd = open(self.args[0], 'r')
             fd.close()
@@ -1134,11 +1141,58 @@ from the data files."""
                 "Cannot access file "+self.args[1])
             return
 
+        # Part 2 - Process instrument parameters.
+
+        # Get instrument parameters (mainly used for resolution calculation)
+        # based on whether the instrument is monochromatic or polychromatic.
+        # Note that these parameters have already been validated.
+        ip = self.instr_param
+        if ip.get_instr_idx() <= 3:  # monocromatic
+            wavelength = ip.get_wavelength()
+            dLoL = ip.get_dLoL()
+            d_s1 = ip.get_d_s1()
+            d_s2 = ip.get_d_s2()
+            Tlo = ip.get_Tlo()
+            Thi = ip.get_Thi()
+            slit1_at_Tlo = ip.get_slit1_at_Tlo()
+            slit2_at_Tlo = ip.get_slit2_at_Tlo()
+            slit1_below = ip.get_slit1_below()
+            slit2_below = ip.get_slit2_below()
+            slit1_above = ip.get_slit1_above()
+            slit2_above = ip.get_slit2_above()
+            sample_width = ip.get_sample_width()
+            sample_broadening = ip.get_sample_broadening()
+        else:  # polychromatic
+            wavelength_lo = ip.get_wavelength_lo()
+            wavelength_hi = ip.get_wavelength_hi()
+            dLoL = ip.get_dLoL()
+            slit1_size = ip.get_slit1_size()
+            slit2_size = ip.get_slit2_size()
+            d_s1 = ip.get_d_s1()
+            d_s2 = ip.get_d_s2()
+            T = ip.get_T()
+            sample_width = ip.get_sample_width()
+            sample_broadening = ip.get_sample_broadening()
+
+        # Part 3 - Process inversion parameters.
+
+        # Explicitly validate all inversion parameters before proceeding.  The
+        # panel's Validate method will invoke all validators associated with
+        # its top-level input objects and transfer data from them.  Although
+        # char-by-char validation would have warned the user about any invalid
+        # entries, the user could have pressed the Compute button without
+        # making the corrections, so a full validation pass must be done now.
+        if not self.inver_param.Validate():
+            display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
+            return
+
         # Get the validated parameters.
-        self.params = self.inver_param_pan.GetResults()
+        params = self.inver_param.GetResults()
         if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
             print "Results from all inversion parameter fields:"
-            print "  ", self.params
+            print "  ", params
+
+        # Part 4 - Perform the simulation, reconstruction, and inversion.
 
         # Inform the user that we're entering a period of high computation.
         write_to_statusbar("Generating new plots ...", 1)
@@ -1154,10 +1208,10 @@ from the data files."""
         # experimental reflectivity datasets.
         t0 = time.time()
         if self.fignum == 1:
-            perform_recon_inver(self.args, self.params)
+            perform_recon_inver(self.args, params)
         # For debug - jak
         if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:] and self.fignum == 3:
-            perform_recon_inver_res(self.args, self.params)
+            perform_recon_inver_res(self.args, params)
         pylab.draw()
         secs = time.time() - t0
 
@@ -1168,12 +1222,12 @@ from the data files."""
 
     def OnEdit(self, event):
         # Show the instrument data to the user and allow edits.
-        self.instmeta.edit_metadata()
+        self.instr_param.edit_metadata()
 
 
     def OnReset(self, event):
         # Restore default parameters for the currently selected instrument.
-        self.instmeta.init_metadata()
+        self.instr_param.init_metadata()
 
 
     def OnSelFile1(self, event):
@@ -1309,8 +1363,11 @@ class TestPlotPage(wx.Panel):
 
 #==============================================================================
 
-class InstrumentMetadata():
-    """This class is responsible for processing the instrument metadata."""
+class InstrumentParameters():
+    """
+    This class is responsible for processing the instrument parameters
+    (also known as instrument metadata) for all support instruments.
+    """
 
     def __init__(self):
         self.instr_classes = [ANDR, NG1, NG7, XRay, Liquids, Magnetic]
@@ -1379,7 +1436,7 @@ class InstrumentMetadata():
 
 
     def set_attr_polychromatic(self, iclass, i):
-        """ Set default values for parameters of a ploychromatic instrument."""
+        """ Set default values for parameters of a polychromatic instrument."""
         if hasattr(iclass, 'wavelength'):
             self.wavelength_lo[0][i], \
             self.wavelength_hi[0][i] = iclass.wavelength
@@ -1437,12 +1494,12 @@ class InstrumentMetadata():
                        self.instr_names[i]+" Scanning Reflectometer"],
                    ["Instrument location:", self.instr_location[i], "str", 'R', None],
                    ["Wavelength (A):", self.wavelength[1][i], "float", 'REH9', None,
-                       "Instrument Parameters"],
+                       "Instrument Attributes"],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
                    ["Theta Lo (degrees):", self.Tlo[1][i], "float", 'REH9', None,
-                      "Measurement Parameters"],
+                      "Measurement Settings"],
                    ["Theta Hi (degrees):", self.Thi[1][i], "float", 'E', None],
                    ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", 'RE', None],
                    ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", 'E', None],
@@ -1456,7 +1513,7 @@ class InstrumentMetadata():
 
         x, y = wx.FindWindowByName("AppFrame").GetPositionTuple()
         dlg = InputListDialog(parent=None,
-                              title="Edit Instrument Attribues",
+                              title="Edit Instrument Parameters",
                               pos=(x+350, y+100),
                               align=True,
                               itemlist=fields)
@@ -1498,13 +1555,13 @@ class InstrumentMetadata():
                        self.instr_names[i]+" Time-of-Flight Reflectometer"],
                    ["Instrument location:", self.instr_location[i], "str", 'R', None],
                    ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", 'REH9', None,
-                       "Instrument Parameters"],
+                       "Instrument Attributes"],
                    ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", 'RE', None],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
                    ["Theta (degrees):", self.T[1][i], "float", 'REH9', None,
-                      "Measurement Parameters"],
+                      "Measurement Settings"],
                    ["Size of Slit 1 (mm):", self.slit1_size[1][i], "float", 'RE', None],
                    ["Size of Slit 2 (mm):", self.slit2_size[1][i], "float", 'RE', None],
                    ["Sample Width (mm):", self.sample_width[1][i], "float", 'E', None],
@@ -1513,7 +1570,7 @@ class InstrumentMetadata():
 
         x, y = wx.FindWindowByName("AppFrame").GetPositionTuple()
         dlg = InputListDialog(parent=None,
-                              title="Edit Instrument Attribues",
+                              title="Edit Instrument Parameters",
                               pos=(x+350, y+100),
                               align=True,
                               itemlist=fields)
@@ -1642,6 +1699,7 @@ def perform_recon_inver_res(args, params):
     Perform phase reconstruction and direct inversion on two reflectometry data
     sets to generate a scattering length depth profile of the sample.
     """
+    print "******* test resolution for analysis"
 
     from inversion.core.core import refl, SurroundVariation, Inversion
     import pylab
@@ -1733,17 +1791,19 @@ def perform_simulation(sample, params):
 
     t.plot()
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
-                          left=0.09, right = 0.96,
+                           left=0.09, right = 0.96,
                           top=0.95, bottom=0.08)
 
 
 # For debug - jak
-def perform_simulation_res(sample, params):
+def perform_simulation_res(sample, params, dq):
     """
     Simulate reflectometry data sets from model information then perform
     phase reconstruction and direct inversion on the data to generate a
     scattering length density profile.
     """
+
+    print "******* test resolution for simulation"
 
     from inversion.core.simulate import Simulation
     from numpy import linspace
@@ -1757,83 +1817,35 @@ def perform_simulation_res(sample, params):
     if _noise < 0.01: _noise = 0.01
     _noise /= 100.0  # convert percent value to hundreths value
 
-    instrument = NG1(Tlo=0.5, slits_at_Tlo=0.2, slits_below=0.1)
-    res = instrument.resolution(Q=np.linspace(params[2], params[3], 150))
-
     inv = dict(showiters=_showiters,
                monitor=None,
                bse=params[9],
-               noise=1,  # inversion noise factor
+               noise=1, # inversion noise factor different from simulation noise
                iters=params[6],
                stages=params[7],
                rhopoints=params[4],
                calcpoints=params[5])
-    t = Simulation(q=linspace(params[2], params[3], 150),
-                   dq=res.dQ,
-                   sample=sample,
-                   u=params[11],
-                   urough=params[12],
-                   v1=params[0],
-                   v2=params[1],
-                   noise=_noise,
-                   invert_args=inv,
-                   phase_args=dict(stages=100),
-                   perfect_reconstruction=_perfect_reconstruction)
 
-    t.plot()
+    sim = Simulation(q=np.linspace(params[2], params[3], params[4]),
+                     dq=dq,
+                     sample=sample,
+                     u=params[11],
+                     urough=params[12],
+                     v1=params[0],
+                     v2=params[1],
+                     noise=_noise,
+                     seed=None,
+                     phase_args=dict(stages=100),
+                     invert_args=inv,
+                     perfect_reconstruction=_perfect_reconstruction)
+
+    sim.plot()
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right = 0.96,
                           top=0.95, bottom=0.08)
 
 
 def test1():
-    """
-    Test interface to phase reconstruction and direct inversion routines
-    in core.py using two actual reflectometry data files.
-    """
-
-    from inversion.core.core import refl, SurroundVariation, Inversion
-    import os
-    import pylab
-
-    #args = ['wsh02_re.dat']
-    local = os.path.dirname(os.path.realpath(__file__))
-    args = [os.path.join(local, "qrd1.refl"),
-            os.path.join(local, "qrd2.refl")]
-    if len(args) == 1:
-        phase = None
-        data = args[0]
-    elif len(args) == 2:
-        v1 = 6.33
-        v2 = 0.0
-        u = 2.07
-        phase = SurroundVariation(args[0], args[1], u=u, v1=v1, v2=v2)
-        data = phase.Q, phase.RealR, phase.dRealR
-
-    #if dz: rhopoints = ceil(1/dz)
-    res = Inversion(data=data, **dict(substrate=2.07,
-                                      thickness=1000,
-                                      calcpoints=4,
-                                      rhopoints=128,
-                                      Qmin=0,
-                                      Qmax=None,
-                                      iters=6,
-                                      stages=10,
-                                      ctf_window=0,
-                                      backrefl=True,
-                                      noise=1,
-                                      bse=0,
-                                      showiters=False,
-                                      monitor=None))
-
-    res.run(showiters=False)
-    res.plot(phase=phase)
-    pylab.subplots_adjust(wspace=0.25, hspace=0.33,
-                          left=0.09, right=0.96,
-                          top=0.95, bottom=0.08)
-
-
-def test2():
     """
     Test interface to simulation routine in simulation.py using a reconstructed
     reflectometry data file.
@@ -1864,6 +1876,54 @@ def test2():
     t.plot()
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right = 0.96,
+                          top=0.95, bottom=0.08)
+
+
+def test2():
+    """
+    Test interface to phase reconstruction and direct inversion routines
+    in core.py using two actual reflectometry data files.
+    """
+
+    from inversion.core.core import refl, SurroundVariation, Inversion
+    import os
+    import pylab
+
+    root = get_appdir()
+    #args = [os.path.join(root, 'wsh02_re.dat')]
+    file_1 = os.path.join(root, DEMO_REFLDATA_1)
+    file_2 = os.path.join(root, DEMO_REFLDATA_2)
+    args = [file_1, file_2]
+    if len(args) == 1:
+        phase = None
+        data = args[0]
+    elif len(args) == 2:
+        v1 = 6.33
+        v2 = 0.0
+        u = 2.07
+        phase = SurroundVariation(args[0], args[1], u=u, v1=v1, v2=v2)
+        data = phase.Q, phase.RealR, phase.dRealR
+
+    #if dz: rhopoints = ceil(1/dz)
+    res = Inversion(data=data, **dict(substrate=2.07,
+                                      thickness=1000,
+                                      calcpoints=4,
+                                      rhopoints=128,
+                                      Qmin=0,
+                                      Qmax=None,
+                                      iters=6,
+                                      stages=10,
+                                      ctf_window=0,
+                                      backrefl=True,
+                                      noise=1,
+                                      bse=0,
+                                      showiters=False,
+                                      monitor=None))
+
+    res.run(showiters=False)
+    res.plot(phase=phase)
+    pylab.subplots_adjust(wspace=0.25, hspace=0.33,
+                          left=0.09, right=0.96,
                           top=0.95, bottom=0.08)
 
 
