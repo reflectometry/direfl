@@ -754,7 +754,26 @@ from your model."""
         if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:] and self.fignum == 2:
             iclasses = self.instr_param.get_instr_classes()
             iclass = iclasses[self.instr_param.get_instr_idx()]
-            instrument = iclass(Tlo=0.5, slits_at_Tlo=0.2, slits_below=0.1)
+            #instrument = iclass(Tlo=0.5, slits_at_Tlo=0.2, slits_below=0.1)
+
+            slits_at_Tlo = (slit1_at_Tlo, slit2_at_Tlo)
+            if slit2_at_Tlo is None: slits_at_Tlo = slit1_at_Tlo
+            slits_below = (slit1_below, slit2_below)
+            if slit2_below is None: slits_below = slit1_below
+            slits_above = (slit1_above, slit2_above)
+            if slit2_above is None: slits_above = slit1_above
+
+            instrument = iclass(wavelength=wavelength,
+                                dLoL=dLoL,
+                                d_s1=d_s1,
+                                d_s2=d_s2,
+                                Tlo=Tlo,
+                                Thi=Thi,
+                                slits_at_Tlo=slits_at_Tlo,
+                                slits_below=slits_below,
+                                slits_above=slits_above,
+                                sample_width=sample_width,
+                                sample_broadening=sample_broadening)
             res = instrument.resolution(Q=np.linspace(params[2], params[3], params[4]))
             perform_simulation_res(sample, params, res.dQ)
         pylab.draw()
@@ -1384,29 +1403,28 @@ class InstrumentParameters():
         # default values by instrument and list[1] holds their current values.
         # n is the number of instruments supported.  For a given instrument
         # only a subset of the parameters may be applicable.
-        self.wavelength =        [[0.0] * n, [0.0] * n]
-        self.wavelength_lo =     [[0.0] * n, [0.0] * n]
-        self.wavelength_hi =     [[0.0] * n, [0.0] * n]
-        self.dLoL =              [[0.0] * n, [0.0] * n]
-        self.d_s1 =              [[0.0] * n, [0.0] * n]
-        self.d_s2 =              [[0.0] * n, [0.0] * n]
-        self.T =                 [[0.0] * n, [0.0] * n]
-        self.Tlo =               [[""]  * n, [0.0] * n]
-        self.Thi =               [[""]  * n, [0.0] * n]
-        self.slit1_size =        [[""]  * n, [0.0] * n]
-        self.slit2_size =        [[""]  * n, [0.0] * n]
-        self.slit1_at_Tlo =      [[""]  * n, [0.0] * n]
-        self.slit2_at_Tlo =      [[""]  * n, [0.0] * n]
-        self.slit1_below =       [[""]  * n, [0.0] * n]
-        self.slit2_below =       [[""]  * n, [0.0] * n]
-        self.slit1_above =       [[""]  * n, [0.0] * n]
-        self.slit2_above =       [[""]  * n, [0.0] * n]
-        self.sample_width =      [[""]  * n, [0.0] * n]
-        self.sample_broadening = [[""]  * n, [0.0] * n]
+        self.wavelength =        [[None] * n, [None] * n]  # monochromatic
+        self.wavelength_lo =     [[None] * n, [None] * n]  # polychromatic
+        self.wavelength_hi =     [[None] * n, [None] * n]  # polychromatic
+        self.dLoL =              [[None] * n, [None] * n]  # both
+        self.d_s1 =              [[None] * n, [None] * n]  # both
+        self.d_s2 =              [[None] * n, [None] * n]  # both
+        self.T =                 [[None] * n, [None] * n]  # polychromatic
+        self.Tlo =               [[None] * n, [None] * n]  # monochromatic
+        self.Thi =               [[None] * n, [None] * n]  # monochromatic
+        self.slit1_size =        [[None] * n, [None] * n]  # polychromatic
+        self.slit2_size =        [[None] * n, [None] * n]  # polychromatic
+        self.slit1_at_Tlo =      [[None] * n, [None] * n]  # monochromatic
+        self.slit2_at_Tlo =      [[None] * n, [None] * n]  # monochromatic
+        self.slit1_below =       [[None] * n, [None] * n]  # monochromatic
+        self.slit2_below =       [[None] * n, [None] * n]  # monochromatic
+        self.slit1_above =       [[None] * n, [None] * n]  # monochromatic
+        self.slit2_above =       [[None] * n, [None] * n]  # monochromatic
+        self.sample_width =      [[None] * n, [None] * n]  # both
+        self.sample_broadening = [[None] * n, [None] * n]  # both
 
         for i, classname in enumerate(self.instr_classes):
-            if i <= 3: self.set_attr_monochromatic(classname, i)
-            else:      self.set_attr_polychromatic(classname, i)
+            self.set_default_values(i, classname)
 
         self.instr_idx = 0
 
@@ -1419,33 +1437,34 @@ class InstrumentParameters():
         self.instr_idx = index
 
 
-    def set_attr_monochromatic(self, iclass, i):
-        """ Set default values for parameters of a monochromatic instrument."""
+    def set_default_values(self, i, iclass):
+        """ Set default values for reflectometer parameters."""
+        from numpy import inf
 
         if hasattr(iclass, 'wavelength'):
-            self.wavelength[0][i] = iclass.wavelength
+            try:
+                self.wavelength_lo[0][i], \
+                self.wavelength_hi[0][i] = iclass.wavelength
+            except:
+                self.wavelength[0][i] = iclass.wavelength
         if hasattr(iclass, 'dLoL'):
             self.dLoL[0][i] = iclass.dLoL
-        if hasattr(iclass, 'd_s1') and iclass.d_s1 is not None:  # temp check
-            self.d_s1[0][i] = iclass.d_s1
-        if hasattr(iclass, 'd_s2') and iclass.d_s2 is not None:  # temp check
-            self.d_s2[0][i] = iclass.d_s2
-
-        self.instr_idx = i
-        self.init_metadata()
-
-
-    def set_attr_polychromatic(self, iclass, i):
-        """ Set default values for parameters of a polychromatic instrument."""
-        if hasattr(iclass, 'wavelength'):
-            self.wavelength_lo[0][i], \
-            self.wavelength_hi[0][i] = iclass.wavelength
-        if hasattr(iclass, 'dLoL'):
-            self.dLoL[0][i] = iclass.dLoL
+        if hasattr(iclass, 'T'):
+            self.T[0][i] = iclass.T
+        if hasattr(iclass, 'Tlo'):
+            if iclass.Tlo is not inf:  # TODO: resolve handling of inf
+                self.Tlo[0][i] = iclass.Tlo
+        if hasattr(iclass, 'Thi'):
+            if iclass.Thi is not inf:  # TODO: resolve handling of inf
+                self.Thi[0][i] = iclass.Thi
         if hasattr(iclass, 'd_s1'):
             self.d_s1[0][i] = iclass.d_s1
         if hasattr(iclass, 'd_s2'):
             self.d_s2[0][i] = iclass.d_s2
+        if hasattr(iclass, 'sample_width'):
+            self.sample_width[0][i] = iclass.sample_width
+        if hasattr(iclass, 'sample_broadening'):
+            self.sample_broadening[0][i] = iclass.sample_broadening
 
         self.instr_idx = i
         self.init_metadata()
@@ -1518,11 +1537,10 @@ class InstrumentParameters():
                               align=True,
                               itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
-            results = dlg.GetResults()
+            results = dlg.GetResultsAltFormat()
             if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
                 print "Results from all instrument parameter fields:"
                 print "  ", results
-
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable
             (self.wavelength[1][i],
@@ -1575,7 +1593,7 @@ class InstrumentParameters():
                               align=True,
                               itemlist=fields)
         if dlg.ShowModal() == wx.ID_OK:
-            results = dlg.GetResults()
+            results = dlg.GetResultsAltFormat()
             if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
                 print "Results from all instrument parameter fields:"
                 print "  ", results

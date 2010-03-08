@@ -321,6 +321,7 @@ class InputListPanel(ScrolledPanel):
             elif params == 5:
                 text, default, datatype, flags, plist = self.itemlist[x]
                 header = None
+            if default is None: default = ""  # display None as a null string
 
             # Process the flags parameter.
             required = False
@@ -402,8 +403,9 @@ class InputListPanel(ScrolledPanel):
         entered by the user that has been successfully validated.  An input
         that fails validation is not returned by the validator from the
         window.  For a non-editable field, its initial value is returned.
-        Blank input is converted to 0.0, 0, or a null string as appropriate
-        for the datatype of the field
+
+        Blank input is converted to 0 for int, 0.0 for float, or a 0-length
+        string for a string datatype.
         """
 
         ret = []
@@ -419,6 +421,7 @@ class InputListPanel(ScrolledPanel):
         entered by the user that has been successfully validated.  An input
         that fails validation is not returned by the validator from the
         window.  For a non-editable field, its initial value is returned.
+
         Blank input is returned as a value of None.
         """
 
@@ -431,9 +434,10 @@ class InputListPanel(ScrolledPanel):
     def GetResultsRawInput(self):
         """
         Returns a list of strings corresponding to each input field.  These
-        are the current values from the text control widgets which may have
-        failed validation.  All values are returned as strings (i.e., they
-        are not converted to floats or ints and whitespace is not stripped).
+        are the current values from the text control widgets whether or not
+        they have passed validation.  All values are returned as raw strings
+        (i.e., they are not converted to floats or ints and leading and
+        trailing whitespace is not stripped).
         """
 
         ret = []
@@ -657,6 +661,7 @@ class InputListDialog(wx.Dialog):
             elif params == 5:
                 text, default, datatype, flags, plist = self.itemlist[x]
                 header = None
+            if default is None: default = ""  # display None as a null string
 
             # Process the flags parameter.
             required = False
@@ -738,8 +743,9 @@ class InputListDialog(wx.Dialog):
         entered by the user that has been successfully validated.  An input
         that fails validation is not returned by the validator from the
         window.  For a non-editable field, its initial value is returned.
-        Blank input is converted to 0.0, 0, or a null string as appropriate
-        for the datatype of the field
+
+        Blank input is converted to 0 for int, 0.0 for float, or a 0-length
+        string for a string datatype.
         """
 
         ret = []
@@ -755,6 +761,7 @@ class InputListDialog(wx.Dialog):
         entered by the user that has been successfully validated.  An input
         that fails validation is not returned by the validator from the
         window.  For a non-editable field, its initial value is returned.
+
         Blank input is returned as a value of None.
         """
 
@@ -767,9 +774,10 @@ class InputListDialog(wx.Dialog):
     def GetResultsRawInput(self):
         """
         Returns a list of strings corresponding to each input field.  These
-        are the current values from the text control widgets which may have
-        failed validation.  All values are returned as strings (i.e., they
-        are not converted to floats or ints and whitespace is not stripped).
+        are the current values from the text control widgets whether or not
+        they have passed validation.  All values are returned as raw strings
+        (i.e., they are not converted to floats or ints and leading and
+        trailing whitespace is not stripped).
         """
 
         ret = []
