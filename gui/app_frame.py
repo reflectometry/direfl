@@ -534,13 +534,13 @@ class SimulateDataPage(wx.Panel):
                    ["# Inversion Iterations:", 6, "int", 'RE', None],
                    ["# Monte Carlo Trials:", 10, "int", 'RE', None],
                 ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
-                ###["Back Reflectivity:", "True", "str", 'RE', ("True", "False")],
+                ###["Back Reflectivity:", "True", "str", 'CRE', ("True", "False")],
                 ###["Inversion Noise Factor:", 1, "int", 'RE', None],
                    ["Simulated Noise (as %):", 8.0, "float", 'RE', None],
                    ["Bound State Energy:", 0.0, "float", 'RE', None],
-                   ["Perfect Reconstruction:", "False", "str", 'RE',
+                   ["Perfect Reconstruction:", "False", "str", 'CRE',
                         ("True", "False")],
-                ###["Show Iterations:", "False", "str", 'RE', ("True", "False")]
+                ###["Show Iterations:", "False", "str", 'CRE', ("True", "False")]
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
 
@@ -683,7 +683,7 @@ from your model."""
         # based on whether the instrument is monochromatic or polychromatic.
         # Note that these parameters have already been validated.
         ip = self.instr_param
-        if ip.get_instr_idx() <= 3:  # monocromatic
+        if ip.get_instr_idx() <= 3:  # monochromatic
             wavelength = ip.get_wavelength()
             dLoL = ip.get_dLoL()
             d_s1 = ip.get_d_s1()
@@ -737,7 +737,7 @@ from your model."""
 
         # Part 4 - Perform the simulation, reconstruction, and inversion.
 
-        # Inform the user that we're entering a period of high computation.
+        # Inform the user that we're starting the computation.
         write_to_statusbar("Generating new plots ...", 1)
         write_to_statusbar("", 2)
 
@@ -1023,10 +1023,10 @@ class AnalyzeDataPage(wx.Panel):
                    ["# Inversion Iterations:", 6, "int", 'RE', None],
                    ["# Monte Carlo Trials:", 10, "int", 'RE', None],
                 ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
-                ###["Back Reflectivity:", "True", "str", '', ("True", "False")],
+                ###["Back Reflectivity:", "True", "str", 'C', ("True", "False")],
                 ###["Inversion Noise Factor:", 1, "int", 'RE', None],
                    ["Bound State Energy:", 0.0, "float", 'RE', None],
-                ###["Show Iterations:", "False", "str", ,RE', ("True", "False")]
+                ###["Show Iterations:", "False", "str", ,'CRE', ("True", "False")]
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
 
@@ -1213,7 +1213,7 @@ from the data files."""
 
         # Part 4 - Perform the simulation, reconstruction, and inversion.
 
-        # Inform the user that we're entering a period of high computation.
+        # Inform the user that we're starting the computation.
         write_to_statusbar("Generating new plots ...", 1)
         write_to_statusbar("", 2)
 
