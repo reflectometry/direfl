@@ -167,37 +167,37 @@ class AppFrame(wx.Frame):
         # Add a 'File' menu to the menu bar and define its options.
         file_menu = wx.Menu()
 
-        ret_id = file_menu.Append(wx.ID_ANY, "Load &Data Files ...")
-        self.Bind(wx.EVT_MENU, self.OnLoadData, ret_id)
+        _id = file_menu.Append(wx.ID_ANY, "Load &Data Files ...")
+        self.Bind(wx.EVT_MENU, self.OnLoadData, _id)
 
         # For debug - jak
         if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:]:
-            ret_id = file_menu.Append(wx.ID_ANY, "Load &Data Files (res)...")
-            self.Bind(wx.EVT_MENU, self.OnLoadData_res, ret_id)
+            _id = file_menu.Append(wx.ID_ANY, "Load &Data Files (res)...")
+            self.Bind(wx.EVT_MENU, self.OnLoadData_res, _id)
 
         file_menu.AppendSeparator()
 
-        ret_id = file_menu.Append(wx.ID_ANY, "&Load Model ...")
-        self.Bind(wx.EVT_MENU, self.OnLoadModel, ret_id)
-        ret_id = file_menu.Append(wx.ID_ANY, "&Save Model ...")
-        self.Bind(wx.EVT_MENU, self.OnSaveModel, ret_id)
+        _id = file_menu.Append(wx.ID_ANY, "&Load Model ...")
+        self.Bind(wx.EVT_MENU, self.OnLoadModel, _id)
+        _id = file_menu.Append(wx.ID_ANY, "&Save Model ...")
+        self.Bind(wx.EVT_MENU, self.OnSaveModel, _id)
 
         file_menu.AppendSeparator()
 
-        ret_id = file_menu.Append(wx.ID_ANY, "&Exit")
-        self.Bind(wx.EVT_MENU, self.OnExit, ret_id)
+        _id = file_menu.Append(wx.ID_ANY, "&Exit")
+        self.Bind(wx.EVT_MENU, self.OnExit, _id)
 
         mb.Append(file_menu, "&File")
 
         # Add a 'Help' menu to the menu bar and define its options.
         help_menu = wx.Menu()
 
-        ret_id = help_menu.Append(wx.ID_ANY, "&Tutorial")
-        self.Bind(wx.EVT_MENU, self.OnTutorial, ret_id)
-        ret_id = help_menu.Append(wx.ID_ANY, "&License")
-        self.Bind(wx.EVT_MENU, self.OnLicense, ret_id)
-        ret_id = help_menu.Append(wx.ID_ANY, "&About")
-        self.Bind(wx.EVT_MENU, self.OnAbout, ret_id)
+        _id = help_menu.Append(wx.ID_ANY, "&Tutorial")
+        self.Bind(wx.EVT_MENU, self.OnTutorial, _id)
+        _id = help_menu.Append(wx.ID_ANY, "&License")
+        self.Bind(wx.EVT_MENU, self.OnLicense, _id)
+        _id = help_menu.Append(wx.ID_ANY, "&About")
+        self.Bind(wx.EVT_MENU, self.OnAbout, _id)
 
         mb.Append(help_menu, "&Help")
 
@@ -337,31 +337,33 @@ class AppFrame(wx.Frame):
 
     def OnLoadData(self, event):
         """Load reflectometry data files for measurements 1 and 2."""
+        # This functionality is now available directly from the Analyze Data
+        # page and will likely be removed from the main menu in the future.
 
-        n_files = self.page1.OnSelFile1(event)
+        n_files = self.page1.OnSelectFile1(event)
         if n_files == 1:
-            self.page1.OnSelFile2(event)
+            self.page1.OnSelectFile2(event)
 
 
     # For debug - jak
     def OnLoadData_res(self, event):
         """Load reflectometry data files for measurements 1 and 2."""
 
-        n_files = self.page3.OnSelFile1(event)
+        n_files = self.page3.OnSelectFile1(event)
         if n_files == 1:
-            self.page3.OnSelFile2(event)
+            self.page3.OnSelectFile2(event)
 
 
     def OnLoadModel(self, event):
         """Load Model from a file."""
 
-        self.page0.sim_tab_OnLoadModel(event)  # TODO: create menu in dest class
+        self.page0.OnLoadModel(event)  # TODO: create menu in dest class
 
 
     def OnSaveModel(self, event):
         """Save Model to a file."""
 
-        self.page0.sim_tab_OnSaveModel(event)  # TODO: create menu in dest class
+        self.page0.OnSaveModel(event)  # TODO: create menu in dest class
 
 
     def OnTutorial(self, event):
@@ -794,8 +796,7 @@ from your model."""
         self.instr_param.init_metadata()
 
 
-    def sim_tab_OnLoadModel(self, event):
-    #def OnLoadModel(self, event):  # TODO: reorganize menu to call directly
+    def OnLoadModel(self, event):
         """Load Model from a file."""
 
         dlg = wx.FileDialog(self,
@@ -830,8 +831,7 @@ from your model."""
         self.model.SetValue(model_params)
 
 
-    def sim_tab_OnSaveModel(self, event):
-    #def OnSaveModel(self, event):  # TODO: reorganize menu to call directly
+    def OnSaveModel(self, event):
         """Save Model to a file."""
 
         dlg = wx.FileDialog(self,
@@ -928,9 +928,9 @@ class AnalyzeDataPage(wx.Panel):
 
         # Create file selector button controls.
         btn_sel1 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, -1))
-        self.Bind(wx.EVT_BUTTON, self.OnSelFile1, btn_sel1)
+        self.Bind(wx.EVT_BUTTON, self.OnSelectFile1, btn_sel1)
         btn_sel2 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, -1))
-        self.Bind(wx.EVT_BUTTON, self.OnSelFile2, btn_sel2)
+        self.Bind(wx.EVT_BUTTON, self.OnSelectFile2, btn_sel2)
 
         # Create horizontal box sizers for the file selection widgets.
         hbox4_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -1249,7 +1249,7 @@ from the data files."""
         self.instr_param.init_metadata()
 
 
-    def OnSelFile1(self, event):
+    def OnSelectFile1(self, event):
         """Load reflectometry data files for measurements 1 and 2."""
 
         dlg = wx.FileDialog(self,
@@ -1285,7 +1285,7 @@ from the data files."""
             return 0
 
 
-    def OnSelFile2(self, event):
+    def OnSelectFile2(self, event):
         """Load reflectometry data files for measurements 1 and 2."""
 
         dlg = wx.FileDialog(self,
