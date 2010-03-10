@@ -175,12 +175,12 @@ class AppFrame(wx.Frame):
         # Add a 'File' menu to the menu bar and define its options.
         file_menu = wx.Menu()
 
-        _id = file_menu.Append(wx.ID_ANY, "Load &Data Files ...")
-        self.Bind(wx.EVT_MENU, self.OnLoadData, _id)
+        _id = file_menu.Append(wx.ID_ANY, "Load Demo Data &Files")
+        self.Bind(wx.EVT_MENU, self.OnLoadDemoDataFiles, _id)
 
         file_menu.AppendSeparator()
 
-        _id = file_menu.Append(wx.ID_ANY, "&Load Demo Model")
+        _id = file_menu.Append(wx.ID_ANY, "Load &Demo Model")
         self.Bind(wx.EVT_MENU, self.OnLoadDemoModel, _id)
         _id = file_menu.Append(wx.ID_ANY, "&Load Model ...")
         self.Bind(wx.EVT_MENU, self.OnLoadModel, _id)
@@ -340,14 +340,10 @@ class AppFrame(wx.Frame):
         wx.AboutBox(info)
 
 
-    def OnLoadData(self, event):
-        """Load reflectometry data files for measurements 1 and 2."""
-        # This functionality is now available directly from the Analyze Data
-        # page and will likely be removed from the main menu in the future.
+    def OnLoadDemoDataFiles(self, event):
+        """Load demo reflectometry data files for measurements 1 and 2."""
 
-        n_files = self.page1.OnSelectFile1(event)
-        if n_files == 1:
-            self.page1.OnSelectFile2(event)
+        self.page1.OnLoadDemoDataFiles(event)  # TODO: create menu in dest class
 
 
     def OnLoadDemoModel(self, event):
@@ -861,7 +857,8 @@ from your model."""
         self.instr_cb.SetBackgroundColour("WHITE")
         self.instr_cb.SetValue(self.instr_param.get_instr_names()[1])
 
-        # Set SLD values in the inversion and reconstruction paramaters panel.
+        # Set surface SLD values for experiments 1 and 2 in the inversion and
+        # reconstruction paramaters panel.
         # Note that datatype of None means do not change.
         plist = (0.0, 4.5, None, None, None, None, None, None, None, None, None)
         self.inver_param.update_items_in_panel(plist)
@@ -989,13 +986,10 @@ class AnalyzeDataPage(wx.Panel):
         label1 = wx.StaticText(self.pan11, wx.ID_ANY, label="File 1:")
         label2 = wx.StaticText(self.pan11, wx.ID_ANY, label="File 2:")
 
-        # Locate the demo data files.
-        root = get_appdir()
-        self.data_file_1 = os.path.join(root, DEMO_REFLDATA_1)
-        self.data_file_2 = os.path.join(root, DEMO_REFLDATA_2)
-
-        self.file1 = wx.TextCtrl(self.pan11, wx.ID_ANY, value=self.data_file_1)
-        self.file2 = wx.TextCtrl(self.pan11, wx.ID_ANY, value=self.data_file_2)
+        self.TCfile1 = wx.TextCtrl(self.pan11, wx.ID_ANY, value="")
+        self.TCfile1.SetBackgroundColour(PALE_YELLOW)
+        self.TCfile2 = wx.TextCtrl(self.pan11, wx.ID_ANY, value="")
+        self.TCfile2.SetBackgroundColour(PALE_YELLOW)
 
         # Create file selector button controls.
         btn_sel1 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, -1))
@@ -1007,12 +1001,12 @@ class AnalyzeDataPage(wx.Panel):
         hbox4_sizer = wx.BoxSizer(wx.HORIZONTAL)
         hbox4_sizer.Add(label1, 0, border=5,
                         flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT)
-        hbox4_sizer.Add(self.file1, 1, wx.EXPAND|wx.RIGHT, border=10)
+        hbox4_sizer.Add(self.TCfile1, 1, wx.EXPAND|wx.RIGHT, border=10)
         hbox4_sizer.Add(btn_sel1, 0)
         hbox5_sizer = wx.BoxSizer(wx.HORIZONTAL)
         hbox5_sizer.Add(label2, 0, border=5,
                         flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT)
-        hbox5_sizer.Add(self.file2, 1, wx.EXPAND|wx.RIGHT, border=10)
+        hbox5_sizer.Add(self.TCfile2, 1, wx.EXPAND|wx.RIGHT, border=10)
         hbox5_sizer.Add(btn_sel2, 0)
 
         # Create a vertical box sizer for the input file selectors.
@@ -1049,6 +1043,7 @@ class AnalyzeDataPage(wx.Panel):
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
         cb.SetBackgroundColour(PALE_YELLOW)
+        self.instr_cb = cb
 
         # Create a horizontal box sizer for the combo box and its label.
         hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -1085,10 +1080,10 @@ class AnalyzeDataPage(wx.Panel):
         #----------------------------------------------------------------------
         # Part 3 - Inversion and Reconstruction Parameters
 
-        fields = [ ["SLD of Substrate:", 2.07, "float", 'RE', None],
-                   ["SLD of Surface 1:", 6.33, "float", 'RE', None],
-                   ["SLD of Surface 2:", 0.0, "float", 'RE', None],
-                   ["Sample Thickness:", 1000, "float", 'RE', None],
+        fields = [ ["SLD of Surface for Exp 1:", None, "float", 'RE', None],
+                   ["SLD of Surface for Exp 2:", None, "float", 'RE', None],
+                   ["SLD of Substrate:", None, "float", 'RE', None],
+                   ["Sample Thickness:", None, "float", 'RE', None],
                    ["Qmin:", 0.0, "float", 'RE', None],
                    ["Qmax:", 0.2, "float", 'RE', None],
                    ["# Profile Steps:", 128, "int", 'RE', None],
@@ -1216,25 +1211,24 @@ from the data files."""
         # Note that we must get the names from the text control box because the
         # user may have edited the names directly and not used the file
         # selection dialog box (or edited after using the file selection box).
-        #self.args = [self.data_file_1, self.data_file_2]
-        self.args = [self.file1.GetValue(), self.file2.GetValue()]
+        files = [self.TCfile1.GetValue(), self.TCfile2.GetValue()]
 
         # Make sure the files are accessible so we can display a proper error
         # message instead of getting a Python runtime error later on.
         try:
-            fd = open(self.args[0], 'r')
+            fd = open(files[0], 'r')
             fd.close()
         except:
             display_error_message(self, "Load Data Error",
-                "Cannot access file "+self.args[0])
+                "Cannot access file "+files[0])
             return
 
         try:
-            fd = open(self.args[1], 'r')
+            fd = open(files[1], 'r')
             fd.close()
         except:
             display_error_message(self, "Load Data Error",
-                "Cannot access file "+self.args[1])
+                "Cannot access file "+files[1])
             return
 
         # Part 2 - Process instrument parameters.
@@ -1305,7 +1299,7 @@ from the data files."""
 
         # Apply phase reconstruction and direct inversion techniques on the
         # experimental reflectivity datasets.
-        perform_recon_inver(self.args, params)
+        perform_recon_inver(files, params)
 
         # Plot the results.
         pylab.draw()
@@ -1321,16 +1315,54 @@ from the data files."""
         self.instr_param.edit_metadata()
 
 
+    def OnLoadDemoDataFiles(self, event):
+        """Load demo reflectometry data files for measurements 1 and 2."""
+
+        # Locate the demo data files.
+        root = get_appdir()
+        datafile_1 = os.path.join(root, DEMO_REFLDATA_1)
+        datafile_2 = os.path.join(root, DEMO_REFLDATA_2)
+
+        # Store the file names in text control boxes.
+        self.TCfile1.SetBackgroundColour("WHITE")
+        self.TCfile1.SetValue(datafile_1)
+        self.TCfile2.SetBackgroundColour("WHITE")
+        self.TCfile2.SetValue(datafile_2)
+
+        # Specify the instrument (NG-1) and set missing required parameters
+        # that do not have default values.
+        self.instr_param.set_instr_idx(1)
+        self.instr_param.set_Tlo(0.5)
+        self.instr_param.set_slit1_at_Tlo(0.2)
+        self.instr_param.set_slit1_below(0.1)
+
+        # Put the instrument name in the combo box.
+        # Note: set background colour before setting the value to update both.
+        self.instr_cb.SetBackgroundColour("WHITE")
+        self.instr_cb.SetValue(self.instr_param.get_instr_names()[1])
+
+        # Set surface SLD values for experiments 1 and 2, the substrate SLD
+        # value, and the sample thickness in the inversion and reconstruction
+        # paramaters panel.
+        # Note that datatype of None means do not change.
+        plist = (6.33, 0.0, 2.07, 1000,
+                 None, None, None, None, None, None, None)
+        self.inver_param.update_items_in_panel(plist)
+
+
     def OnReset(self, event):
         # Restore default parameters for the currently selected instrument.
         self.instr_param.init_metadata()
 
 
     def OnSelectFile1(self, event):
-        """Load reflectometry data files for measurements 1 and 2."""
+        """Select the first reflectometry data file."""
 
+        # The user can select both file1 and file2 from the file dialog box
+        # by using the shift or control key to pick two files.  The order in
+        # which they are selected determines which is file1 and file2.
         dlg = wx.FileDialog(self,
-                            message="Select 1st Data File or Both Data Files",
+                            message="Select 1st Data File",
                             defaultDir=os.getcwd(),
                             defaultFile="",
                             wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
@@ -1349,21 +1381,24 @@ from the data files."""
                 "You can only select two data files, please try again.")
             return 0
         elif num_files == 2:
-            self.data_file_1 = paths[1]  # files are returned in reverse order!
-            self.data_file_2 = paths[0]  # files are returned in reverse order!
-            self.file1.SetValue(self.data_file_1)
-            self.file2.SetValue(self.data_file_2)
+            datafile_1 = paths[1]  # files are returned in reverse order!
+            datafile_2 = paths[0]  # files are returned in reverse order!
+            self.TCfile1.SetBackgroundColour("WHITE")
+            self.TCfile1.SetValue(datafile_1)
+            self.TCfile2.SetBackgroundColour("WHITE")
+            self.TCfile2.SetValue(datafile_2)
             return 2
         elif num_files == 1:
-            self.data_file_1 = paths[0]
-            self.file1.SetValue(self.data_file_1)
+            datafile_1 = paths[0]
+            self.TCfile1.SetBackgroundColour("WHITE")
+            self.TCfile1.SetValue(datafile_1)
             return 1
         else:
             return 0
 
 
     def OnSelectFile2(self, event):
-        """Load reflectometry data files for measurements 1 and 2."""
+        """Select the second reflectometry data file."""
 
         dlg = wx.FileDialog(self,
                             message="Select 2nd Data File",
@@ -1381,8 +1416,9 @@ from the data files."""
 
         num_files = len(paths)
         if num_files == 1:
-            self.data_file_2 = paths[0]
-            self.file2.SetValue(self.data_file_2)
+            datafile_2 = paths[0]
+            self.TCfile2.SetBackgroundColour("WHITE")
+            self.TCfile2.SetValue(datafile_2)
             return 1
         else:
             return 0
@@ -1753,7 +1789,7 @@ class InstrumentParameters():
 
 #==============================================================================
 
-def perform_recon_inver(args, params):
+def perform_recon_inver(files, params):
     """
     Perform phase reconstruction and direct inversion on two reflectometry data
     sets to generate a scattering length depth profile of the sample.
@@ -1765,15 +1801,15 @@ def perform_recon_inver(args, params):
     # Perform phase reconstruction using two reflectivity measurements of a
     # sample where the only change in the setup between the two runs is that a
     # different surrounding media is used (usually for the incident layer).
-    phase = SurroundVariation(args[0], args[1], u=params[0],
-                              v1=params[1], v2=params[2], stages=100)
+    phase = SurroundVariation(files[0], files[1], u=params[2],
+                              v1=params[0], v2=params[1], stages=100)
     data = phase.Q, phase.RealR, phase.dRealR
 
     # Perform phase inversion of the real part of a reflectivity amplitude that
     # was computed by the phase reconstruction algorithm.  The result is a step
     # profile of the scattering length density of the sample as a function of
     # depth.
-    res = Inversion(data=data, **dict(substrate=params[0],
+    res = Inversion(data=data, **dict(substrate=params[2],
                                       thickness=params[3],
                                       Qmin=params[4],
                                       Qmax=params[5],
