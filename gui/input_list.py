@@ -653,6 +653,7 @@ class InputListDialog(wx.Dialog):
 
         self.headers = []; self.labels = []; self.inputs = []
         self.widest = 0
+        first_error_idx = None
 
         for x in xrange(self.item_cnt):
             params = len(self.itemlist[x])
@@ -713,7 +714,12 @@ class InputListDialog(wx.Dialog):
 
             # Validate the default value and highlight the field if the value is
             # in error or if input is required and the value is a null string.
-            self.inputs[x].GetValidator().Validate(self.inputs[x])
+            # Also, save index of the first field to fail validation, if any.
+            ret = self.inputs[x].GetValidator().Validate(self.inputs[x])
+            if not ret and first_error_idx is None: first_error_idx = x
+
+        # If any fields failed validation, set focus to the first failed one.
+        if first_error_idx is not None: self.inputs[first_error_idx].SetFocus()
 
         # Determine if all input boxes should be aligned across sections.
         if self.align:
