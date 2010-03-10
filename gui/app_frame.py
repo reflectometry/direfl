@@ -91,13 +91,21 @@ NEWLINES_2 = "\n\n"
 
 BKGD_COLOUR_WINDOW = "#ECE9D8"
 PALE_YELLOW = "#FFFFB0"
-PALE_GREEN = "#B0FFB0"
+PALE_GREEN1 = "#C0FFC0"
+PALE_GREEN2 = "#D0FFD0"
+PALE_BLUE1  = "#E8E8FF"
+PALE_BLUE2  = "#F0F0FF"
 
 DATA_ENTRY_ERRMSG = """\
 Please correct any highlighted field in error,
-then retry the operation.
-Yellow means an input value is required.
-Pink indicates a syntax error."""
+then retry the operation.\n
+Yellow incidates an input value is required.
+Red means the input value has incorrect syntax."""
+
+INSTR_PARAM_ERRMSG = """\
+Please edit the instrument data to supply missing
+required parameters needed to compute resolution for
+the simulated datasets."""
 
 #==============================================================================
 
@@ -228,8 +236,8 @@ class AppFrame(wx.Frame):
                                          style=wx.NB_TOP|wx.NB_FIXEDWIDTH)
 
         # Create page windows as children of the notebook.
-        self.page0 = SimulateDataPage(nb, colour=PALE_YELLOW, fignum=0)
-        self.page1 = AnalyzeDataPage(nb, colour=PALE_GREEN, fignum=1)
+        self.page0 = SimulateDataPage(nb, colour=PALE_GREEN1, fignum=0)
+        self.page1 = AnalyzeDataPage(nb, colour=PALE_BLUE1, fignum=1)
 
         # Add the pages to the notebook with a label to show on the tab.
         nb.AddPage(self.page0, "Simulate Data")
@@ -238,8 +246,8 @@ class AppFrame(wx.Frame):
         # For debug - jak
         # Create test page windows and add them to notebook if requested.
         if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:]:
-            self.page2 = SimulateDataPage(nb, colour=PALE_YELLOW, fignum=2)
-            self.page3 = AnalyzeDataPage(nb, colour=PALE_GREEN, fignum=3)
+            self.page2 = SimulateDataPage(nb, colour=PALE_GREEN2, fignum=2)
+            self.page3 = AnalyzeDataPage(nb, colour=PALE_BLUE2, fignum=3)
 
             nb.AddPage(self.page2, "Simulation Test")
             nb.AddPage(self.page3, "Analysis Test")
@@ -468,10 +476,12 @@ class SimulateDataPage(wx.Panel):
         cb_label = wx.StaticText(self.pan12, wx.ID_ANY, "Choose Instrument:")
         instr_names = self.instr_param.get_instr_names()
         cb = wx.ComboBox(self.pan12, wx.ID_ANY,
-                         value=instr_names[self.instr_param.get_instr_idx()],
+                         #value=instr_names[self.instr_param.get_instr_idx()],
+                         value="",
                          choices=instr_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
+        cb.SetBackgroundColour(PALE_YELLOW)
 
         # Create a horizontal box sizer for the combo box and its label.
         hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -622,6 +632,7 @@ from your model."""
 
         sel = event.GetEventObject().GetSelection()
         self.instr_param.set_instr_idx(sel)
+        event.GetEventObject().SetBackgroundColour("WHITE")
 
         # Show the instrument data to the user and allow edits.
         self.instr_param.edit_metadata()
@@ -667,6 +678,12 @@ from your model."""
             return
 
         # Part 2 - Process instrument parameters.
+
+        # Check to see if an instrument has been specified.
+        if self.instr_param.get_instr_idx() < 0:
+            display_error_message(self, "No Instrument Chosen",
+                "Please specify an instrument to be used for the simulation.")
+            return
 
         # Get instrument parameters (mainly used for resolution calculation)
         # based on whether the instrument is monochromatic or polychromatic.
@@ -762,6 +779,16 @@ from your model."""
         if slit2_above is None: slits_above = slit1_above
         if sample_width is None: sample_width = 0.0
         if sample_broadening is None: sample_broadening = 0.0
+
+        if (wavelength is None or
+            dLoL is None or
+            d_s1 is None or
+            d_s2 is None or
+            Tlo is None or
+            slits_at_Tlo is None):
+            display_error_message(self, "Need Instrument Parameters",
+                                  INSTR_PARAM_ERRMSG)
+            return
 
         # Define the reflectometer.
         instrument = classname(wavelength=wavelength,
@@ -979,10 +1006,12 @@ class AnalyzeDataPage(wx.Panel):
         cb_label = wx.StaticText(self.pan12, wx.ID_ANY, "Choose Instrument:")
         instr_names = self.instr_param.get_instr_names()
         cb = wx.ComboBox(self.pan12, wx.ID_ANY,
-                         value=instr_names[self.instr_param.get_instr_idx()],
+                         #value=instr_names[self.instr_param.get_instr_idx()],
+                         value="",
                          choices=instr_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
+        cb.SetBackgroundColour(PALE_YELLOW)
 
         # Create a horizontal box sizer for the combo box and its label.
         hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -1129,6 +1158,7 @@ from the data files."""
 
         sel = event.GetEventObject().GetSelection()
         self.instr_param.set_instr_idx(sel)
+        event.GetEventObject().SetBackgroundColour("WHITE")
 
         # Show the instrument data to the user and allow edits.
         self.instr_param.edit_metadata()
@@ -1436,7 +1466,8 @@ class InstrumentParameters():
         for i, classname in enumerate(self.instr_classes):
             self.set_default_values(i, classname)
 
-        self.instr_idx = 0
+        # Indicate that no instrument has been chosen.
+        self.instr_idx = -1
 
 
     def get_instr_idx(self):
@@ -1551,6 +1582,7 @@ class InstrumentParameters():
             if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
                 print "Results from all instrument parameter fields:"
                 print "  ", results
+
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable
             (self.wavelength[1][i],
