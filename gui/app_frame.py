@@ -180,6 +180,8 @@ class AppFrame(wx.Frame):
 
         file_menu.AppendSeparator()
 
+        _id = file_menu.Append(wx.ID_ANY, "&Load Demo Model")
+        self.Bind(wx.EVT_MENU, self.OnLoadDemoModel, _id)
         _id = file_menu.Append(wx.ID_ANY, "&Load Model ...")
         self.Bind(wx.EVT_MENU, self.OnLoadModel, _id)
         _id = file_menu.Append(wx.ID_ANY, "&Save Model ...")
@@ -348,6 +350,12 @@ class AppFrame(wx.Frame):
             self.page1.OnSelectFile2(event)
 
 
+    def OnLoadDemoModel(self, event):
+        """Load Demo Model from a file."""
+
+        self.page0.OnLoadDemoModel(event)  # TODO: create menu in dest class
+
+
     def OnLoadModel(self, event):
         """Load Model from a file."""
 
@@ -429,24 +437,14 @@ class SimulateDataPage(wx.Panel):
         #           label="    as shown below (roughness defaults to 0):")
         #line3.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
-        # Read in demo model parameters.
-        # Note that the number of lines determines the height of the box.
-        # TODO: create a model edit box with a min-max height.
-        filespec = os.path.join(get_appdir(), DEMO_MODEL_DESC)
-
-        try:
-            fd = open(filespec, 'rU')
-            demo_model_params = fd.read()
-            fd.close()
-        except:
-            display_warning_message(self, "Load Model Error",
-                "Error loading demo model from file "+DEMO_MODEL_DESC)
-            demo_model_params = \
-                "# SLDensity  Thickness  Roughness (optional)" + \
+        demo_model_params = \
+            "# SLDensity  Thickness  Roughness (optional)" + \
                 NEWLINES_2 + NEWLINES_2 + NEWLINES_2 + NEWLINE
 
         # Create an input box to enter and edit the model description and
-        # populate it with the contents of the demo file.
+        # populate it with a header but no layer information.
+        # Note that the number of lines determines the height of the box.
+        # TODO: create a model edit box with a min-max height.
         self.model = wx.TextCtrl(self.pan1, wx.ID_ANY, value=demo_model_params,
                          style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.RAISED_BORDER)
         self.model.SetBackgroundColour(BKGD_COLOUR_WINDOW)
@@ -482,6 +480,7 @@ class SimulateDataPage(wx.Panel):
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
         cb.SetBackgroundColour(PALE_YELLOW)
+        self.instr_cb = cb
 
         # Create a horizontal box sizer for the combo box and its label.
         hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -520,8 +519,8 @@ class SimulateDataPage(wx.Panel):
 
         fields = [
                 ###["SLD of Substrate:", 2.07, "float", 'RE', None],
-                   ["SLD of Surface for Exp 1:", 0.0, "float", 'RE', None],
-                   ["SLD of Surface for Exp 2:", 4.5, "float", 'RE', None],
+                   ["SLD of Surface for Exp 1:", None, "float", 'RE', None],
+                   ["SLD of Surface for Exp 2:", None, "float", 'RE', None],
                 ###["Sample Thickness:", 1000, "float", 'RE', None],
                    ["Qmin:", 0.0, "float", 'RE', None],
                    ["Qmax:", 0.4, "float", 'RE', None],
@@ -828,6 +827,44 @@ from your model."""
     def OnReset(self, event):
         # Restore default parameters for the currently selected instrument.
         self.instr_param.init_metadata()
+
+
+    def OnLoadDemoModel(self, event):
+        """LoadDemoModel from a file."""
+
+        filespec = os.path.join(get_appdir(), DEMO_MODEL_DESC)
+
+        # Read the entire input file into a buffer.
+        try:
+            fd = open(filespec, 'rU')
+            demo_model_params = fd.read()
+            fd.close()
+        except:
+            display_warning_message(self, "Load Model Error",
+                "Error loading demo model from file "+DEMO_MODEL_DESC)
+            return
+
+        # Replace the contents of the model parameter text control box with
+        # the data from the file.
+        self.model.Clear()
+        self.model.SetValue(demo_model_params)
+
+        # Specify the instrument (NG-1) and set missing required parameters
+        # that do not have default values.
+        self.instr_param.set_instr_idx(1)
+        self.instr_param.set_Tlo(0.5)
+        self.instr_param.set_slit1_at_Tlo(0.2)
+        self.instr_param.set_slit1_below(0.1)
+
+        # Put the instrument name in the combo box.
+        # Note: set background colour before setting the value to update both.
+        self.instr_cb.SetBackgroundColour("WHITE")
+        self.instr_cb.SetValue(self.instr_param.get_instr_names()[1])
+
+        # Set SLD values in the inversion and reconstruction paramaters panel.
+        # Note that datatype of None means do not change.
+        plist = (0.0, 4.5, None, None, None, None, None, None, None, None, None)
+        self.inver_param.update_items_in_panel(plist)
 
 
     def OnLoadModel(self, event):
@@ -1706,6 +1743,13 @@ class InstrumentParameters():
         return self.sample_width[1][self.instr_idx]
     def get_sample_broadening(self):
         return self.sample_broadening[1][self.instr_idx]
+
+    def set_Tlo(self, value=None):
+        self.Tlo[1][self.instr_idx] = value
+    def set_slit1_at_Tlo(self, value=None):
+        self.slit1_at_Tlo[1][self.instr_idx] = value
+    def set_slit1_below(self, value=None):
+        self.slit1_below[1][self.instr_idx] = value
 
 #==============================================================================
 
