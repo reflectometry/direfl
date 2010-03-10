@@ -170,11 +170,6 @@ class AppFrame(wx.Frame):
         _id = file_menu.Append(wx.ID_ANY, "Load &Data Files ...")
         self.Bind(wx.EVT_MENU, self.OnLoadData, _id)
 
-        # For debug - jak
-        if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:]:
-            _id = file_menu.Append(wx.ID_ANY, "Load &Data Files (res)...")
-            self.Bind(wx.EVT_MENU, self.OnLoadData_res, _id)
-
         file_menu.AppendSeparator()
 
         _id = file_menu.Append(wx.ID_ANY, "&Load Model ...")
@@ -343,15 +338,6 @@ class AppFrame(wx.Frame):
         n_files = self.page1.OnSelectFile1(event)
         if n_files == 1:
             self.page1.OnSelectFile2(event)
-
-
-    # For debug - jak
-    def OnLoadData_res(self, event):
-        """Load reflectometry data files for measurements 1 and 2."""
-
-        n_files = self.page3.OnSelectFile1(event)
-        if n_files == 1:
-            self.page3.OnSelectFile2(event)
 
 
     def OnLoadModel(self, event):
@@ -642,7 +628,10 @@ from your model."""
 
 
     def OnCompute(self, event):
-        """Perform the operation."""
+        """
+        Generate a simulated dataset then perform phase reconstruction and
+        phase inversion on the data and plot the results.
+        """
 
         import pylab
         import time
@@ -741,47 +730,65 @@ from your model."""
         write_to_statusbar("Generating new plots ...", 1)
         write_to_statusbar("", 2)
 
+        # Keep track of the time it takes to do the computation and plotting.
+        t0 = time.time()
+
         # Set the plotting figure manager for this class as the active one and
         # erase the current figure.
         _pylab_helpers.Gcf.set_active(self.fm)
         pylab.clf()
         pylab.draw()
 
+        # Obtain the class that defines the selected instrument.
+        classes = self.instr_param.get_instr_classes()
+        classname = classes[self.instr_param.get_instr_idx()]
+
+        # Calculate the resolution of the instrument, specifically compute
+        # the resolution vector dQ for given values of a Q vector based on
+        # L, dL, T, and dT.  We do not have all of the input data directly
+        # (for instance we know L (wavelength) but not dT), however, the
+        # required parameters can be determined by the resolution method
+        # from the instrument geometry.  At a minimum, we need to supply
+        # L, dLoL, d_s1, d_s2, Tlo, and slits_at_Tlo.
+
+        # First, transform some of the data into the format required by
+        # the resolution method and in all cases avoid passing a datatype
+        # of None directly or indirectly as part of a tuple.
+        slits_at_Tlo = (slit1_at_Tlo, slit2_at_Tlo)
+        if slit2_at_Tlo is None: slits_at_Tlo = slit1_at_Tlo
+        slits_below = (slit1_below, slit2_below)
+        if slit2_below is None: slits_below = slit1_below
+        slits_above = (slit1_above, slit2_above)
+        if slit2_above is None: slits_above = slit1_above
+        if sample_width is None: sample_width = 0.0
+        if sample_broadening is None: sample_broadening = 0.0
+
+        # Define the reflectometer.
+        instrument = classname(wavelength=wavelength,
+                               dLoL=dLoL,
+                               d_s1=d_s1,
+                               d_s2=d_s2,
+                               Tlo=Tlo,
+                               Thi=Thi,
+                               slits_at_Tlo=slits_at_Tlo,
+                               slits_below=slits_below,
+                               slits_above=slits_above,
+                               sample_width=sample_width,
+                               sample_broadening=sample_broadening)
+
+        # Compute the resolution.
+        Q=np.linspace(params[2], params[3], params[4])
+        res = instrument.resolution(Q)
+
         # Apply phase reconstruction and direct inversion techniques on the
         # simulated reflectivity datasets.
-        t0 = time.time()
-        if self.fignum == 0:
-            perform_simulation(sample, params)
-        # For debug - jak
-        if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:] and self.fignum == 2:
-            iclasses = self.instr_param.get_instr_classes()
-            iclass = iclasses[self.instr_param.get_instr_idx()]
-            #instrument = iclass(Tlo=0.5, slits_at_Tlo=0.2, slits_below=0.1)
+        perform_simulation(sample, params, res.dQ)
 
-            slits_at_Tlo = (slit1_at_Tlo, slit2_at_Tlo)
-            if slit2_at_Tlo is None: slits_at_Tlo = slit1_at_Tlo
-            slits_below = (slit1_below, slit2_below)
-            if slit2_below is None: slits_below = slit1_below
-            slits_above = (slit1_above, slit2_above)
-            if slit2_above is None: slits_above = slit1_above
-
-            instrument = iclass(wavelength=wavelength,
-                                dLoL=dLoL,
-                                d_s1=d_s1,
-                                d_s2=d_s2,
-                                Tlo=Tlo,
-                                Thi=Thi,
-                                slits_at_Tlo=slits_at_Tlo,
-                                slits_below=slits_below,
-                                slits_above=slits_above,
-                                sample_width=sample_width,
-                                sample_broadening=sample_broadening)
-            res = instrument.resolution(Q=np.linspace(params[2], params[3], params[4]))
-            perform_simulation_res(sample, params, res.dQ)
+        # Finally, plot the results.
         pylab.draw()
-        secs = time.time() - t0
 
         # Write the total execution and plotting time to the status bar.
+        secs = time.time() - t0
         write_to_statusbar("Plots updated", 1)
         write_to_statusbar("%g secs" %(secs), 2)
 
@@ -1128,7 +1135,10 @@ from the data files."""
 
 
     def OnCompute(self, event):
-        """Perform the operation."""
+        """
+        Perform phase reconstruction and phase inversion on the datasets and
+        plot the results.
+        """
 
         import pylab
         import time
@@ -1217,6 +1227,9 @@ from the data files."""
         write_to_statusbar("Generating new plots ...", 1)
         write_to_statusbar("", 2)
 
+        # Keep track of the time it takes to do the computation and plotting.
+        t0 = time.time()
+
         # Set the plotting figure manager for this class as the active one and
         # erase the current figure.
         _pylab_helpers.Gcf.set_active(self.fm)
@@ -1225,16 +1238,13 @@ from the data files."""
 
         # Apply phase reconstruction and direct inversion techniques on the
         # experimental reflectivity datasets.
-        t0 = time.time()
-        if self.fignum == 1:
-            perform_recon_inver(self.args, params)
-        # For debug - jak
-        if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:] and self.fignum == 3:
-            perform_recon_inver_res(self.args, params)
+        perform_recon_inver(self.args, params)
+
+        # Plot the results.
         pylab.draw()
-        secs = time.time() - t0
 
         # Write the total execution and plotting time to the status bar.
+        secs = time.time() - t0
         write_to_statusbar("Plots updated", 1)
         write_to_statusbar("%g secs" %(secs), 2)
 
@@ -1676,19 +1686,18 @@ def perform_recon_inver(args, params):
     from inversion.core.core import refl, SurroundVariation, Inversion
     import pylab
 
-    u = params[0]
-    v1 = params[1]
-    v2 = params[2]
-    phase = SurroundVariation(args[0], args[1], u=u, v1=v1, v2=v2)
+    # Perform phase reconstruction using two reflectivity measurements of a
+    # sample where the only change in the setup between the two runs is that a
+    # different surrounding media is used (usually for the incident layer).
+    phase = SurroundVariation(args[0], args[1], u=params[0],
+                              v1=params[1], v2=params[2], stages=100)
     data = phase.Q, phase.RealR, phase.dRealR
 
-    #if dz: rhopoints = ceil(1/dz)
-    #_backrefl = True if params[99] == "True" else False
-    _backrefl = True
-    #_showiters = True if params[99] == "True" else False
-    _showiters = False
-
-    res = Inversion(data=data, **dict(substrate=u,
+    # Perform phase inversion of the real part of a reflectivity amplitude that
+    # was computed by the phase reconstruction algorithm.  The result is a step
+    # profile of the scattering length density of the sample as a function of
+    # depth.
+    res = Inversion(data=data, **dict(substrate=params[0],
                                       thickness=params[3],
                                       Qmin=params[4],
                                       Qmax=params[5],
@@ -1698,11 +1707,13 @@ def perform_recon_inver(args, params):
                                       iters=params[8],
                                       stages=params[9],
                                       ctf_window=0, #cosine transform smoothing
-                                      backrefl=_backrefl,
-                                      noise=1,  # inversion noise factor
+                                      backrefl=True,
                                       bse=params[10],
-                                      showiters=_showiters,
+                                      noise=1,  # inversion noise factor
+                                      showiters=False,
                                       monitor=None))
+
+    # Generate the plots.
     res.run(showiters=False)
     res.plot(phase=phase)
 
@@ -1711,53 +1722,7 @@ def perform_recon_inver(args, params):
                           top=0.95, bottom=0.08)
 
 
-# For debug - jak
-def perform_recon_inver_res(args, params):
-    """
-    Perform phase reconstruction and direct inversion on two reflectometry data
-    sets to generate a scattering length depth profile of the sample.
-    """
-    print "******* test resolution for analysis"
-
-    from inversion.core.core import refl, SurroundVariation, Inversion
-    import pylab
-
-    u = params[0]
-    v1 = params[1]
-    v2 = params[2]
-    phase = SurroundVariation(args[0], args[1], u=u, v1=v1, v2=v2)
-    data = phase.Q, phase.RealR, phase.dRealR
-
-    #if dz: rhopoints = ceil(1/dz)
-    #_backrefl = True if params[99] == "True" else False
-    _backrefl = True
-    #_showiters = True if params[99] == "True" else False
-    _showiters = False
-
-    res = Inversion(data=data, **dict(substrate=u,
-                                      thickness=params[3],
-                                      Qmin=params[4],
-                                      Qmax=params[5],
-                                      #Qmax=None,
-                                      rhopoints=params[6],
-                                      calcpoints=params[7],
-                                      iters=params[8],
-                                      stages=params[9],
-                                      ctf_window=0, #cosine transform smoothing
-                                      backrefl=_backrefl,
-                                      noise=1,  # inversion noise factor
-                                      bse=params[10],
-                                      showiters=_showiters,
-                                      monitor=None))
-    res.run(showiters=False)
-    res.plot(phase=phase)
-
-    pylab.subplots_adjust(wspace=0.25, hspace=0.33,
-                          left=0.09, right=0.96,
-                          top=0.95, bottom=0.08)
-
-
-def perform_simulation(sample, params):
+def perform_simulation(sample, params, dq):
     """
     Simulate reflectometry data sets from model information then perform
     phase reconstruction and direct inversion on the data to generate a
@@ -1768,82 +1733,38 @@ def perform_simulation(sample, params):
     from numpy import linspace
     import pylab
 
-    if sample is None:
-        # Roughness parameters (surface, sample, substrate)
-        sv, s, su = 3, 5, 2
-        # Surround parameters
-        u, v1, v2 = 2.07, 0, 4.5
-        # Default sample
-        sample = ([5,100,s], [1,123,s], [3,47,s], [-1,25,s])
-        sample[0][2] = sv
-    else:
-        su = 2
+    # Construct a dictionary of keyword arguments for the invert_args parameter
+    # used by the phase inversion algorithm.
+    #
+    # Note that the inversion noise factor here is different than the
+    # simulation noise parameter (determined by user input)!
+    inversion_args = dict(rhopoints=params[4],
+                          calcpoints=params[5],
+                          iters=params[6],
+                          stages=params[7],
+                          bse=params[9],
+                          noise=1,
+                          showiters=False,
+                          monitor=None)
+    # Construct a dictionary of keyword arguments for the phase_args parameter
+    # used by the phase reconstruction algorithm.
+    reconstruction_args = dict(stages=100)
 
-    # Run the simulation
-    _perfect_reconstruction = True if params[10] == "True" else False
-    #_showiters = True if params[99] == "True" else False
-    _showiters = False
-    _noise = params[8]
-    if _noise < 0.01: _noise = 0.01
-    _noise /= 100.0  # convert percent value to hundreths value
+    # Convert the noise (uncertainly) parameter from a percentage value to a
+    # hundredths value (e.g., if the user enters 5%, change it to 0.05).  Also
+    # make the noise a non-zero value as Simulation cannot tolerate a zero.
+    noise = params[8]
+    if noise < 0.01: noise = 0.01
+    noise /= 100.0  # convert percent value to hundreths value
 
-    inv = dict(showiters=_showiters,
-               monitor=None,
-               bse=params[9],
-               noise=1,  # inversion noise factor
-               iters=params[6],
-               stages=params[7],
-               rhopoints=params[4],
-               calcpoints=params[5])
+    # Convert flag from a string to a Boolean value.
+    perfect_reconstruction = True if params[10] == "True" else False
 
-    t = Simulation(q=linspace(params[2], params[3], 150),
-                   sample=sample,
-                   u=params[11],
-                   urough=params[12],
-                   v1=params[0],
-                   v2=params[1],
-                   noise=_noise,
-                   invert_args=inv,
-                   phase_args=dict(stages=100),
-                   perfect_reconstruction=_perfect_reconstruction)
-
-    t.plot()
-    pylab.subplots_adjust(wspace=0.25, hspace=0.33,
-                           left=0.09, right = 0.96,
-                          top=0.95, bottom=0.08)
-
-
-# For debug - jak
-def perform_simulation_res(sample, params, dq):
-    """
-    Simulate reflectometry data sets from model information then perform
-    phase reconstruction and direct inversion on the data to generate a
-    scattering length density profile.
-    """
-
-    print "******* test resolution for simulation"
-
-    from inversion.core.simulate import Simulation
-    from numpy import linspace
-    import pylab
-
-    # Run the simulation
-    _perfect_reconstruction = True if params[10] == "True" else False
-    #_showiters = True if params[99] == "True" else False
-    _showiters = False
-    _noise = params[8]
-    if _noise < 0.01: _noise = 0.01
-    _noise /= 100.0  # convert percent value to hundreths value
-
-    inv = dict(showiters=_showiters,
-               monitor=None,
-               bse=params[9],
-               noise=1, # inversion noise factor different from simulation noise
-               iters=params[6],
-               stages=params[7],
-               rhopoints=params[4],
-               calcpoints=params[5])
-
+    # Create simulated datasets and perform phase reconstruction and phase
+    # inversion using the simulated datasets.
+    #
+    # Note that Simulation internally calls both SurroundVariation and
+    # Inversion as is done when simulation is not used to create the datasets.
     sim = Simulation(q=np.linspace(params[2], params[3], params[4]),
                      dq=dq,
                      sample=sample,
@@ -1851,12 +1772,13 @@ def perform_simulation_res(sample, params, dq):
                      urough=params[12],
                      v1=params[0],
                      v2=params[1],
-                     noise=_noise,
+                     noise=noise,
                      seed=None,
-                     phase_args=dict(stages=100),
-                     invert_args=inv,
-                     perfect_reconstruction=_perfect_reconstruction)
+                     invert_args=inversion_args,
+                     phase_args=reconstruction_args,
+                     perfect_reconstruction=perfect_reconstruction)
 
+    # Generate the plots.
     sim.plot()
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right = 0.96,
