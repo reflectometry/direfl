@@ -72,6 +72,7 @@ from .input_list import InputListDialog, InputListPanel
 
 from inversion.core.ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
 from inversion.core.snsdata import Liquids, Magnetic, SNSLoader
+from inversion.core.resolution import bins, binwidths
 
 # Text strings for use in file selection dialog boxes.
 REFL_FILES = "Refl files (*.refl)|*.refl"
@@ -658,7 +659,7 @@ from your model."""
             if len(ln) == 2: ln.append('0')  # default roughness to 0.0
 
             try:
-                temp = [ float(ln[0]), float(ln[1]), float(ln[2]) ]
+                temp = [float(ln[0]), float(ln[1]), float(ln[2])]
             except:
                 display_error_message(self, "Syntax Error",
                     "Please correct syntax error in model description.")
@@ -752,59 +753,103 @@ from your model."""
         pylab.draw()
 
         # Obtain the class that defines the selected instrument.
-        classes = self.instr_param.get_instr_classes()
-        classname = classes[self.instr_param.get_instr_idx()]
+        classes = ip.get_instr_classes()
+        classname = classes[ip.get_instr_idx()]
 
-        # Calculate the resolution of the instrument, specifically compute
-        # the resolution vector dQ for given values of a Q vector based on
-        # L, dL, T, and dT.  We do not have all of the input data directly
-        # (for instance we know L (wavelength) but not dT), however, the
-        # required parameters can be determined by the resolution method
-        # from the instrument geometry.  At a minimum, we need to supply
-        # L, dLoL, d_s1, d_s2, Tlo, and slits_at_Tlo.
+        if ip.get_instr_idx() <= 3:  # monochromatic
+            # Calculate the resolution of the instrument, specifically compute
+            # the resolution vector dQ for given values of a Q vector based on
+            # L, dL, T, and dT.  We do not have all of the input data directly
+            # (for instance we know L (wavelength) but not dT), however, the
+            # required parameters can be determined by the resolution method
+            # from the instrument geometry.  At a minimum, we need to supply
+            # L, dLoL, d_s1, d_s2, Tlo, and slits_at_Tlo.
 
-        # First, transform some of the data into the format required by
-        # the resolution method and in all cases avoid passing a datatype
-        # of None directly or indirectly as part of a tuple.
-        slits_at_Tlo = (slit1_at_Tlo, slit2_at_Tlo)
-        if slit2_at_Tlo is None: slits_at_Tlo = slit1_at_Tlo
-        slits_below = (slit1_below, slit2_below)
-        if slit2_below is None: slits_below = slit1_below
-        slits_above = (slit1_above, slit2_above)
-        if slit2_above is None: slits_above = slit1_above
-        if sample_width is None: sample_width = 0.0
-        if sample_broadening is None: sample_broadening = 0.0
+            # First, transform some of the data into the format required by
+            # the resolution method and in all cases avoid passing a datatype
+            # of None directly or indirectly as part of a tuple.
+            slits_at_Tlo = (slit1_at_Tlo, slit2_at_Tlo)
+            if slit2_at_Tlo is None: slits_at_Tlo = slit1_at_Tlo
+            slits_below = (slit1_below, slit2_below)
+            if slit2_below is None: slits_below = slit1_below
+            slits_above = (slit1_above, slit2_above)
+            if slit2_above is None: slits_above = slit1_above
+            if sample_width is None: sample_width = 0.0
+            if sample_broadening is None: sample_broadening = 0.0
 
-        if (wavelength is None or
-            dLoL is None or
-            d_s1 is None or
-            d_s2 is None or
-            Tlo is None or
-            slits_at_Tlo is None):
-            display_error_message(self, "Need Instrument Parameters",
-                                  INSTR_PARAM_ERRMSG)
-            return
+            if (wavelength is None or
+                dLoL is None or
+                d_s1 is None or
+                d_s2 is None or
+                Tlo is None or
+                slits_at_Tlo is None):
+                display_error_message(self, "Need Instrument Parameters",
+                                      INSTR_PARAM_ERRMSG)
+                return
 
-        # Define the reflectometer.
-        instrument = classname(wavelength=wavelength,
-                               dLoL=dLoL,
-                               d_s1=d_s1,
-                               d_s2=d_s2,
-                               Tlo=Tlo,
-                               Thi=Thi,
-                               slits_at_Tlo=slits_at_Tlo,
-                               slits_below=slits_below,
-                               slits_above=slits_above,
-                               sample_width=sample_width,
-                               sample_broadening=sample_broadening)
+            # Define the reflectometer.
+            instrument = classname(wavelength=wavelength,
+                                   dLoL=dLoL,
+                                   d_s1=d_s1,
+                                   d_s2=d_s2,
+                                   Tlo=Tlo,
+                                   Thi=Thi,
+                                   slits_at_Tlo=slits_at_Tlo,
+                                   slits_below=slits_below,
+                                   slits_above=slits_above,
+                                   sample_width=sample_width,
+                                   sample_broadening=sample_broadening)
 
-        # Compute the resolution.
-        Q=np.linspace(params[2], params[3], params[4])
-        res = instrument.resolution(Q)
+            # Compute the resolution.
+            Q=np.linspace(params[2], params[3], params[4])
+            res = instrument.resolution(Q)
 
-        # Apply phase reconstruction and direct inversion techniques on the
-        # simulated reflectivity datasets.
-        perform_simulation(sample, params, res.dQ)
+            # Apply phase reconstruction and direct inversion techniques on the
+            # simulated reflectivity datasets.
+            perform_simulation(sample, params, res.dQ)
+
+        else:  # polychromatic
+            # Calculate the resolution of the instrument, specifically compute
+            # the resolution vector dQ for given values of a Q vector.
+
+            # First, transform some of the data into the format required by
+            # the resolution method and in all cases avoid passing a datatype
+            # of None directly or indirectly as part of a tuple.
+            wavelength = (wavelength_lo, wavelength_hi)
+            slits = (slit1_size, slit2_size)
+            if slit2_size is None: slits = slit1_size
+            if sample_width is None: sample_width = 0.0
+            if sample_broadening is None: sample_broadening = 0.0
+
+            if (wavelength is None or
+                dLoL is None or
+                d_s1 is None or
+                d_s2 is None or
+                T is None or
+                slits is None):
+                display_error_message(self, "Need Instrument Parameters",
+                                      INSTR_PARAM_ERRMSG)
+                return
+
+            # Define the reflectometer.
+            instrument = classname(wavelength=wavelength,
+                                   dLoL=dLoL,
+                                   d_s1=d_s1,
+                                   d_s2=d_s2,
+                                   T=T,
+                                   slits=slits,
+                                   sample_width=sample_width,
+                                   sample_broadening=sample_broadening)
+
+            # Compute the resolution.
+            L = bins(wavelength[0], wavelength[1], dLoL)
+            dL = binwidths(L)
+            res = instrument.resolution(L=L, dL=dL)
+
+            # Apply phase reconstruction and direct inversion techniques on the
+            # simulated reflectivity datasets.
+            #perform_simulation(sample, params, res.dQ)
+            perform_simulation(sample, params, None)
 
         # Finally, plot the results.
         pylab.draw()
