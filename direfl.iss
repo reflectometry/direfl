@@ -29,7 +29,7 @@
 ; NOTE: The Quick Start package add-on for the Inno Setup Compiler needs to be
 ; installed to support the use of #define statements.
 #define MyAppName "DiRefl"
-#define MyAppVersion "0.5.0"
+#define MyAppVersion "1.0.0"
 #define MyGroupFolderName "DANSE"
 #define MyAppPublisher "University of Maryland"
 #define MyAppURL "http://www.reflectometry.org/danse/"

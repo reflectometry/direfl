@@ -69,10 +69,13 @@ data_files.append(imagesData)
 
 # Add data files that need to reside in the same directory as the image.
 data_files.append( ('.', [os.path.join('.','demo_model_1.dat')]) )
+data_files.append( ('.', [os.path.join('.','demo_model_2.dat')]) )
 data_files.append( ('.', [os.path.join('.','direfl.ico')]) )
 data_files.append( ('.', [os.path.join('.','LICENSE-direfl.txt')]) )
 data_files.append( ('.', [os.path.join('.','qrd1.refl')]) )
 data_files.append( ('.', [os.path.join('.','qrd2.refl')]) )
+data_files.append( ('.', [os.path.join('.','surround_air_4.refl')]) )
+data_files.append( ('.', [os.path.join('.','surround_d2o_4.refl')]) )
 data_files.append( ('.', [os.path.join('.','README-direfl.txt')]) )
 data_files.append( ('.', [os.path.join('.','splash.png')]) )
 

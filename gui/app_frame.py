@@ -83,9 +83,12 @@ ALL_FILES = "All files (*.*)|*.*"
 # Resource files.
 PROG_ICON = "direfl.ico"
 PROG_SPLASH_SCREEN = "splash.png"
-DEMO_MODEL_DESC = "demo_model_1.dat"
-DEMO_REFLDATA_1 = "qrd1.refl"
-DEMO_REFLDATA_2 = "qrd2.refl"
+DEMO_MODEL1_DESC = "demo_model_1.dat"
+DEMO_MODEL2_DESC = "demo_model_2.dat"
+DEMO_REFLDATA1_1 = "qrd1.refl"
+DEMO_REFLDATA1_2 = "qrd2.refl"
+DEMO_REFLDATA2_1 = "surround_air_4.refl"
+DEMO_REFLDATA2_2 = "surround_d2o_4.refl"
 
 NEWLINE = "\n"
 NEWLINES_2 = "\n\n"
@@ -176,17 +179,25 @@ class AppFrame(wx.Frame):
         # Add a 'File' menu to the menu bar and define its options.
         file_menu = wx.Menu()
 
-        _id = file_menu.Append(wx.ID_ANY, "Load Demo Data &Files")
-        self.Bind(wx.EVT_MENU, self.OnLoadDemoDataFiles, _id)
-
-        file_menu.AppendSeparator()
-
-        _id = file_menu.Append(wx.ID_ANY, "Load &Demo Model")
-        self.Bind(wx.EVT_MENU, self.OnLoadDemoModel, _id)
         _id = file_menu.Append(wx.ID_ANY, "&Load Model ...")
         self.Bind(wx.EVT_MENU, self.OnLoadModel, _id)
         _id = file_menu.Append(wx.ID_ANY, "&Save Model ...")
         self.Bind(wx.EVT_MENU, self.OnSaveModel, _id)
+
+        file_menu.AppendSeparator()
+
+        _id = file_menu.Append(wx.ID_ANY, "Load &Demo Model 1")
+        self.Bind(wx.EVT_MENU, self.OnLoadDemoModel1, _id)
+
+        _id = file_menu.Append(wx.ID_ANY, "Load &Demo Model 2")
+        self.Bind(wx.EVT_MENU, self.OnLoadDemoModel2, _id)
+
+        file_menu.AppendSeparator()
+
+        _id = file_menu.Append(wx.ID_ANY, "Load &Demo Dataset 1")
+        self.Bind(wx.EVT_MENU, self.OnLoadDemoDataset1, _id)
+        _id = file_menu.Append(wx.ID_ANY, "Load &Demo Dataset 2")
+        self.Bind(wx.EVT_MENU, self.OnLoadDemoDataset2, _id)
 
         file_menu.AppendSeparator()
 
@@ -341,16 +352,28 @@ class AppFrame(wx.Frame):
         wx.AboutBox(info)
 
 
-    def OnLoadDemoDataFiles(self, event):
-        """Load demo reflectometry data files for measurements 1 and 2."""
+    def OnLoadDemoDataset1(self, event):
+        """Load demo 1 reflectometry data files for measurements 1 and 2."""
 
-        self.page1.OnLoadDemoDataFiles(event)  # TODO: create menu in dest class
+        self.page1.OnLoadDemoDataset1(event)  # TODO: create menu in dest class
 
 
-    def OnLoadDemoModel(self, event):
-        """Load Demo Model from a file."""
+    def OnLoadDemoDataset2(self, event):
+        """Load demo 2 reflectometry data files for measurements 1 and 2."""
 
-        self.page0.OnLoadDemoModel(event)  # TODO: create menu in dest class
+        self.page1.OnLoadDemoDataset2(event)  # TODO: create menu in dest class
+
+
+    def OnLoadDemoModel1(self, event):
+        """Load Demo Model 1 from a file."""
+
+        self.page0.OnLoadDemoModel1(event)  # TODO: create menu in dest class
+
+
+    def OnLoadDemoModel2(self, event):
+        """Load Demo Model 2 from a file."""
+
+        self.page0.OnLoadDemoModel2(event)  # TODO: create menu in dest class
 
 
     def OnLoadModel(self, event):
@@ -871,10 +894,10 @@ from your model."""
         self.instr_param.init_metadata()
 
 
-    def OnLoadDemoModel(self, event):
-        """LoadDemoModel from a file."""
+    def OnLoadDemoModel1(self, event):
+        """Load Demo Model 1 from a file."""
 
-        filespec = os.path.join(self.app_root_dir, DEMO_MODEL_DESC)
+        filespec = os.path.join(self.app_root_dir, DEMO_MODEL1_DESC)
 
         # Read the entire input file into a buffer.
         try:
@@ -883,7 +906,7 @@ from your model."""
             fd.close()
         except:
             display_warning_message(self, "Load Model Error",
-                "Error loading demo model from file "+DEMO_MODEL_DESC)
+                "Error loading demo model from file "+DEMO_MODEL1_DESC)
             return
 
         # Replace the contents of the model parameter text control box with
@@ -906,7 +929,48 @@ from your model."""
         # Set surface SLD values for experiments 1 and 2 in the inversion and
         # reconstruction paramaters panel.
         # Note that datatype of None means do not change.
-        plist = (0.0, 4.5, None, None, None, None, None, None, None, None, None)
+        plist = (0.0, 4.5,
+                 None, None, None, None, None, None, None, None, None)
+        self.inver_param.update_items_in_panel(plist)
+
+
+    def OnLoadDemoModel2(self, event):
+        """Load Demo Model 2 from a file."""
+
+        filespec = os.path.join(self.app_root_dir, DEMO_MODEL2_DESC)
+
+        # Read the entire input file into a buffer.
+        try:
+            fd = open(filespec, 'rU')
+            demo_model_params = fd.read()
+            fd.close()
+        except:
+            display_warning_message(self, "Load Model Error",
+                "Error loading demo model from file "+DEMO_MODEL2_DESC)
+            return
+
+        # Replace the contents of the model parameter text control box with
+        # the data from the file.
+        self.model.Clear()
+        self.model.SetValue(demo_model_params)
+
+        # Specify the instrument (Liquids) and set missing required parameters
+        # that do not have default values.
+        self.instr_param.set_instr_idx(4)
+        self.instr_param.set_T(4.0)
+        self.instr_param.set_slit1_size(0.8)
+        self.instr_param.set_slit2_size(0.8)
+
+        # Put the instrument name in the combo box.
+        # Note: set background colour before setting the value to update both.
+        self.instr_cb.SetBackgroundColour("WHITE")
+        self.instr_cb.SetValue(self.instr_param.get_instr_names()[4])
+
+        # Set surface SLD values for experiments 1 and 2 in the inversion and
+        # reconstruction paramaters panel.
+        # Note that datatype of None means do not change.
+        plist = (0.0, 6.33,
+                 None, None, None, None, None, None, None, None, None)
         self.inver_param.update_items_in_panel(plist)
 
 
@@ -1132,7 +1196,7 @@ class AnalyzeDataPage(wx.Panel):
                    ["SLD of Substrate:", None, "float", 'RE', None],
                    ["Sample Thickness:", None, "float", 'RE', None],
                    ["Qmin:", 0.0, "float", 'RE', None],
-                   ["Qmax:", 0.4, "float", 'RE', None],
+                   ["Qmax:", None, "float", 'E', None],
                    ["# Profile Steps:", 128, "int", 'RE', None],
                    ["Over Sampling Factor:", 4, "int", 'RE', None],
                    ["# Inversion Iterations:", 6, "int", 'RE', None],
@@ -1323,7 +1387,7 @@ from the data files."""
             display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
             return
 
-        # Get the validated parameters.
+        # Get the validated inversion parameters.
         params = self.inver_param.GetResults()
         if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
             print "Results from all inversion parameter fields:"
@@ -1362,12 +1426,12 @@ from the data files."""
         self.instr_param.edit_metadata()
 
 
-    def OnLoadDemoDataFiles(self, event):
-        """Load demo reflectometry data files for measurements 1 and 2."""
+    def OnLoadDemoDataset1(self, event):
+        """Load demo 1 reflectometry data files for measurements 1 and 2."""
 
         # Locate the demo data files.
-        datafile_1 = os.path.join(self.app_root_dir, DEMO_REFLDATA_1)
-        datafile_2 = os.path.join(self.app_root_dir, DEMO_REFLDATA_2)
+        datafile_1 = os.path.join(self.app_root_dir, DEMO_REFLDATA1_1)
+        datafile_2 = os.path.join(self.app_root_dir, DEMO_REFLDATA1_2)
 
         # Store the file names in text control boxes.
         self.TCfile1.SetBackgroundColour("WHITE")
@@ -1388,11 +1452,45 @@ from the data files."""
         self.instr_cb.SetValue(self.instr_param.get_instr_names()[1])
 
         # Set surface SLD values for experiments 1 and 2, the substrate SLD
-        # value, and the sample thickness in the inversion and reconstruction
-        # paramaters panel.
+        # value, the sample thickness, and Qmin in the inversion and
+        # reconstruction paramaters panel.
         # Note that datatype of None means do not change.
-        plist = (6.33, 0.0, 2.07, 1000,
-                 None, None, None, None, None, None, None)
+        plist = (6.33, 0.0, 2.07, 1200, 0.014,
+                 None, None, None, None, None, None)
+        self.inver_param.update_items_in_panel(plist)
+
+
+    def OnLoadDemoDataset2(self, event):
+        """Load demo 1 reflectometry data files for measurements 1 and 2."""
+
+        # Locate the demo data files.
+        datafile_1 = os.path.join(self.app_root_dir, DEMO_REFLDATA2_1)
+        datafile_2 = os.path.join(self.app_root_dir, DEMO_REFLDATA2_2)
+
+        # Store the file names in text control boxes.
+        self.TCfile1.SetBackgroundColour("WHITE")
+        self.TCfile1.SetValue(datafile_1)
+        self.TCfile2.SetBackgroundColour("WHITE")
+        self.TCfile2.SetValue(datafile_2)
+
+        # Specify the instrument (Liquids) and set missing required parameters
+        # that do not have default values.
+        self.instr_param.set_instr_idx(4)
+        self.instr_param.set_T(4.0)
+        self.instr_param.set_slit1_size(0.8)
+        self.instr_param.set_slit2_size(0.8)
+
+        # Put the instrument name in the combo box.
+        # Note: set background colour before setting the value to update both.
+        self.instr_cb.SetBackgroundColour("WHITE")
+        self.instr_cb.SetValue(self.instr_param.get_instr_names()[4])
+
+        # Set surface SLD values for experiments 1 and 2, the substrate SLD
+        # value, the sample thickness, and Qmin in the inversion and
+        # reconstruction paramaters panel.
+        # Note that datatype of None means do not change.
+        plist = (0.0, 6.33, 2.07, 400, 0.01,
+                 None, None, None, None, None, None)
         self.inver_param.update_items_in_panel(plist)
 
 
@@ -1828,8 +1926,14 @@ class InstrumentParameters():
     def get_sample_broadening(self):
         return self.sample_broadening[1][self.instr_idx]
 
+    def set_T(self, value=None):
+        self.T[1][self.instr_idx] = value
     def set_Tlo(self, value=None):
         self.Tlo[1][self.instr_idx] = value
+    def set_slit1_size(self, value=None):
+        self.slit1_size[1][self.instr_idx] = value
+    def set_slit2_size(self, value=None):
+        self.slit2_size[1][self.instr_idx] = value
     def set_slit1_at_Tlo(self, value=None):
         self.slit1_at_Tlo[1][self.instr_idx] = value
     def set_slit1_below(self, value=None):
@@ -1857,11 +1961,12 @@ def perform_recon_inver(files, params):
     # was computed by the phase reconstruction algorithm.  The result is a step
     # profile of the scattering length density of the sample as a function of
     # depth.
+    if params[5] <= params[4]:  # Qmax must be > Qmin
+        params[5] = None        # If not, then let algorithm pick Qmax
     res = Inversion(data=data, **dict(substrate=params[2],
                                       thickness=params[3],
                                       Qmin=params[4],
                                       Qmax=params[5],
-                                      #Qmax=None,
                                       rhopoints=params[6],
                                       calcpoints=params[7],
                                       iters=params[8],
