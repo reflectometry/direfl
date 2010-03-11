@@ -701,7 +701,7 @@ from your model."""
 
         # Check to see if an instrument has been specified.
         if self.instr_param.get_instr_idx() < 0:
-            display_error_message(self, "No Instrument Chosen",
+            display_error_message(self, "Choose an Instrument",
                 "Please specify an instrument to be used for the simulation.")
             return
 
@@ -885,7 +885,12 @@ from your model."""
 
 
     def OnEdit(self, event):
-        # Show the instrument data to the user and allow edits.
+        """Show the instrument metadata to the user and allow edits to it."""
+
+        if self.instr_param.get_instr_idx() < 0:
+            display_warning_message(self, "Select an Instrument",
+                "Please select an instrument from the drop down list.")
+            return
         self.instr_param.edit_metadata()
 
 
@@ -1324,6 +1329,12 @@ from the data files."""
         # selection dialog box (or edited after using the file selection box).
         files = [self.TCfile1.GetValue(), self.TCfile2.GetValue()]
 
+        # Verfiy that the user has selected two reflectivity data files.
+        if files[0] == "" or files[1] == "":
+            display_warning_message(self, "Specify a Dataset",
+            "Please specify the names of two reflectometry data files to use.")
+            return
+
         # Make sure the files are accessible so we can display a proper error
         # message instead of getting a Python runtime error later on.
         try:
@@ -1422,7 +1433,12 @@ from the data files."""
 
 
     def OnEdit(self, event):
-        # Show the instrument data to the user and allow edits.
+        """Show the instrument metadata to the user and allow edits to it."""
+
+        if self.instr_param.get_instr_idx() < 0:
+            display_warning_message(self, "Select an Instrument",
+                "Please select an instrument from the drop down list.")
+            return
         self.instr_param.edit_metadata()
 
 
