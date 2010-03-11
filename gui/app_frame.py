@@ -391,6 +391,7 @@ class SimulateDataPage(wx.Panel):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
         self.fignum=fignum
         self.SetBackgroundColour(colour)
+        self.app_root_dir = get_appdir()
 
         # Split the panel to separate the input fields from the plots.
         # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
@@ -873,7 +874,7 @@ from your model."""
     def OnLoadDemoModel(self, event):
         """LoadDemoModel from a file."""
 
-        filespec = os.path.join(get_appdir(), DEMO_MODEL_DESC)
+        filespec = os.path.join(self.app_root_dir, DEMO_MODEL_DESC)
 
         # Read the entire input file into a buffer.
         try:
@@ -991,6 +992,7 @@ class AnalyzeDataPage(wx.Panel):
         self.parent=parent
         self.fignum=fignum
         self.SetBackgroundColour(colour)
+        self.app_root_dir = get_appdir()
 
         # Split the panel to separate the input fields from the plots.
         # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
@@ -1364,9 +1366,8 @@ from the data files."""
         """Load demo reflectometry data files for measurements 1 and 2."""
 
         # Locate the demo data files.
-        root = get_appdir()
-        datafile_1 = os.path.join(root, DEMO_REFLDATA_1)
-        datafile_2 = os.path.join(root, DEMO_REFLDATA_2)
+        datafile_1 = os.path.join(self.app_root_dir, DEMO_REFLDATA_1)
+        datafile_2 = os.path.join(self.app_root_dir, DEMO_REFLDATA_2)
 
         # Store the file names in text control boxes.
         self.TCfile1.SetBackgroundColour("WHITE")
@@ -1410,7 +1411,8 @@ from the data files."""
                             message="Select 1st Data File",
                             defaultDir=os.getcwd(),
                             defaultFile="",
-                            wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
+                            wildcard=(REFL_FILES+"|"+DATA_FILES+"|"+
+                                      TEXT_FILES+"|"+ALL_FILES),
                             style=wx.OPEN|wx.MULTIPLE|wx.CHANGE_DIR)
         # Wait for user to close the dialog.
         sts = dlg.ShowModal()
@@ -1449,7 +1451,8 @@ from the data files."""
                             message="Select 2nd Data File",
                             defaultDir=os.getcwd(),
                             defaultFile="",
-                            wildcard=REFL_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
+                            wildcard=(REFL_FILES+"|"+DATA_FILES+"|"+
+                                      TEXT_FILES+"|"+ALL_FILES),
                             style=wx.OPEN|wx.CHANGE_DIR)
         # Wait for user to close the dialog.
         sts = dlg.ShowModal()
