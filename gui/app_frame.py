@@ -1132,7 +1132,7 @@ class AnalyzeDataPage(wx.Panel):
                    ["SLD of Substrate:", None, "float", 'RE', None],
                    ["Sample Thickness:", None, "float", 'RE', None],
                    ["Qmin:", 0.0, "float", 'RE', None],
-                   ["Qmax:", 0.2, "float", 'RE', None],
+                   ["Qmax:", 0.4, "float", 'RE', None],
                    ["# Profile Steps:", 128, "int", 'RE', None],
                    ["Over Sampling Factor:", 4, "int", 'RE', None],
                    ["# Inversion Iterations:", 6, "int", 'RE', None],
@@ -1768,9 +1768,9 @@ class InstrumentParameters():
              self.dLoL[1][i],
              self.d_s1[1][i],
              self.d_s2[1][i],
+             self.T[1][i],
              self.slit1_size[1][i],
              self.slit2_size[1][i],
-             self.T[1][i],
              self.sample_width[1][i],
              self.sample_broadening[1][i]
             ) = results[2:]
