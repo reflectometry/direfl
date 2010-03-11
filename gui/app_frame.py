@@ -228,9 +228,9 @@ class AppFrame(wx.Frame):
         #tb = self.CreateToolBar()
         tb = wx.ToolBar(parent=self, style=wx.TB_HORIZONTAL|wx.NO_BORDER)
 
-        tb.AddSimpleTool(wx.ID_OPEN, getOpenBitmap(),
-                         wx.GetTranslation("Open Data Files"),
-                         wx.GetTranslation("Open reflectometry data files"))
+        #tb.AddSimpleTool(wx.ID_OPEN, getOpenBitmap(),
+        #                 wx.GetTranslation("Open Data Files"),
+        #                 wx.GetTranslation("Open reflectometry data files"))
         tb.Realize()
         self.SetToolBar(tb)
 
@@ -826,11 +826,11 @@ from your model."""
 
             # Compute the resolution.
             Q=np.linspace(params[2], params[3], params[4])
-            res = instrument.resolution(Q)
+            res = instrument.resolution(Q=Q)
 
             # Apply phase reconstruction and direct inversion techniques on the
             # simulated reflectivity datasets.
-            perform_simulation(sample, params, res.dQ)
+            perform_simulation(sample, params, dQ=res.dQ)
 
         else:  # polychromatic
             # Calculate the resolution of the instrument, specifically compute
@@ -866,14 +866,16 @@ from your model."""
                                    sample_broadening=sample_broadening)
 
             # Compute the resolution.
+            Q=np.linspace(params[2], params[3], params[4])
             L = bins(wavelength[0], wavelength[1], dLoL)
             dL = binwidths(L)
-            res = instrument.resolution(L=L, dL=dL)
+            res = instrument.resolution(Q=Q, L=L, dL=dL)
 
             # Apply phase reconstruction and direct inversion techniques on the
             # simulated reflectivity datasets.
-            #perform_simulation(sample, params, res.dQ)
-            perform_simulation(sample, params, None)
+            perform_simulation(sample, params, Q=None, dQ=None)
+            #print "*** len of Q, res.Q, res.dQ, L:", len(Q), len(res.Q), len(res.dQ), len(L)
+            #perform_simulation(sample, params, Q=res.Q, dQ=res.dQ)
 
         # Finally, plot the results.
         pylab.draw()
@@ -2003,7 +2005,7 @@ def perform_recon_inver(files, params):
                           top=0.95, bottom=0.08)
 
 
-def perform_simulation(sample, params, dq):
+def perform_simulation(sample, params, Q=None, dQ=None):
     """
     Simulate reflectometry data sets from model information then perform
     phase reconstruction and direct inversion on the data to generate a
@@ -2041,13 +2043,19 @@ def perform_simulation(sample, params, dq):
     # Convert flag from a string to a Boolean value.
     perfect_reconstruction = True if params[10] == "True" else False
 
+    # For monochromatic instruments, Q will be None.
+    # The Q parameter is here for debugging purposes to allow the caller to
+    # compute Q instead of using the input panel parameter list.
+    if Q is None:
+        Q=np.linspace(params[2], params[3], params[4])
+
     # Create simulated datasets and perform phase reconstruction and phase
     # inversion using the simulated datasets.
     #
     # Note that Simulation internally calls both SurroundVariation and
     # Inversion as is done when simulation is not used to create the datasets.
-    sim = Simulation(q=np.linspace(params[2], params[3], params[4]),
-                     dq=dq,
+    sim = Simulation(q=Q,
+                     dq=dQ,
                      sample=sample,
                      u=params[11],
                      urough=params[12],
