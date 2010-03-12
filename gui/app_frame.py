@@ -559,7 +559,7 @@ class SimulateDataPage(wx.Panel):
                 ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
                 ###["Back Reflectivity:", "True", "str", 'CRE', ("True", "False")],
                 ###["Inversion Noise Factor:", 1, "int", 'RE', None],
-                   ["Simulated Noise (as %):", 8.0, "float", 'RE', None],
+                   ["Simulated Noise (as %):", 5.0, "float", 'RE', None],
                    ["Bound State Energy:", 0.0, "float", 'RE', None],
                    ["Perfect Reconstruction:", "False", "str", 'CRE',
                         ("True", "False")],
@@ -804,7 +804,7 @@ from your model."""
             if slit2_below is None: slits_below = slit1_below
             slits_above = (slit1_above, slit2_above)
             if slit2_above is None: slits_above = slit1_above
-            if sample_width is None: sample_width = 0.0
+            if sample_width is None: sample_width = 1e10  # set to a large value
             if sample_broadening is None: sample_broadening = 0.0
 
             if (wavelength is None or
@@ -848,7 +848,7 @@ from your model."""
             wavelength = (wavelength_lo, wavelength_hi)
             slits = (slit1_size, slit2_size)
             if slit2_size is None: slits = slit1_size
-            if sample_width is None: sample_width = 0.0
+            if sample_width is None: sample_width = 1e10  # set to a large value
             if sample_broadening is None: sample_broadening = 0.0
 
             if (wavelength is None or
@@ -1748,8 +1748,8 @@ class InstrumentParameters():
             self.d_s1[0][i] = iclass.d_s1
         if hasattr(iclass, 'd_s2'):
             self.d_s2[0][i] = iclass.d_s2
-        if hasattr(iclass, 'sample_width'):
-            self.sample_width[0][i] = iclass.sample_width
+        #if hasattr(iclass, 'sample_width'):
+        #    self.sample_width[0][i] = iclass.sample_width
         if hasattr(iclass, 'sample_broadening'):
             self.sample_broadening[0][i] = iclass.sample_broadening
 
