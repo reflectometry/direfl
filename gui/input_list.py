@@ -253,16 +253,23 @@ class InputListPanel(ScrolledPanel):
                  style    =(wx.RAISED_BORDER|wx.TAB_TRAVERSAL),
                  name     = "",
                  itemlist = [],
-                 align    = False
+                 align    = False,
+                 fontsize = None
                 ):
         ScrolledPanel.__init__(self, parent, id, pos, size, style, name)
 
         self.SetBackgroundColour(BKGD_COLOUR_WINDOW)
         self.align = align
+        self.fontsize = fontsize
         self.itemlist = itemlist
         self.item_cnt = len(self.itemlist)
         if self.item_cnt == 0:
             return
+
+        # Set the default font for this and all child windows (widgets) if
+        # the caller specifies a size; otherwise let it default from parent.
+        if self.fontsize is not None:
+            self.SetFont(wx.Font(self.fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL))
 
         # Specify the widget layout using sizers.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -369,7 +376,8 @@ class InputListPanel(ScrolledPanel):
             # Verfiy that field is editable, otherwise don't allow user to edit
             if not editable:
                 self.inputs[x].Enable(False)
-                self.inputs[x].SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+                self.inputs[x].SetFont(wx.Font(self.fontsize, wx.SWISS,
+                                               wx.NORMAL, wx.BOLD))
 
             # Validate the default value and highlight the field if the value is
             # in error or if input is required and the value is a null string.
@@ -573,15 +581,20 @@ class InputListDialog(wx.Dialog):
                  style    = wx.DEFAULT_DIALOG_STYLE,
                  name     = "",
                  itemlist = [],
-                 align    = False
+                 align    = False,
+                 fontsize = 8
                 ):
         wx.Dialog.__init__(self, parent, id, title, pos, size, style, name)
 
         self.align = align
+        self.fontsize = fontsize
         self.itemlist = itemlist
         self.item_cnt = len(self.itemlist)
         if self.item_cnt == 0:
             return
+
+        # Set the default font for this and all child windows (widgets).
+        self.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL))
 
         # Create the button controls (OK and Cancel) and bind their events.
         ok_button = wx.Button(self, wx.ID_OK, "OK")
@@ -710,7 +723,8 @@ class InputListDialog(wx.Dialog):
             # Verfiy that field is editable, otherwise don't allow user to edit
             if not editable:
                 self.inputs[x].Enable(False)
-                self.inputs[x].SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+                self.inputs[x].SetFont(wx.Font(self.fontsize, wx.SWISS,
+                                               wx.NORMAL, wx.BOLD))
 
             # Validate the default value and highlight the field if the value is
             # in error or if input is required and the value is a null string.

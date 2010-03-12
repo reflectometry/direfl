@@ -90,6 +90,10 @@ DEMO_REFLDATA1_2 = "qrd2.refl"
 DEMO_REFLDATA2_1 = "surround_air_4.refl"
 DEMO_REFLDATA2_2 = "surround_d2o_4.refl"
 
+# Default font size
+FONTSIZE = 9
+
+# Other constants
 NEWLINE = "\n"
 NEWLINES_2 = "\n\n"
 
@@ -412,14 +416,18 @@ class SimulateDataPage(wx.Panel):
 
     def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
+
         self.fignum=fignum
         self.SetBackgroundColour(colour)
         self.app_root_dir = get_appdir()
 
+        # Set the default font for this and all child windows.
+        self.SetFont(wx.Font(FONTSIZE, wx.SWISS, wx.NORMAL, wx.NORMAL))
+
         # Split the panel to separate the input fields from the plots.
         # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
         sp = wx.SplitterWindow(self, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
-        sp.SetMinimumPaneSize(290)
+        sp.SetMinimumPaneSize(100)
 
         # Create display panels as children of the splitter.
         self.pan1 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
@@ -431,7 +439,7 @@ class SimulateDataPage(wx.Panel):
         self.init_plot_panel()
 
         # Attach the child panels to the splitter.
-        sp.SplitVertically(self.pan1, self.pan2, sashPosition=300)
+        sp.SplitVertically(self.pan1, self.pan2, sashPosition=310)
         sp.SetSashGravity(0.2)  # on resize grow mostly on right side
 
         # Put the splitter in a sizer attached to the main panel of the page.
@@ -450,13 +458,13 @@ class SimulateDataPage(wx.Panel):
         # Create instructions for using the model description input box.
         line1 = wx.StaticText(self.pan1, wx.ID_ANY,
                     label="Define the Surface, Sample, and Substrate")
-        line1.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+        line1.SetFont(wx.Font(FONTSIZE, wx.SWISS, wx.NORMAL, wx.BOLD))
         line2 = wx.StaticText(self.pan1, wx.ID_ANY,
                     label="layers of your model (one layer per line):")
-        line2.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+        line2.SetFont(wx.Font(FONTSIZE, wx.SWISS, wx.NORMAL, wx.BOLD))
         #line3 = wx.StaticText(self.pan1, wx.ID_ANY,
         #           label="    as shown below (roughness defaults to 0):")
-        #line3.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
+        #line3.SetFont(wx.Font(FONTSIZE, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         demo_model_params = \
             "# SLDensity  Thickness  Roughness (optional)" + \
@@ -469,7 +477,6 @@ class SimulateDataPage(wx.Panel):
         self.model = wx.TextCtrl(self.pan1, wx.ID_ANY, value=demo_model_params,
                          style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.RAISED_BORDER)
         self.model.SetBackgroundColour(BKGD_COLOUR_WINDOW)
-        #self.model.SetFont(wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         # Group model parameter widgets into a labelled section and
         # manage them with a static box sizer.
@@ -529,7 +536,7 @@ class SimulateDataPage(wx.Panel):
 
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
-        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Parameters")
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Resolution Parameters")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
         sbox2_sizer.Add(self.pan12, 0,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
@@ -596,9 +603,8 @@ class SimulateDataPage(wx.Panel):
     def init_plot_panel(self):
         """Initialize the plotting panel of the SimulateDataPage."""
 
-        INTRO_TEXT = """\
-Results from phase reconstruction and inversion of simulated data files \
-generated from model parameters:"""
+        INTRO_TEXT = """Results from phase reconstruction and inversion \
+of two simulated reflectometry data files:"""
 
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
@@ -623,7 +629,7 @@ generated from model parameters:"""
 
         # Create a placeholder for text displayed above the plots.
         intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
-        intro.SetFont(wx.Font(10, wx.SWISS, wx.NORMAL, wx.BOLD))
+        intro.SetFont(wx.Font(FONTSIZE+1, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1060,15 +1066,19 @@ class AnalyzeDataPage(wx.Panel):
 
     def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
+
         self.parent=parent
         self.fignum=fignum
         self.SetBackgroundColour(colour)
         self.app_root_dir = get_appdir()
 
+        # Set the default font for this and all child windows.
+        self.SetFont(wx.Font(FONTSIZE, wx.SWISS, wx.NORMAL, wx.NORMAL))
+
         # Split the panel to separate the input fields from the plots.
         # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
         sp = wx.SplitterWindow(self, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
-        sp.SetMinimumPaneSize(290)
+        sp.SetMinimumPaneSize(100)
 
         # Create display panels as children of the splitter.
         self.pan1 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
@@ -1080,7 +1090,7 @@ class AnalyzeDataPage(wx.Panel):
         self.init_plot_panel()
 
         # Attach the panels to the splitter.
-        sp.SplitVertically(self.pan1, self.pan2, sashPosition=300)
+        sp.SplitVertically(self.pan1, self.pan2, sashPosition=310)
         sp.SetSashGravity(0.2)  # on resize grow mostly on right side
 
         # Put the splitter in a sizer attached to the main panel of the page.
@@ -1189,7 +1199,7 @@ class AnalyzeDataPage(wx.Panel):
 
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
-        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Instrument Parameters")
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Resolution Parameters")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
         sbox2_sizer.Add(self.pan12, 0,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
@@ -1252,9 +1262,8 @@ class AnalyzeDataPage(wx.Panel):
     def init_plot_panel(self):
         """Initialize the plotting panel of the AnalyzeDataPage."""
 
-        INTRO_TEXT = """\
-Results from phase reconstruction and inversion of reflectometry data files \
-from two surround measurements:"""
+        INTRO_TEXT = """Results from phase reconstruction and inversion \
+of two experimental reflectometry measurements:"""
 
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
@@ -1279,7 +1288,7 @@ from two surround measurements:"""
 
         # Create a placeholder for text displayed above the plots.
         intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
-        intro.SetFont(wx.Font(10, wx.SWISS, wx.NORMAL, wx.BOLD))
+        intro.SetFont(wx.Font(FONTSIZE+1, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1812,8 +1821,9 @@ class InstrumentParameters():
         dlg = InputListDialog(parent=None,
                               title="Edit Instrument Parameters",
                               pos=(x+350, y+100),
+                              itemlist=fields,
                               align=True,
-                              itemlist=fields)
+                              fontsize=FONTSIZE)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
             if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
@@ -1869,8 +1879,9 @@ class InstrumentParameters():
         dlg = InputListDialog(parent=None,
                               title="Edit Instrument Parameters",
                               pos=(x+350, y+100),
+                              itemlist=fields,
                               align=True,
-                              itemlist=fields)
+                              fontsize=FONTSIZE)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
             if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
