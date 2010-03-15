@@ -270,6 +270,9 @@ class InputListPanel(ScrolledPanel):
         # the caller specifies a size; otherwise let it default from parent.
         if self.fontsize is not None:
             self.SetFont(wx.Font(self.fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL))
+        else:
+            self.fontsize = self.GetFont().GetPointSize()
+            print "***", self.fontsize
 
         # Specify the widget layout using sizers.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -965,7 +968,8 @@ class AppTestFrame(wx.Frame):
         dlg = InputListDialog(parent=None,
                               title="InputListDialog Test",
                               itemlist=self.fields,
-                              align=True)
+                              align=True,
+                              fontsize=9)
         if dlg.ShowModal() == wx.ID_OK:
             print "****** Dialog Box results from validated input fields:"
             print "  ", dlg.GetResults()
