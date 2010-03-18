@@ -580,7 +580,7 @@ class SimulateDataPage(wx.Panel):
                    ["Qmin:", 0.0, "float", 'RE', None],
                    ["Qmax:", 0.4, "float", 'RE', None],
                    ["# Profile Steps:", 128, "int", 'RE', None],
-                   ["Over Sampling Factor:", 4, "int", 'RE', None],
+                   ["Over Sampling Factor:", 4, "int", 'REL', None],
                    ["# Inversion Iterations:", 6, "int", 'RE', None],
                    ["# Monte Carlo Trials:", 10, "int", 'RE', None],
                 ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
@@ -594,7 +594,8 @@ class SimulateDataPage(wx.Panel):
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
 
-        self.inver_param = InputListPanel(parent=self.pan1, itemlist=fields)
+        self.inver_param = InputListPanel(parent=self.pan1, itemlist=fields,
+                                          align=True)
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
@@ -1248,7 +1249,7 @@ class AnalyzeDataPage(wx.Panel):
                    ["Qmin:", 0.0, "float", 'RE', None],
                    ["Qmax:", None, "float", 'E', None],
                    ["# Profile Steps:", 128, "int", 'RE', None],
-                   ["Over Sampling Factor:", 4, "int", 'RE', None],
+                   ["Over Sampling Factor:", 4, "int", 'REL', None],
                    ["# Inversion Iterations:", 6, "int", 'RE', None],
                    ["# Monte Carlo Trials:", 10, "int", 'RE', None],
                 ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
@@ -1259,7 +1260,8 @@ class AnalyzeDataPage(wx.Panel):
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
 
-        self.inver_param = InputListPanel(parent=self.pan1, itemlist=fields)
+        self.inver_param = InputListPanel(parent=self.pan1, itemlist=fields,
+                                          align=True)
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
@@ -1859,7 +1861,7 @@ class InstrumentParameters():
                    ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", 'E', None],
                    ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", 'RE', None],
                    ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", 'E', None],
-                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", 'E', None],
+                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", 'EL', None],
                    ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", 'E', None],
                    ["Sample Width (mm):", self.sample_width[1][i], "float", 'E', None],
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
@@ -1922,7 +1924,7 @@ class InstrumentParameters():
                       "Measurement Settings"],
                    ["Size of Slit 1 (mm):", self.slit1_size[1][i], "float", 'RE', None],
                    ["Size of Slit 2 (mm):", self.slit2_size[1][i], "float", 'RE', None],
-                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'E', None],
+                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'EL', None],
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
                  ]
 

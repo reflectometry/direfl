@@ -227,6 +227,7 @@ class InputListPanel(ScrolledPanel):
         E - field is editable by the user; otherwise it is non-editable and box
             is grayed-out; a non-editable field has its default value returned
         C - field is a combobox; otherwise it is a simple data entry box
+        L - field is preceded by a divider line; 'L' takes precedent over 'H'
         H - field is preceded by a header given in the 6th element of the list;
             the following header sub-options are valid only if 'H' is specified:
             0 - header text size is same as label text size (default)
@@ -346,6 +347,8 @@ class InputListPanel(ScrolledPanel):
             if flags.find('E') >= 0: editable = True
             combo = False
             if flags.find('C') >= 0: combo = True
+            line = False
+            if flags.find('L') >= 0: line = True
             hdr = False
             if flags.find('H') >= 0 and header is not None: hdr = True
             if hdr:
@@ -359,7 +362,11 @@ class InputListPanel(ScrolledPanel):
                 if flags.find('U') >= 0: underlined = True
 
             # Optionally, create a header widget to display above the input box.
-            if hdr:
+            # A dividing line is treated as a special case header.
+            if line:
+                lin = wx.StaticLine(self, wx.ID_ANY, style=wx.LI_HORIZONTAL)
+                self.headers.append(lin)
+            elif hdr:
                 hdr = wx.StaticText(self, wx.ID_ANY, label=header,
                                     style=wx.ALIGN_CENTER)
                 font = hdr.GetFont()
@@ -572,6 +579,7 @@ class InputListDialog(wx.Dialog):
         E - field is editable by the user; otherwise it is non-editable and box
             is grayed-out; a non-editable field has its default value returned
         C - field is a combobox; otherwise it is a simple data entry box
+        L - field is preceded by a divider line; 'L' takes precedent over 'H'
         H - field is preceded by a header given in the 6th element of the list;
             the following header sub-options are valid only if 'H' is specified:
             0 - header text size is same as label text size (default)
@@ -680,6 +688,11 @@ class InputListDialog(wx.Dialog):
         button_sizer.Add((10,20), 0)  # non-stretchable whitespace
         button_sizer.Add(cancel_button, 0)
 
+        # Add a separator line before the buttons.
+        separator = wx.StaticLine(self, wx.ID_ANY, style=wx.LI_HORIZONTAL)
+        main_sizer.Add(separator, 0 , border=10,
+                       flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
+
         # Add the button sizer to the main sizer.
         main_sizer.Add(button_sizer, 0, border=10,
                        flag=wx.EXPAND|wx.TOP|wx.BOTTOM|wx.RIGHT)
@@ -720,6 +733,8 @@ class InputListDialog(wx.Dialog):
             if flags.find('E') >= 0: editable = True
             combo = False
             if flags.find('C') >= 0: combo = True
+            line = False
+            if flags.find('L') >= 0: line = True
             hdr = False
             if flags.find('H') >= 0 and header is not None: hdr = True
             if hdr:
@@ -733,7 +748,11 @@ class InputListDialog(wx.Dialog):
                 if flags.find('U') >= 0: underlined = True
 
             # Optionally, create a header widget to display above the input box.
-            if hdr:
+            # A dividing line is treated as a special case header.
+            if line:
+                lin = wx.StaticLine(self, wx.ID_ANY, style=wx.LI_HORIZONTAL)
+                self.headers.append(lin)
+            elif hdr:
                 hdr = wx.StaticText(self, wx.ID_ANY, label=header,
                                     style=wx.ALIGN_CENTER)
                 font = hdr.GetFont()
@@ -977,7 +996,7 @@ class AppTestFrame(wx.Frame):
                 "Test Header (%dpt font, underlined)"%pt_size],
             ["String (str, reqiured):", "delete me", "str", 'RE', None],
             ["Non-editable field:", "Cannot be changed!", "str", '', None],
-            ["ComboBox String:", "Two", "str", 'CRE', ("One", "Two", "Three")],
+            ["ComboBox String:", "Two", "str", 'CREL', ("One", "Two", "Three")],
             # ComboBox items must be specified as strings
             ["ComboBox String:", "", "int", 'CE', ("100", "200", "300")],
             ["String (alphabetic):", "Aa", "str_alpha", 'E', None],
