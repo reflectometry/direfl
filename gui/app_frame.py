@@ -1141,9 +1141,11 @@ class AnalyzeDataPage(wx.Panel):
         label1 = wx.StaticText(self.pan11, wx.ID_ANY, label="File 1:")
         label2 = wx.StaticText(self.pan11, wx.ID_ANY, label="File 2:")
 
-        self.TCfile1 = wx.TextCtrl(self.pan11, wx.ID_ANY, value="")
+        self.TCfile1 = wx.TextCtrl(self.pan11, wx.ID_ANY, value="",
+                                   style=wx.TE_RIGHT)
         self.TCfile1.SetBackgroundColour(PALE_YELLOW)
-        self.TCfile2 = wx.TextCtrl(self.pan11, wx.ID_ANY, value="")
+        self.TCfile2 = wx.TextCtrl(self.pan11, wx.ID_ANY, value="",
+                                   style=wx.TE_RIGHT)
         self.TCfile2.SetBackgroundColour(PALE_YELLOW)
 
         # Create file selector button controls.
@@ -1494,11 +1496,14 @@ from the data files."""
         datafile_1 = os.path.join(self.app_root_dir, DEMO_REFLDATA1_1)
         datafile_2 = os.path.join(self.app_root_dir, DEMO_REFLDATA1_2)
 
-        # Store the file names in text control boxes.
+        # Store the file names in text control boxes and position text so that
+        # the file name is visible even if the beginning of the path is not.
         self.TCfile1.SetBackgroundColour("WHITE")
         self.TCfile1.SetValue(datafile_1)
+        self.TCfile1.SetInsertionPointEnd()
         self.TCfile2.SetBackgroundColour("WHITE")
         self.TCfile2.SetValue(datafile_2)
+        self.TCfile2.SetInsertionPointEnd()
 
         # Specify the instrument (NG-1) and set missing required parameters
         # that do not have default values.
@@ -1528,11 +1533,14 @@ from the data files."""
         datafile_1 = os.path.join(self.app_root_dir, DEMO_REFLDATA2_1)
         datafile_2 = os.path.join(self.app_root_dir, DEMO_REFLDATA2_2)
 
-        # Store the file names in text control boxes.
+        # Store the file names in text control boxes and position text so that
+        # the file name is visible even if the beginning of the path is not.
         self.TCfile1.SetBackgroundColour("WHITE")
         self.TCfile1.SetValue(datafile_1)
+        self.TCfile1.SetInsertionPointEnd()
         self.TCfile2.SetBackgroundColour("WHITE")
         self.TCfile2.SetValue(datafile_2)
+        self.TCfile2.SetInsertionPointEnd()
 
         # Specify the instrument (Liquids) and set missing required parameters
         # that do not have default values.
@@ -1591,13 +1599,16 @@ from the data files."""
             datafile_2 = paths[0]  # files are returned in reverse order!
             self.TCfile1.SetBackgroundColour("WHITE")
             self.TCfile1.SetValue(datafile_1)
+            self.TCfile1.SetInsertionPointEnd()
             self.TCfile2.SetBackgroundColour("WHITE")
             self.TCfile2.SetValue(datafile_2)
+            self.TCfile2.SetInsertionPointEnd()
             return 2
         elif num_files == 1:
             datafile_1 = paths[0]
             self.TCfile1.SetBackgroundColour("WHITE")
             self.TCfile1.SetValue(datafile_1)
+            self.TCfile1.SetInsertionPointEnd()
             return 1
         else:
             return 0
@@ -1626,6 +1637,7 @@ from the data files."""
             datafile_2 = paths[0]
             self.TCfile2.SetBackgroundColour("WHITE")
             self.TCfile2.SetValue(datafile_2)
+            self.TCfile2.SetInsertionPointEnd()
             return 1
         else:
             return 0
