@@ -29,7 +29,7 @@ input from a structured list of input fields.
 import wx
 from wx.lib.scrolledpanel import ScrolledPanel
 
-BKGD_COLOUR_WINDOW = "#ECE9D8"
+WINDOW_BKGD_COLOUR = "#ECE9D8"
 PALE_YELLOW = "#FFFFB0"
 
 DATA_ENTRY_ERRMSG = """\
@@ -215,32 +215,39 @@ class InputListPanel(ScrolledPanel):
     |      horizontal scroll bar -->      | |   visible only when needed.
     +-------------------------------------+-+
 
-    The itemlist parameter controls the display.  It is a list containing one
-    or more 5-element or 6-element lists where each list specifies a:
+    The itemlist parameter controls the display.  It is a list of input field
+    description lists where each description list contains 5 or 6 elements and
+    the 6th element is optional.  The items in the description list are:
 
-    - label string
-    - default value
-    - datatype for validation (see the ItemListValidator docstring for details)
-    - flags parameter in the form of a string of characters as follows:
-      R - input is required, otherwise it is optional and therefore can be blank
-      E - field is editable by the user, otherwise it is non-editable and box
-          is grayed-out; a non-editable field has its default value returned
-      C - field is a combobox; by default it is a simple data entry box
-      L - field is preceded by a line separator
-      H - field is preceded by a header given in the 6th element of the list
-      8 - font size of header is 8-pt (small)
-      9 - font size of header is 9-pt (medium, default)
-      0 - font size of header is 10-pt (large)
-      Options can be combined in the flags string such as 'REH8'.
-      Options 8, 9, and 10 are mutually exclusive, and ignored without H.
-    - list of values for a combo box or None for a simple data entry field
-    - header string to be displayed above the label string of the input field;
-      if 'H' is not specified, this list element can be omitted or can be None
+    [0] Label string prefix for the input field
+    [1] Default value
+    [2] Datatype for validation (see ItemListValidator docstring for details)
+    [3] flags parameter in the form of a string of characters as follows:
+        R - input is required; otherwise input is optional and can be blank
+        E - field is editable by the user; otherwise it is non-editable and box
+            is grayed-out; a non-editable field has its default value returned
+        C - field is a combobox; otherwise it is a simple data entry box
+        H - field is preceded by a header given in the 6th element of the list;
+            the following header sub-options are valid only if 'H' is specified:
+            0 - header text size is same as label text size (default)
+            1 - header text size is label text size + 1 point (large)
+            2 - header text size is label text size + 2 points (x-large)
+            3 - header text size is label text size + 3 points (2x-large)
+            B - header text is bolded
+            U - header text is underlined
+        Options can be combined in the flags string such as 'REHB2' which means
+        field is required, editable, and preceeded by a bold, extra-large header
+    [4] List of values for a combo box or None for a simple data entry field
+    [5] Header string to be displayed above the label string of the input field;
+        if 'H' is not specified, this list element can be omitted or can be None
 
     The align parameter determines whether input fields are aligned across when
     the input fields are grouped into sections.  If True, the widest text label
     determines the space allocated for all labels; if False, the text label
     width is determined separately for each section.
+
+    The fontsize parameter allows the caller to specify a font point size to
+    override the default point size.
 
     See the AppTestFrame class for a comprehensive example.
     """
@@ -258,21 +265,20 @@ class InputListPanel(ScrolledPanel):
                 ):
         ScrolledPanel.__init__(self, parent, id, pos, size, style, name)
 
-        self.SetBackgroundColour(BKGD_COLOUR_WINDOW)
+        self.SetBackgroundColour(WINDOW_BKGD_COLOUR)
         self.align = align
-        self.fontsize = fontsize
         self.itemlist = itemlist
         self.item_cnt = len(self.itemlist)
         if self.item_cnt == 0:
             return
 
-        # Set the default font for this and all child windows (widgets) if
-        # the caller specifies a size; otherwise let it default from parent.
-        if self.fontsize is not None:
-            self.SetFont(wx.Font(self.fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL))
-        else:
-            self.fontsize = self.GetFont().GetPointSize()
-            print "***", self.fontsize
+        # Set the default font for this and all child windows (widgets) if the
+        # caller specifies a size; otherwise let it default from the parent.
+        if fontsize is not None:
+            font = self.GetFont()
+            font.SetPointSize(fontsize)
+            self.SetFont(font)
+        #print "Input List Panel font ptsize =", self.GetFont().GetPointSize()
 
         # Specify the widget layout using sizers.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -342,21 +348,32 @@ class InputListPanel(ScrolledPanel):
             if flags.find('C') >= 0: combo = True
             hdr = False
             if flags.find('H') >= 0 and header is not None: hdr = True
-            hdr_fontsize = 9
-            if flags.find('8') >= 0: hdr_fontsize = 8  # small
-            if flags.find('9') >= 0: hdr_fontsize = 9  # medium
-            if flags.find('0') >= 0: hdr_fontsize = 10 # large
+            if hdr:
+                delta_pts = 0
+                if flags.find('1') >= 0: delta_pts = 1  # large
+                if flags.find('2') >= 0: delta_pts = 2  # X-large
+                if flags.find('3') >= 0: delta_pts = 3  # 2X-large
+                weight = wx.NORMAL
+                if flags.find('B') >= 0: weight = wx.BOLD
+                underlined = False
+                if flags.find('U') >= 0: underlined = True
 
+            # Optionally, create a header widget to display above the input box.
             if hdr:
                 hdr = wx.StaticText(self, wx.ID_ANY, label=header,
                                     style=wx.ALIGN_CENTER)
-                hdr.SetFont(wx.Font(hdr_fontsize, wx.SWISS, wx.NORMAL, wx.BOLD))
+                font = hdr.GetFont()
+                ptsize = font.GetPointSize() + delta_pts
+                font.SetPointSize(ptsize)
+                font.SetWeight(weight)
+                font.SetUnderlined(underlined)
+                hdr.SetFont(font)
                 hdr.SetForegroundColour("BLUE")
                 self.headers.append(hdr)
             else:
                 self.headers.append(None)
 
-            # Create text label widget.
+            # Create the text label widget.
             self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text,
                                style=wx.ALIGN_RIGHT))
             w, h = self.labels[x].GetSize()
@@ -379,8 +396,6 @@ class InputListPanel(ScrolledPanel):
             # Verfiy that field is editable, otherwise don't allow user to edit
             if not editable:
                 self.inputs[x].Enable(False)
-                self.inputs[x].SetFont(wx.Font(self.fontsize, wx.SWISS,
-                                               wx.NORMAL, wx.BOLD))
 
             # Validate the default value and highlight the field if the value is
             # in error or if input is required and the value is a null string.
@@ -545,32 +560,39 @@ class InputListDialog(wx.Dialog):
     |                                     |
     +-------------------------------------+
 
-    The itemlist parameter controls the display.  It is a list containing one
-    or more 5-element or 6-element lists where each list specifies a:
+    The itemlist parameter controls the display.  It is a list of input field
+    description lists where each description list contains 5 or 6 elements and
+    the 6th element is optional.  The items in the description list are:
 
-    - label string
-    - default value
-    - datatype for validation (see the ItemListValidator docstring for details)
-    - flags parameter in the form of a string of characters as follows:
-      R - input is required, otherwise it is optional and therefore can be blank
-      E - field is editable by the user, otherwise it is non-editable and box
-          is grayed-out; a non-editable field has its default value returned
-      C - field is a combobox; by default it is a simple data entry box
-      L - field is preceded by a line separator
-      H - field is preceded by a header given in the 6th element of the list
-      8 - font size of header is 8-pt (small)
-      9 - font size of header is 9-pt (medium, default)
-      0 - font size of header is 10-pt (large)
-      Options can be combined in the flags string such as 'REH8'.
-      Options 8, 9, and 10 are mutually exclusive, and ignored without H.
-    - list of values for a combo box or None for a simple data entry field
-    - header string to be displayed above the label string of the input field;
-      if 'H' is not specified, this list element can be omitted or can be None
+    [0] Label string prefix for the input field
+    [1] Default value
+    [2] Datatype for validation (see ItemListValidator docstring for details)
+    [3] flags parameter in the form of a string of characters as follows:
+        R - input is required; otherwise input is optional and can be blank
+        E - field is editable by the user; otherwise it is non-editable and box
+            is grayed-out; a non-editable field has its default value returned
+        C - field is a combobox; otherwise it is a simple data entry box
+        H - field is preceded by a header given in the 6th element of the list;
+            the following header sub-options are valid only if 'H' is specified:
+            0 - header text size is same as label text size (default)
+            1 - header text size is label text size + 1 point (large)
+            2 - header text size is label text size + 2 points (x-large)
+            3 - header text size is label text size + 3 points (2x-large)
+            B - header text is bolded
+            U - header text is underlined
+        Options can be combined in the flags string such as 'REHB2' which means
+        field is required, editable, and preceeded by a bold, extra-large header
+    [4] List of values for a combo box or None for a simple data entry field
+    [5] Header string to be displayed above the label string of the input field;
+        if 'H' is not specified, this list element can be omitted or can be None
 
     The align parameter determines whether input fields are aligned across when
     the input fields are grouped into sections.  If True, the widest text label
     determines the space allocated for all labels; if False, the text label
     width is determined separately for each section.
+
+    The fontsize parameter allows the caller to specify a font point size to
+    override the default point size.
 
     See the AppTestFrame class for a comprehensive example.
     """
@@ -585,19 +607,30 @@ class InputListDialog(wx.Dialog):
                  name     = "",
                  itemlist = [],
                  align    = False,
-                 fontsize = 8
+                 fontsize = None
                 ):
         wx.Dialog.__init__(self, parent, id, title, pos, size, style, name)
 
         self.align = align
-        self.fontsize = fontsize
         self.itemlist = itemlist
         self.item_cnt = len(self.itemlist)
         if self.item_cnt == 0:
             return
 
-        # Set the default font for this and all child windows (widgets).
-        self.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL))
+        # Set the font for this window and all child windows (widgets) from the
+        # parent window, or from the system defaults if no parent is given.
+        # A dialog box does not inherit font info from its parent, so we will
+        # explicitly get it from the parent and apply it to the dialog box.
+        if parent is not None:
+            font = parent.GetFont()
+            self.SetFont(font)
+
+        # If the caller specifies a font size, override the default value.
+        if fontsize is not None:
+            font = self.GetFont()
+            font.SetPointSize(fontsize)
+            self.SetFont(font)
+        #print "Input Dialog box font ptsize =", self.GetFont().GetPointSize()
 
         # Create the button controls (OK and Cancel) and bind their events.
         ok_button = wx.Button(self, wx.ID_OK, "OK")
@@ -689,21 +722,32 @@ class InputListDialog(wx.Dialog):
             if flags.find('C') >= 0: combo = True
             hdr = False
             if flags.find('H') >= 0 and header is not None: hdr = True
-            hdr_fontsize = 9
-            if flags.find('8') >= 0: hdr_fontsize = 8  # small
-            if flags.find('9') >= 0: hdr_fontsize = 9  # medium
-            if flags.find('0') >= 0: hdr_fontsize = 10 # large
+            if hdr:
+                delta_pts = 0
+                if flags.find('1') >= 0: delta_pts = 1  # large
+                if flags.find('2') >= 0: delta_pts = 2  # X-large
+                if flags.find('3') >= 0: delta_pts = 3  # 2X-large
+                weight = wx.NORMAL
+                if flags.find('B') >= 0: weight = wx.BOLD
+                underlined = False
+                if flags.find('U') >= 0: underlined = True
 
+            # Optionally, create a header widget to display above the input box.
             if hdr:
                 hdr = wx.StaticText(self, wx.ID_ANY, label=header,
                                     style=wx.ALIGN_CENTER)
-                hdr.SetFont(wx.Font(hdr_fontsize, wx.SWISS, wx.NORMAL, wx.BOLD))
+                font = hdr.GetFont()
+                ptsize = font.GetPointSize() + delta_pts
+                font.SetPointSize(ptsize)
+                font.SetWeight(weight)
+                font.SetUnderlined(underlined)
+                hdr.SetFont(font)
                 hdr.SetForegroundColour("BLUE")
                 self.headers.append(hdr)
             else:
                 self.headers.append(None)
 
-            # Create text label widget.
+            # Create the text label widget.
             self.labels.append(wx.StaticText(self, wx.ID_ANY, label=text,
                                style=wx.ALIGN_RIGHT))
             w, h = self.labels[x].GetSize()
@@ -726,8 +770,6 @@ class InputListDialog(wx.Dialog):
             # Verfiy that field is editable, otherwise don't allow user to edit
             if not editable:
                 self.inputs[x].Enable(False)
-                self.inputs[x].SetFont(wx.Font(self.fontsize, wx.SWISS,
-                                               wx.NORMAL, wx.BOLD))
 
             # Validate the default value and highlight the field if the value is
             # in error or if input is required and the value is a null string.
@@ -899,27 +941,40 @@ class AppTestFrame(wx.Frame):
     Resize the main window to see scroll bars disappear and reappear.
     """
 
+    # Establish efault font and point size for test.
+    FONTNAME = "Arial"
+    if wx.Platform == "__WXMSW__":
+        FONTSIZE = 9
+    elif wx.Platform == "__WXMAC__":
+        FONTSIZE = 12
+    elif wx.Platform == "__WXGTK__":
+        FONTSIZE = 11
+    else:
+        FONTSIZE = 10
+
     def __init__(self):
         wx.Frame.__init__(self, parent=None, id=wx.ID_ANY,
                           title="InputListPanel Test", size=(300, 600))
         panel = wx.Panel(self, wx.ID_ANY, style=wx.RAISED_BORDER)
         panel.SetBackgroundColour("PALE GREEN")
 
+        pt_size = panel.GetFont().GetPointSize()
+
         # Define fields for both InputListPanel and InputListDialog to display.
         self.fields = [
-            ["Integer (int, optional):", 12345, "int", 'EH0', None,
-                "Test Header (10-pt)"],
+            ["Integer (int, optional):", 12345, "int", 'EH3', None,
+                "Test Header (2X-large)"],
             # Test specification of integer default value as a string
             ["Integer (int, optional):", "-60", "int", 'E', None],
             # Default value is null, so the required field should be highlighted
             ["Integer (int, required):", "", "int", 'RE', None],
-            ["Floating Point (float, optional):", 2.34567e-5, "float", 'EH', None,
-                "Test Header (9-pt)"],
+            ["Floating Point (float, optional):", 2.34567e-5, "float", 'EHB1', None,
+                "Test Header (large, bold)"],
             ["Floating Point (float, optional):", "", "float", 'E', None],
             ["Floating Point (float, required):", 1.0, "float", 'RE', None],
             # Test unknown datatype which should be treated as 'str'
-            ["String (str, optional):", "DANSE", "foo", 'EH8', None,
-                "Test Header (8-pt)"],
+            ["String (str, optional):", "DANSE", "foo", 'EHU', None,
+                "Test Header (%dpt font, underlined)"%pt_size],
             ["String (str, reqiured):", "delete me", "str", 'RE', None],
             ["Non-editable field:", "Cannot be changed!", "str", '', None],
             ["ComboBox String:", "Two", "str", 'CRE', ("One", "Two", "Three")],
@@ -965,11 +1020,13 @@ class AppTestFrame(wx.Frame):
 
     def OnShow(self, event):
         # Display the same fields shown in the frame in a pop-up dialog box.
-        dlg = InputListDialog(parent=None,
+        pt_size = self.FONTSIZE
+        self.fields[6][5] = "Test Header (%dpt font, underlined)"%pt_size
+        dlg = InputListDialog(parent=self,
                               title="InputListDialog Test",
                               itemlist=self.fields,
                               align=True,
-                              fontsize=9)
+                              fontsize=self.FONTSIZE)
         if dlg.ShowModal() == wx.ID_OK:
             print "****** Dialog Box results from validated input fields:"
             print "  ", dlg.GetResults()

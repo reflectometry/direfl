@@ -51,9 +51,9 @@ import numpy as np
 
 from wx.lib.wordwrap import wordwrap
 
-
 from .utilities import (get_appdir, write_to_statusbar,
                         display_error_message, display_warning_message)
+
 # Add a path one level above 'inversion...' to sys.path so that this app can be
 # run even if the inversion package is not installed and the current working
 # directory is in a diffferent location.  Do this before importing (directly or
@@ -90,19 +90,22 @@ DEMO_REFLDATA1_2 = "qrd2.refl"
 DEMO_REFLDATA2_1 = "surround_air_4.refl"
 DEMO_REFLDATA2_2 = "surround_d2o_4.refl"
 
-# Default font size
+# Default font and point size based on a screen set to 96 ppi resolution.
+# Fontsize will be changed later when the actual screen resolution is known.
+FONTNAME = "Arial"
 FONTSIZE = 9
 
-# Other constants
-NEWLINE = "\n"
-NEWLINES_2 = "\n\n"
-
-BKGD_COLOUR_WINDOW = "#ECE9D8"
+# Custom colors.
+WINDOW_BKGD_COLOUR = "#ECE9D8"
 PALE_YELLOW = "#FFFFB0"
 PALE_GREEN1 = "#C0FFC0"
 PALE_GREEN2 = "#D0FFD0"
 PALE_BLUE1  = "#E8E8FF"
 PALE_BLUE2  = "#F0F0FF"
+
+# Other constants
+NEWLINE = "\n"
+NEWLINES_2 = "\n\n"
 
 DATA_ENTRY_ERRMSG = """\
 Please correct any highlighted field in error,
@@ -118,12 +121,43 @@ the simulated datasets."""
 #==============================================================================
 
 class AppFrame(wx.Frame):
-    """This class implements the top-level frame for the application."""
+    """
+    This class implements the top-level frame for the application.
+    """
 
     def __init__(self, parent=None, id=wx.ID_ANY, title=APP_TITLE,
                  pos=wx.DefaultPosition, size=(800, 600), name="AppFrame"
                 ):
         wx.Frame.__init__(self, parent, id, title, pos, size, name=name)
+
+        # Determine an appropriate font point size to use so that text displayed
+        # on all platforms using various screen resolutions will appear to be
+        # about the same size as seen on a Windows screen set to its default
+        # resolution.  Screen resolution is given in pixels per inch (PPI),
+        # though 'inch' is an archaic (or historical) term and does not really
+        # correspond to the physical size of the monitor.  Typically a Windows
+        # display is set to a resolution of 96 or sometimes 120; for Linux it
+        # is usually 75 or sometimes 100; for Mac it is almost always set to 72.
+        # In addition, some systems allow the user to pick a non-standard size.
+        # Based on the screen resolution, we will calculate a point size in the
+        # range of 6 to 12.
+        x, y = wx.ClientDC(self).GetPPI()
+        if x >= 72 and x <= 144:
+            fontsize = FONTSIZE * 96 / x
+        else:
+            fontsize = FONTSIZE  # something is wrong, use the default
+        if x == 75: fontsize = 12  # give it a boost from 11 to 12
+
+        if len(sys.argv) > 1 and '-platform' in sys.argv[1:]:
+            print "Platform =", wx.PlatformInfo
+            print "default fontname = %s  new fontname = %s"\
+                  %(self.GetFont().GetFaceName(), FONTNAME)
+            print "PPI = %d  default ptsize = %d  new ptsize = %d"\
+                  %(x, self.GetFont().GetPointSize(), fontsize)
+
+        # Set the default font for this and all child windows.
+        self.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL, False,
+                             FONTNAME))
 
         # Create a panel for the frame.  This will be the only child panel of
         # the frame and it inherits its size from the frame which is useful
@@ -151,8 +185,8 @@ class AppFrame(wx.Frame):
         # Initialize the notebook bar.
         self.add_notebookbar()
 
-        # Comment out the call to Fit() to keep the frame at its initial size.
-        # Uncomment the call to reduce the frame to its minimum required size.
+        # Comment out the call to Fit() to keep the frame at its initial size,
+        # otherwise it will be reduced to its minimum size.
         #self.Fit()
 
 
@@ -164,13 +198,12 @@ class AppFrame(wx.Frame):
                          wx.BITMAP_TYPE_PNG)
         image.Rescale(x, y, wx.IMAGE_QUALITY_HIGH)
         bm = image.ConvertToBitmap()
-        # bug? - wx.SPLASH_NO_CENTRE seems to ignore pos parameter; uses (0, 0)
         wx.SplashScreen(bitmap=bm,
-                        #splashStyle=wx.SPLASH_NO_CENTRE|wx.SPLASH_TIMEOUT,
-                        splashStyle=wx.SPLASH_CENTRE_ON_SCREEN|wx.SPLASH_TIMEOUT,
+                        splashStyle=(wx.SPLASH_CENTRE_ON_PARENT|
+                                     wx.SPLASH_TIMEOUT|wx.STAY_ON_TOP),
                         milliseconds=3000,
-                        pos=self.GetPosition(),
-                        parent=None, id=wx.ID_ANY)
+                        parent=self,
+                        id=wx.ID_ANY)
         wx.Yield()
 
 
@@ -421,9 +454,6 @@ class SimulateDataPage(wx.Panel):
         self.SetBackgroundColour(colour)
         self.app_root_dir = get_appdir()
 
-        # Set the default font for this and all child windows.
-        self.SetFont(wx.Font(FONTSIZE, wx.SWISS, wx.NORMAL, wx.NORMAL))
-
         # Split the panel to separate the input fields from the plots.
         # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
         sp = wx.SplitterWindow(self, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
@@ -458,13 +488,10 @@ class SimulateDataPage(wx.Panel):
         # Create instructions for using the model description input box.
         line1 = wx.StaticText(self.pan1, wx.ID_ANY,
                     label="Define the Surface, Sample, and Substrate")
-        line1.SetFont(wx.Font(FONTSIZE, wx.SWISS, wx.NORMAL, wx.BOLD))
         line2 = wx.StaticText(self.pan1, wx.ID_ANY,
                     label="layers of your model (one layer per line):")
-        line2.SetFont(wx.Font(FONTSIZE, wx.SWISS, wx.NORMAL, wx.BOLD))
         #line3 = wx.StaticText(self.pan1, wx.ID_ANY,
         #           label="    as shown below (roughness defaults to 0):")
-        #line3.SetFont(wx.Font(FONTSIZE, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         demo_model_params = \
             "# SLDensity  Thickness  Roughness (optional)" + \
@@ -476,7 +503,7 @@ class SimulateDataPage(wx.Panel):
         # TODO: create a model edit box with a min-max height.
         self.model = wx.TextCtrl(self.pan1, wx.ID_ANY, value=demo_model_params,
                          style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.RAISED_BORDER)
-        self.model.SetBackgroundColour(BKGD_COLOUR_WINDOW)
+        self.model.SetBackgroundColour(WINDOW_BKGD_COLOUR)
 
         # Group model parameter widgets into a labelled section and
         # manage them with a static box sizer.
@@ -496,7 +523,7 @@ class SimulateDataPage(wx.Panel):
 
         # Create a panel for gathering instrument metadata.
         self.pan12 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
-        self.pan12.SetBackgroundColour(BKGD_COLOUR_WINDOW)
+        self.pan12.SetBackgroundColour(WINDOW_BKGD_COLOUR)
 
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan12, wx.ID_ANY, "Choose Instrument:")
@@ -506,8 +533,8 @@ class SimulateDataPage(wx.Panel):
                          value="",
                          choices=instr_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
-        self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
         cb.SetBackgroundColour(PALE_YELLOW)
+        self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
         self.instr_cb = cb
 
         # Create a horizontal box sizer for the combo box and its label.
@@ -629,7 +656,10 @@ of two simulated reflectometry data files:"""
 
         # Create a placeholder for text displayed above the plots.
         intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
-        intro.SetFont(wx.Font(FONTSIZE+1, wx.SWISS, wx.NORMAL, wx.BOLD))
+        font = intro.GetFont()
+        font.SetPointSize(font.GetPointSize() + 1)
+        font.SetWeight(wx.BOLD)
+        intro.SetFont(font)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1072,9 +1102,6 @@ class AnalyzeDataPage(wx.Panel):
         self.SetBackgroundColour(colour)
         self.app_root_dir = get_appdir()
 
-        # Set the default font for this and all child windows.
-        self.SetFont(wx.Font(FONTSIZE, wx.SWISS, wx.NORMAL, wx.NORMAL))
-
         # Split the panel to separate the input fields from the plots.
         # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
         sp = wx.SplitterWindow(self, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
@@ -1108,7 +1135,7 @@ class AnalyzeDataPage(wx.Panel):
 
         # Create a panel for obtaining input file selections.
         self.pan11 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
-        self.pan11.SetBackgroundColour(BKGD_COLOUR_WINDOW)
+        self.pan11.SetBackgroundColour(WINDOW_BKGD_COLOUR)
 
         # Create file name entry boxes and labels.
         label1 = wx.StaticText(self.pan11, wx.ID_ANY, label="File 1:")
@@ -1120,9 +1147,13 @@ class AnalyzeDataPage(wx.Panel):
         self.TCfile2.SetBackgroundColour(PALE_YELLOW)
 
         # Create file selector button controls.
-        btn_sel1 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, -1))
+        # Match the button height to the text box height. Using y = -1 on
+        # Windows does this, but not on Linux where the button height is larger.
+        x, y = self.TCfile1.GetSizeTuple()
+        btn_sel1 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, y))
         self.Bind(wx.EVT_BUTTON, self.OnSelectFile1, btn_sel1)
-        btn_sel2 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, -1))
+        x, y = self.TCfile2.GetSizeTuple()
+        btn_sel2 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, y))
         self.Bind(wx.EVT_BUTTON, self.OnSelectFile2, btn_sel2)
 
         # Create horizontal box sizers for the file selection widgets.
@@ -1159,7 +1190,7 @@ class AnalyzeDataPage(wx.Panel):
 
         # Create a panel for gathering instrument metadata.
         self.pan12 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
-        self.pan12.SetBackgroundColour(BKGD_COLOUR_WINDOW)
+        self.pan12.SetBackgroundColour(WINDOW_BKGD_COLOUR)
 
         # Present a combobox with instrument choices.
         cb_label = wx.StaticText(self.pan12, wx.ID_ANY, "Choose Instrument:")
@@ -1288,7 +1319,10 @@ of two experimental reflectometry measurements:"""
 
         # Create a placeholder for text displayed above the plots.
         intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
-        intro.SetFont(wx.Font(FONTSIZE+1, wx.SWISS, wx.NORMAL, wx.BOLD))
+        font = intro.GetFont()
+        font.SetPointSize(font.GetPointSize() + 1)
+        font.SetWeight(wx.BOLD)
+        intro.SetFont(font)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1599,7 +1633,9 @@ from the data files."""
 #==============================================================================
 
 class TestPlotPage(wx.Panel):
-    """This class implements adds a page to the notebook."""
+    """
+    This class adds a page to the notebook.
+    """
 
     def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
@@ -1796,15 +1832,15 @@ class InstrumentParameters():
 
         i = self.instr_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", 'RH9', None,
+                   ["Radiation Type:", self.radiation[i], "str", 'RH2B', None,
                        self.instr_names[i]+" Scanning Reflectometer"],
                    ["Instrument location:", self.instr_location[i], "str", 'R', None],
-                   ["Wavelength (A):", self.wavelength[1][i], "float", 'REH9', None,
+                   ["Wavelength (A):", self.wavelength[1][i], "float", 'REH2', None,
                        "Instrument Attributes"],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
-                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", 'REH9', None,
+                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", 'REH2', None,
                       "Measurement Settings"],
                    ["Theta Hi (degrees):", self.Thi[1][i], "float", 'E', None],
                    ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", 'RE', None],
@@ -1817,13 +1853,16 @@ class InstrumentParameters():
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
                  ]
 
-        x, y = wx.FindWindowByName("AppFrame").GetPositionTuple()
-        dlg = InputListDialog(parent=None,
+        # Get instrument and measurement parameters via a pop-up dialog box.
+        # Pass in the frame object as the parent window so that the dialog box
+        # will inherit font info from it instead of using system defaults.
+        frame = wx.FindWindowByName("AppFrame")
+        x, y = frame.GetPositionTuple()
+        dlg = InputListDialog(parent=frame,
                               title="Edit Instrument Parameters",
                               pos=(x+350, y+100),
                               itemlist=fields,
-                              align=True,
-                              fontsize=FONTSIZE)
+                              align=True)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
             if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
@@ -1858,16 +1897,16 @@ class InstrumentParameters():
 
         i = self.instr_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", 'RH9', None,
+                   ["Radiation Type:", self.radiation[i], "str", 'RH2B', None,
                        self.instr_names[i]+" Time-of-Flight Reflectometer"],
                    ["Instrument location:", self.instr_location[i], "str", 'R', None],
-                   ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", 'REH9', None,
+                   ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", 'REH2', None,
                        "Instrument Attributes"],
                    ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", 'RE', None],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
-                   ["Theta (degrees):", self.T[1][i], "float", 'REH9', None,
+                   ["Theta (degrees):", self.T[1][i], "float", 'REH2', None,
                       "Measurement Settings"],
                    ["Size of Slit 1 (mm):", self.slit1_size[1][i], "float", 'RE', None],
                    ["Size of Slit 2 (mm):", self.slit2_size[1][i], "float", 'RE', None],
@@ -1875,13 +1914,16 @@ class InstrumentParameters():
                    ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
                  ]
 
-        x, y = wx.FindWindowByName("AppFrame").GetPositionTuple()
-        dlg = InputListDialog(parent=None,
+        # Get instrument and measurement parameters via a pop-up dialog box.
+        # Pass in the frame object as the parent window so that the dialog box
+        # will inherit font info from it instead of using system defaults.
+        frame = wx.FindWindowByName("AppFrame")
+        x, y = frame.GetPositionTuple()
+        dlg = InputListDialog(parent=frame,
                               title="Edit Instrument Parameters",
                               pos=(x+350, y+100),
                               itemlist=fields,
-                              align=True,
-                              fontsize=FONTSIZE)
+                              align=True)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
             if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
@@ -1904,7 +1946,7 @@ class InstrumentParameters():
 
         dlg.Destroy()
 
-
+    # Get methods (without corresponding set methods).
     def get_instr_names(self):
         return self.instr_names
     def get_instr_classes(self):
@@ -1912,6 +1954,7 @@ class InstrumentParameters():
     def get_radiation(self):
         return self.radiation[self.instr_idx]
 
+    # Get methods.
     def get_wavelength(self):
         return self.wavelength[1][self.instr_idx]
     def get_wavelength_lo(self):
@@ -1955,18 +1998,49 @@ class InstrumentParameters():
     def get_sample_broadening(self):
         return self.sample_broadening[1][self.instr_idx]
 
+    # Set methods.
+    def set_wavelength(self):
+        self.wavelength[1][self.instr_idx] = value
+    def set_wavelength_lo(self):
+        self.wavelength_lo[1][self.instr_idx] = value
+    def set_wavelength_hi(self):
+        self.wavelength_hi[1][self.instr_idx] = value
+    def set_dLoL(self):
+        self.dLoL[1][self.instr_idx] = value
+
+    def set_d_s1(self):
+        self.d_s1[1][self.instr_idx] = value
+    def set_d_s2(self):
+        self.d_s2[1][self.instr_idx] = value
+
     def set_T(self, value=None):
         self.T[1][self.instr_idx] = value
     def set_Tlo(self, value=None):
         self.Tlo[1][self.instr_idx] = value
+    def set_Thi(self, value=None):
+        self.Thi[1][self.instr_idx] = value
+
     def set_slit1_size(self, value=None):
         self.slit1_size[1][self.instr_idx] = value
     def set_slit2_size(self, value=None):
         self.slit2_size[1][self.instr_idx] = value
     def set_slit1_at_Tlo(self, value=None):
         self.slit1_at_Tlo[1][self.instr_idx] = value
+    def set_slit2_at_Tlo(self):
+        self.slit2_at_Tlo[1][self.instr_idx] = value
     def set_slit1_below(self, value=None):
         self.slit1_below[1][self.instr_idx] = value
+    def set_slit2_below(self, value=None):
+        self.slit2_below[1][self.instr_idx] = value
+    def set_slit1_above(self):
+        self.slit1_above[1][self.instr_idx] = value
+    def set_slit2_above(self):
+        self.slit2_above[1][self.instr_idx] = value
+
+    def set_sample_width(self):
+        self.sample_width[1][self.instr_idx] = value
+    def set_sample_broadening(self):
+        self.sample_broadening[1][self.instr_idx] = value
 
 #==============================================================================
 

@@ -29,7 +29,6 @@ from gui.about import APP_TITLE
 # Desired initial window size (if physical screen size permits).
 DISPLAY_WIDTH = 1200
 DISPLAY_HEIGHT = 900
-TASKBAR_HEIGHT = 32
 
 #==============================================================================
 
@@ -39,13 +38,22 @@ class InversionApp(wx.App):
     def OnInit(self):
         # Compute the size of the application frame such that it fits on the
         # user's screen without obstructing (or being obstructed by) the
-        # Windows launch bar.  The maximum initial size in pixels is bounded by
+        # Windows task bar.  The maximum initial size in pixels is bounded by
         # DISPLAY_WIDTH x DISPLAY_HEIGHT.
+        #
+        # Note that when running Linux and using an Xming (X11) server on a PC
+        # with a dual  monitor configuration, the reported display size of the
+        # PC may be that of both monitors combined with an incorrect display
+        # count of 1.  To avoid displaying this app across both monitors, we
+        # check if screen is 'too big'.  If so, the frame is not centered.
         xpos = ypos = 0
-        x, y = wx.DisplaySize()
-        y -= TASKBAR_HEIGHT  # avoid obscuring the Windows task bar
-        if x > DISPLAY_WIDTH : xpos = (x - DISPLAY_WIDTH)/2
-        if y > DISPLAY_HEIGHT : ypos = (y - DISPLAY_HEIGHT)/2
+
+        # x, y = wx.DisplaySize()  # includes task bar area, if any
+        j, k, x, y = wx.Display().GetClientArea() # rectangle less task bar area
+        if x > 1920: x = 1280  # display on left side, not centered on screen
+
+        if x > DISPLAY_WIDTH:  xpos = (x - DISPLAY_WIDTH)/2
+        if y > DISPLAY_HEIGHT: ypos = (y - DISPLAY_HEIGHT)/2
 
         frame = AppFrame(parent=None, title=APP_TITLE, pos=(xpos, ypos),
                          size=(min(x, DISPLAY_WIDTH), min(y, DISPLAY_HEIGHT)))
