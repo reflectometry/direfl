@@ -90,9 +90,8 @@ DEMO_REFLDATA1_2 = "qrd2.refl"
 DEMO_REFLDATA2_1 = "surround_air_4.refl"
 DEMO_REFLDATA2_2 = "surround_d2o_4.refl"
 
-# Default font and point size based on a screen set to 96 ppi resolution.
+# Default font point size based on a screen set to 96 ppi resolution.
 # Fontsize will be changed later when the actual screen resolution is known.
-FONTNAME = "Arial"
 FONTSIZE = 9
 
 # Custom colors.
@@ -130,6 +129,10 @@ class AppFrame(wx.Frame):
                 ):
         wx.Frame.__init__(self, parent, id, title, pos, size, name=name)
 
+        # Save the system default font information before we make any changes.
+        default_fontsize = self.GetFont().GetPointSize()
+        default_fontname = self.GetFont().GetFaceName()
+
         # Determine an appropriate font point size to use so that text displayed
         # on all platforms using various screen resolutions will appear to be
         # about the same size as seen on a Windows screen set to its default
@@ -139,25 +142,34 @@ class AppFrame(wx.Frame):
         # display is set to a resolution of 96 or sometimes 120; for Linux it
         # is usually 75 or sometimes 100; for Mac it is almost always set to 72.
         # In addition, some systems allow the user to pick a non-standard size.
-        # Based on the screen resolution, we will calculate a point size in the
-        # range of 6 to 12.
+        # Based on the screen resolution and this app's desired FONTSIZE when
+        # used with a 96 PPI screen setting, we will calculate a point size in
+        # the range of 6 to 12.
         x, y = wx.ClientDC(self).GetPPI()
         if x >= 72 and x <= 144:
             fontsize = FONTSIZE * 96 / x
         else:
             fontsize = FONTSIZE  # something is wrong, use the default
-        if x == 75: fontsize = 12  # give it a boost from 11 to 12
 
-        if len(sys.argv) > 1 and '-platform' in sys.argv[1:]:
-            print "Platform =", wx.PlatformInfo
-            print "default fontname = %s  new fontname = %s"\
-                  %(self.GetFont().GetFaceName(), FONTNAME)
-            print "PPI = %d  default ptsize = %d  new ptsize = %d"\
-                  %(x, self.GetFont().GetPointSize(), fontsize)
+        # Specify the font name to use.  For now we'll use the system's default.
+        fontname = default_fontname
+
+        # For testing purposes, we can override the above font settings.
+        if len(sys.argv) > 1 and '-arial' in sys.argv[1:]:
+            fontname = "Arial"
+        if len(sys.argv) > 1 and '-usesysfontsize' in sys.argv[1:]:
+            fontsize = self.GetFont().GetPointSize()
 
         # Set the default font for this and all child windows.
         self.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL, False,
-                             FONTNAME))
+                             fontname))
+
+        if len(sys.argv) > 1 and '-platform' in sys.argv[1:]:
+            print "Platform =", wx.PlatformInfo
+            print "default fontname = %s  actual fontname = %s"\
+                  %(default_fontname, self.GetFont().GetFaceName())
+            print "PPI = %d  default ptsize = %d  actual ptsize = %d"\
+                  %(x, default_fontsize, self.GetFont().GetPointSize())
 
         # Create a panel for the frame.  This will be the only child panel of
         # the frame and it inherits its size from the frame which is useful
