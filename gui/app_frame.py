@@ -1886,7 +1886,7 @@ class InstrumentParameters():
         x, y = frame.GetPositionTuple()
         dlg = InputListDialog(parent=frame,
                               title="Edit Instrument Parameters",
-                              pos=(x+350, y+100),
+                              pos=(x+350, y+50),
                               itemlist=fields,
                               align=True)
         if dlg.ShowModal() == wx.ID_OK:
@@ -1947,7 +1947,7 @@ class InstrumentParameters():
         x, y = frame.GetPositionTuple()
         dlg = InputListDialog(parent=frame,
                               title="Edit Instrument Parameters",
-                              pos=(x+350, y+100),
+                              pos=(x+350, y+50),
                               itemlist=fields,
                               align=True)
         if dlg.ShowModal() == wx.ID_OK:
@@ -2231,8 +2231,8 @@ def test2():
 
     root = get_appdir()
     #args = [os.path.join(root, 'wsh02_re.dat')]
-    file_1 = os.path.join(root, DEMO_REFLDATA_1)
-    file_2 = os.path.join(root, DEMO_REFLDATA_2)
+    file_1 = os.path.join(root, DEMO_REFLDATA1_1)
+    file_2 = os.path.join(root, DEMO_REFLDATA1_2)
     args = [file_1, file_2]
     if len(args) == 1:
         phase = None
