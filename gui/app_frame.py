@@ -1339,6 +1339,8 @@ of two experimental reflectometry measurements:"""
         font.SetPointSize(font.GetPointSize() + 1)
         font.SetWeight(wx.BOLD)
         intro.SetFont(font)
+        self.pan2_intro_ctrl = intro
+        self.pan2_intro_text = INTRO_TEXT
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1482,7 +1484,11 @@ from the data files."""
 
         # Apply phase reconstruction and direct inversion techniques on the
         # experimental reflectivity datasets.
-        perform_recon_inver(files, params)
+        try:
+            perform_recon_inver(files, params)
+        except Exception, e:
+            display_error_message(self, "Operation Failed", str(e))
+            return
 
         # Plot the results.
         pylab.draw()
@@ -1491,6 +1497,9 @@ from the data files."""
         secs = time.time() - t0
         write_to_statusbar("Plots updated", 1)
         write_to_statusbar("%g secs" %(secs), 2)
+
+        self.pan2_intro_ctrl.SetLabel(self.pan2_intro_text)
+        self.pan2_intro_ctrl.Refresh()
 
 
     def OnEdit(self, event):
@@ -1539,6 +1548,9 @@ from the data files."""
                  None, None, None, None, None, None)
         self.inver_param.update_items_in_panel(plist)
 
+        # Generate the plots and display them.
+        self.plot_dataset(datafile_1, datafile_2)
+
 
     def OnLoadDemoDataset2(self, event):
         """Load demo 1 reflectometry data files for measurements 1 and 2."""
@@ -1576,6 +1588,9 @@ from the data files."""
                  None, None, None, None, None, None)
         self.inver_param.update_items_in_panel(plist)
 
+        # Generate the plots and display them.
+        self.plot_dataset(datafile_1, datafile_2)
+
 
     def OnReset(self, event):
         # Restore default parameters for the currently selected instrument.
@@ -1607,7 +1622,7 @@ from the data files."""
         if num_files > 2:
             display_error_message(self, "Too Many Files Selected",
                 "You can only select two data files, please try again.")
-            return 0
+            return
         elif num_files == 2:
             datafile_1 = paths[1]  # files are returned in reverse order!
             datafile_2 = paths[0]  # files are returned in reverse order!
@@ -1617,15 +1632,17 @@ from the data files."""
             self.TCfile2.SetBackgroundColour("WHITE")
             self.TCfile2.SetValue(datafile_2)
             self.TCfile2.SetInsertionPointEnd()
-            return 2
         elif num_files == 1:
             datafile_1 = paths[0]
             self.TCfile1.SetBackgroundColour("WHITE")
             self.TCfile1.SetValue(datafile_1)
             self.TCfile1.SetInsertionPointEnd()
-            return 1
-        else:
-            return 0
+
+        # Generate the plots and display them.
+        file1 = self.TCfile1.GetValue()
+        file2 = self.TCfile2.GetValue()
+        if len(file1) > 0 and len(file2) > 0:
+            self.plot_dataset(file1, file2)
 
 
     def OnSelectFile2(self, event):
@@ -1652,9 +1669,138 @@ from the data files."""
             self.TCfile2.SetBackgroundColour("WHITE")
             self.TCfile2.SetValue(datafile_2)
             self.TCfile2.SetInsertionPointEnd()
-            return 1
+
+        # Generate the plots and display them.
+        file1 = self.TCfile1.GetValue()
+        file2 = self.TCfile2.GetValue()
+        if len(file1) > 0 and len(file2) > 0:
+            self.plot_dataset(file1, file2)
+
+
+
+    def plot_dataset(self, file1, file2):
+        """
+        Plot the Q, R, and dR of the two data files.
+        """
+        import pylab
+
+        # Set the plotting figure manager for this class as the active one and
+        # erase the current figure.
+        _pylab_helpers.Gcf.set_active(self.fm)
+        pylab.clf()
+        pylab.draw()
+
+        # Make sure the files are accessible so we can display a proper error
+        # message now.  This is a bit of overkill since load_data will also
+        # open the files, but load_data will be replaced in the future.
+        try:
+            fd = open(file1, 'r')
+            fd.close()
+        except:
+            display_error_message(self, "File Access Error",
+                "Cannot access file "+file1)
+            return
+
+        try:
+            fd = open(file2, 'r')
+            fd.close()
+        except:
+            display_error_message(self, "File Access Error",
+                "Cannot access file "+file2)
+            return
+
+        try:
+            self.load_data(file1, file2)
+        except ValueError, e:
+            display_error_message(self, "Data File Error", str(e))
+            return
         else:
-            return 0
+            self.pan2_intro_ctrl.SetLabel("Dataset Reflectivity Plots:")
+            self.generate_plot()
+            pylab.draw()
+
+
+
+    def load_data(self, file1, file2):
+        """
+        Load the data from files or from tuples of (Q,R) or (Q,R,dR),
+        (Q,dQ,R,dR) or (Q,dQ,R,dR,L).
+
+        This code is cloned from SurroundVariation._load().
+        TODO: Replace this loader with a general purpose loader in development.
+        """
+        import numpy
+
+        # This code assumes the following data file formats:
+        # 2-column data: Q, R
+        # 3-column data: Q, R, dR
+        # 4-column data: Q, dQ, R, dR
+        # 5-column data: Q, dQ, R, dR, Lambda
+        if isinstance(file1, basestring):
+            d1 = numpy.loadtxt(file1).T
+            name1 = file1
+        else:
+            d1 = file1
+            name1 = "data1"
+
+        if isinstance(file2, basestring):
+            d2 = numpy.loadtxt(file2).T
+            name2 = file2
+        else:
+            d2 = file2
+            name2 = "data2"
+
+        ncols = len(d1)
+        if ncols <= 1:
+            raise ValueError("Data file has less than two columns.")
+        elif ncols == 2:
+            q1, r1 = d1[0:2]
+            q2, r2 = d2[0:2]
+            dr1 = dr2 = None
+            dq1 = dq2 = None
+        elif ncols == 3:
+            q1, r1, dr1 = d1[0:3]
+            q2, r2, dr2 = d2[0:3]
+            dq1 = dq2 = None
+        elif ncols == 4:
+            q1, dq1, r1, dr1 = d1[0:4]
+            q2, dq2, r2, dr2 = d2[0:4]
+        elif ncols >= 5:
+            q1, dq1, r1, dr1, lambda1 = d1[0:5]
+            q2, dq2, r2, dr2, lanbda2 = d2[0:5]
+
+        if not q1.shape == q2.shape or not all(q1==q2):
+            raise ValueError("Q points do not match in data files.")
+
+        # Note that q2, dq2, lambda1, and lambda2 are currently discarded.
+        self.name1, self.name2 = name1, name2
+        self.Qin, self.dQin = q1, dq1
+        self.R1in, self.R2in = r1, r2
+        self.dR1in, self.dR2in = dr1, dr2
+
+
+    def generate_plot(self):
+        """Plot Q vs R and uncertainly dR if available."""
+
+        import pylab
+        from matplotlib.font_manager import FontProperties
+
+        def plot1(Q, R, dR, label, color, hold=True):
+            #pylab.plot(Q, R, '.', label=label, color=color, hold=hold)
+            pylab.semilogy(Q, R, '.', label=label, color=color, hold=hold)
+            if dR is not None:
+                pylab.fill_between(Q, (R-dR), (R+dR),
+                                   color=color, alpha=0.2, hold=True)
+
+        # Only show file.ext portion of the file specification
+        name1 = os.path.basename(self.name1)
+        name2 = os.path.basename(self.name2)
+        plot1(self.Qin, self.R1in, self.dR1in, name1, 'green', hold=False)
+        plot1(self.Qin, self.R2in, self.dR2in, name2, 'blue', hold=True)
+
+        pylab.legend(prop=FontProperties(size='medium'))
+        pylab.ylabel('Reflectivity')
+        pylab.xlabel('Q (inv A)')
 
 #==============================================================================
 
