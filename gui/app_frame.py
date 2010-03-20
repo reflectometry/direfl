@@ -40,14 +40,17 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as Toolbar
 # The Figure object is used to create backend-independent plot representations.
 from matplotlib.figure import Figure
 
-from matplotlib import pyplot as plt
+# For use in the matplotlib toolbar.
 from matplotlib.widgets import Slider, Button, RadioButtons
 
-# Wx-Pylab magic ...
+# Wx-Pylab magic for displaying plots within an application's window.
 from matplotlib import _pylab_helpers
 from matplotlib.backend_bases import FigureManagerBase
 
-import numpy as np
+#from matplotlib import pyplot as plt
+import pylab
+
+import numpy
 
 from wx.lib.wordwrap import wordwrap
 
@@ -654,7 +657,7 @@ of two simulated reflectometry data files:"""
         canvas = FigureCanvas(self.pan2, wx.ID_ANY, figure)
 
         # Wx-Pylab magic ...
-        # Make our canvas the active figure manager for Pylab so that when
+        # Make our canvas the active figure manager for pylab so that when
         # pylab plotting statements are executed they will operate on our
         # canvas and not create a new frame and canvas for display purposes.
         # This technique allows this application to execute code that uses
@@ -713,7 +716,6 @@ from your model."""
         phase inversion on the data and plot the results.
         """
 
-        import pylab
         import time
 
         # Part 1 - Process model parameters.
@@ -874,7 +876,7 @@ from your model."""
                                    sample_broadening=sample_broadening)
 
             # Compute the resolution.
-            Q=np.linspace(params[2], params[3], params[4])
+            Q=numpy.linspace(params[2], params[3], params[4])
             res = instrument.resolution(Q=Q)
 
             # Apply phase reconstruction and direct inversion techniques on the
@@ -915,7 +917,7 @@ from your model."""
                                    sample_broadening=sample_broadening)
 
             # Compute the resolution.
-            Q=np.linspace(params[2], params[3], params[4])
+            Q=numpy.linspace(params[2], params[3], params[4])
             L = bins(wavelength[0], wavelength[1], dLoL)
             dL = binwidths(L)
             res = instrument.resolution(Q=Q, L=L, dL=dL)
@@ -1320,7 +1322,7 @@ of two experimental reflectometry measurements:"""
         canvas = FigureCanvas(self.pan2, wx.ID_ANY, figure)
 
         # Wx-Pylab magic ...
-        # Make our canvas the active figure manager for Pylab so that when
+        # Make our canvas the active figure manager for pylab so that when
         # pylab plotting statements are executed they will operate on our
         # canvas and not create a new frame and canvas for display purposes.
         # This technique allows this application to execute code that uses
@@ -1380,8 +1382,6 @@ from the data files."""
         Perform phase reconstruction and phase inversion on the datasets and
         plot the results.
         """
-
-        import pylab
         import time
 
         # Part 1 - Process reflectometry data files.
@@ -1682,7 +1682,6 @@ from the data files."""
         """
         Plot the Q, R, and dR of the two data files.
         """
-        import pylab
 
         # Set the plotting figure manager for this class as the active one and
         # erase the current figure.
@@ -1729,7 +1728,6 @@ from the data files."""
         This code is cloned from SurroundVariation._load().
         TODO: Replace this loader with a general purpose loader in development.
         """
-        import numpy
 
         # This code assumes the following data file formats:
         # 2-column data: Q, R
@@ -1781,20 +1779,45 @@ from the data files."""
 
     def generate_plot(self):
         """Plot Q vs R and uncertainly dR if available."""
-
-        import pylab
         from matplotlib.font_manager import FontProperties
 
+        '''
+        # This simpler version of the function does not handle negative nor
+        # very small values of dR gracefully that are sometimes found in
+        # reflectivity files collected from real experiments.  Files qrd1.refl
+        # and qrd2.refl have both of these issues that are clearly demonstrated
+        # in the plots.
         def plot1(Q, R, dR, label, color, hold=True):
             #pylab.plot(Q, R, '.', label=label, color=color, hold=hold)
+	        #pylab.gca().set_yscale('symlog', linthreshy=t, linwidthy=0.1)
             pylab.semilogy(Q, R, '.', label=label, color=color, hold=hold)
             if dR is not None:
                 pylab.fill_between(Q, (R-dR), (R+dR),
-                                   color=color, alpha=0.2, hold=True)
+                                       color=color, alpha=0.2, hold=True)
+        '''
 
-        # Only show file.ext portion of the file specification
+        def plot1(Q, R, dR, label, color, hold=True):
+            # Generate a plot for one data file while trying to deal with bogus
+            # negative values for dR or very small values for dR in a sensible
+            # way.  This technique was developed by Paul Kienzle and will
+            # likely be improved over time.
+            if dR is not None:
+                minR = numpy.min((R+dR))/10
+            else:
+                minR = numpy.min(R[R>0])/2
+
+            pylab.semilogy(Q, numpy.maximum(R,minR), '.', label=label,
+                              color=color, hold=hold)
+            if dR is not None:
+                idx = numpy.argsort(Q)
+                pylab.fill_between(Q, numpy.maximum(R-dR,minR),
+                                      numpy.maximum(R+dR,minR),
+                                      color=color, alpha=0.2, hold=True)
+
+        # Only show file.ext portion of the file specification on the plots.
         name1 = os.path.basename(self.name1)
         name2 = os.path.basename(self.name2)
+
         plot1(self.Qin, self.R1in, self.dR1in, name1, 'green', hold=False)
         plot1(self.Qin, self.R2in, self.dR2in, name2, 'blue', hold=True)
 
@@ -1836,7 +1859,7 @@ class TestPlotPage(wx.Panel):
         canvas = FigureCanvas(self.pan1, wx.ID_ANY, figure)
 
         # Wx-Pylab magic ...
-        # Make our canvas the active figure manager for Pylab so that when
+        # Make our canvas the active figure manager for pylab so that when
         # pylab plotting statements are executed they will operate on our
         # canvas and not create a new frame and canvas for display purposes.
         # This technique allows this application to execute code that uses
@@ -2223,7 +2246,6 @@ def perform_recon_inver(files, params):
     """
 
     from inversion.core.core import refl, SurroundVariation, Inversion
-    import pylab
 
     # Perform phase reconstruction using two reflectivity measurements of a
     # sample where the only change in the setup between the two runs is that a
@@ -2271,7 +2293,6 @@ def perform_simulation(sample, params, Q=None, dQ=None):
 
     from inversion.core.simulate import Simulation
     from numpy import linspace
-    import pylab
 
     # Construct a dictionary of keyword arguments for the invert_args parameter
     # used by the phase inversion algorithm.
@@ -2304,7 +2325,7 @@ def perform_simulation(sample, params, Q=None, dQ=None):
     # The Q parameter is here for debugging purposes to allow the caller to
     # compute Q instead of using the input panel parameter list.
     if Q is None:
-        Q=np.linspace(params[2], params[3], params[4])
+        Q=numpy.linspace(params[2], params[3], params[4])
 
     # Create simulated datasets and perform phase reconstruction and phase
     # inversion using the simulated datasets.
@@ -2339,7 +2360,6 @@ def test1():
 
     from inversion.core.simulate import Simulation
     from numpy import linspace
-    import pylab
 
     # Roughness parameters (surface, sample, substrate)
     sv, s, su = 3, 5, 2
@@ -2372,8 +2392,6 @@ def test2():
     """
 
     from inversion.core.core import refl, SurroundVariation, Inversion
-    import os
-    import pylab
 
     root = get_appdir()
     #args = [os.path.join(root, 'wsh02_re.dat')]
@@ -2419,21 +2437,19 @@ def test3():
     to pylab to generate subplots.
     """
 
-    import pylab
-
     pylab.suptitle("Test use of procedural interface to Pylab", fontsize=16)
 
     pylab.subplot(211)
-    x = np.arange(0, 6, .01)
-    y = np.sin(x**2)*np.exp(-x)
+    x = numpy.arange(0, 6, .01)
+    y = numpy.sin(x**2)*numpy.exp(-x)
     pylab.xlabel("x-axis")
     pylab.ylabel("y-axis")
     pylab.title("First Plot")
     pylab.plot(x, y)
 
     pylab.subplot(212)
-    x = np.arange(0, 8, .01)
-    y = np.sin(x**2)*np.exp(-x) + 1
+    x = numpy.arange(0, 8, .01)
+    y = numpy.sin(x**2)*numpy.exp(-x) + 1
     pylab.xlabel("x-axis")
     pylab.ylabel("y-axis")
     pylab.title("Second Plot")
@@ -2448,22 +2464,20 @@ def test4(figure):
     to pylab to generate subplots.
     """
 
-    import pylab
-
     axes = figure.add_subplot(311)
-    x = np.arange(0, 6, .01)
-    y = np.sin(x**2)*np.exp(-x)
+    x = numpy.arange(0, 6, .01)
+    y = numpy.sin(x**2)*numpy.exp(-x)
     axes.plot(x, y)
 
     axes = figure.add_subplot(312)
-    x = np.arange(0, 8, .01)
-    y = np.sin(x**2)*np.exp(-x) + 1
+    x = numpy.arange(0, 8, .01)
+    y = numpy.sin(x**2)*numpy.exp(-x) + 1
     axes.plot(x, y)
     axes.set_ylabel("y-axis")
 
     axes = figure.add_subplot(313)
-    x = np.arange(0, 4, .01)
-    y = np.sin(x**2)*np.exp(-x) + 2
+    x = numpy.arange(0, 4, .01)
+    y = numpy.sin(x**2)*numpy.exp(-x) + 2
     axes.plot(x, y)
     axes.set_xlabel("x-axis")
 
