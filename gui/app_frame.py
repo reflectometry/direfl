@@ -404,40 +404,46 @@ class AppFrame(wx.Frame):
         wx.AboutBox(info)
 
 
-    def OnLoadDemoDataset1(self, event):
-        """Load demo 1 reflectometry data files for measurements 1 and 2."""
-
-        self.page1.OnLoadDemoDataset1(event)  # TODO: create menu in dest class
-
-
-    def OnLoadDemoDataset2(self, event):
-        """Load demo 2 reflectometry data files for measurements 1 and 2."""
-
-        self.page1.OnLoadDemoDataset2(event)  # TODO: create menu in dest class
-
-
     def OnLoadDemoModel1(self, event):
-        """Load Demo Model 1 from a file."""
+        """Load Demo Model 1 from a resource file."""
 
-        self.page0.OnLoadDemoModel1(event)  # TODO: create menu in dest class
+        self.page0.OnLoadDemoModel1(event)
+        self.notebook.SetSelection(0)
 
 
     def OnLoadDemoModel2(self, event):
-        """Load Demo Model 2 from a file."""
+        """Load Demo Model 2 from a resource file."""
 
-        self.page0.OnLoadDemoModel2(event)  # TODO: create menu in dest class
+        self.page0.OnLoadDemoModel2(event)
+        self.notebook.SetSelection(0)
 
 
     def OnLoadModel(self, event):
-        """Load Model from a file."""
+        """Load Model from a user specified file."""
 
-        self.page0.OnLoadModel(event)  # TODO: create menu in dest class
+        self.page0.OnLoadModel(event)
+        self.notebook.SetSelection(0)
 
 
     def OnSaveModel(self, event):
-        """Save Model to a file."""
+        """Save Model to a user specified file."""
 
-        self.page0.OnSaveModel(event)  # TODO: create menu in dest class
+        self.page0.OnSaveModel(event)
+        self.notebook.SetSelection(0)
+
+
+    def OnLoadDemoDataset1(self, event):
+        """Load demo 1 reflectometry data from resource files."""
+
+        self.page1.OnLoadDemoDataset1(event)
+        self.notebook.SetSelection(1)
+
+
+    def OnLoadDemoDataset2(self, event):
+        """Load demo 2 reflectometry data from resource files"""
+
+        self.page1.OnLoadDemoDataset2(event)
+        self.notebook.SetSelection(1)
 
 
     def OnTutorial(self, event):
