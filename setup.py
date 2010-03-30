@@ -32,15 +32,24 @@ def configuration(parent_package='', top_path=None):
 
 
 if __name__ == '__main__':
+    """
+    When run as a script ($ python .../inversion/setup.py), the DiRefl
+    application will be installed as a package named Inversion and an .egg-info
+    file will be created (e.g. in c:\Python25\Lib\site-packages\ for Windows).
+
+    When run indirectly as part of installing the Reflectometry package
+    ($ python .../reflectometry/setup.py), the DiRefl application will be
+    installed as a subpackage of Reflectometry and a separate .egg-info file
+    will not be created.
+
+    Note that the name parameter in the call below is given as a null string
+    which will be concatenated with the name parameter from Configuration.
+    This allows Inversion to be installed as a standalone package when this
+    setup is run as a script, or installed as a subpackage of Reflectometry.
+    """
+
     if len(sys.argv) == 1: sys.argv.append('install')
 
-    # When this file is run as a script, Inversion will be installed as its
-    # own package and an .egg-info file will be created.
-    # Note that the name parameter is given as a null string which will be
-    # concatenated with the name parameter from Configuration.  This allows
-    # Inversion to be installed as a standalone package when this setup is run
-    # as a script, or installed as a subpackage of Reflectometry when its setup
-    # is run.
     setup(name='',  # set to null so that name from Configuration prevails
           maintainer='DANSE Reflectometry Group',
           maintainer_email='UNKNOWN',

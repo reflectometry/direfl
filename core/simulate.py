@@ -16,13 +16,8 @@ from numpy import linspace, real
 
 from matplotlib.font_manager import FontProperties
 
-from core import refl, SurroundVariation, Inversion, plottitle
-try:
-    from reflectometry.model1d.model.calcRefl import convolve
-except:
-    print "WARNING: faking convolution with linear interpolation"
-    def convolve(Qin, Rin, Q, dQ):
-        return numpy.interp1(Qin, Rin, Q)
+from .core import refl, SurroundVariation, Inversion, plottitle
+from .calc import convolve
 from . import profile
 
 # Note that for efficiency, pylab is only imported if plotting is requested.

@@ -79,12 +79,7 @@ from numpy.random import uniform, poisson, normal
 
 from matplotlib.font_manager import FontProperties
 
-try:
-    from reflectometry.model1d.model.calcRefl import convolve
-except:
-    print "WARNING: faking convolution with linear interpolation"
-    def convolve(Qin, Rin, Q, dQ):
-        return numpy.interp1(Qin, Rin, Q)
+from .calc import convolve
 
 # Common SLDs
 silicon = Si = 2.07

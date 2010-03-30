@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 """
-Create direfl.exe using py2exe where the output is in the \dist directory tree.
-This is a self contained Win32 distribution of the DiRefl application built
-from the Reflectometry repository.
+Create direfl.exe using py2exe in the inversion\dist directory tree.  This
+executable contains the python runtime environment, required python packages,
+and the DiRefl application.  Additional resource files needed to run DiRefl are
+placed in the \dist directory tree.
 """
 
 import os
@@ -13,7 +14,6 @@ from distutils.core import setup
 
 import matplotlib
 import py2exe
-import reflectometry
 
 if len(sys.argv) == 1:
     sys.argv.append('py2exe')
@@ -54,18 +54,6 @@ mplData = (r'mpl-data\fonts\pdfcorefonts',glob.glob(os.path.join(matplotlibdatad
 data_files.append(mplData)
 mplData = (r'mpl-data\fonts\ttf',glob.glob(os.path.join(matplotlibdatadir,r'fonts\ttf\*.*')))
 data_files.append(mplData)
-
-'''
-# Add images for the toolbar.
-images = []
-imageDir = os.path.join('.', 'images')
-for fname in os.listdir(imageDir):
-    fullFname = os.path.join(imageDir, fname)
-    if os.path.isfile(fullFname):
-        images.append(fullFname)
-imagesData = ('images', images)
-data_files.append(imagesData)
-'''
 
 # Add data files that need to reside in the same directory as the image.
 data_files.append( ('.', [os.path.join('.','demo_model_1.dat')]) )
