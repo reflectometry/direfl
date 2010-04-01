@@ -29,11 +29,12 @@
 ; NOTE: The Quick Start package add-on for the Inno Setup Compiler needs to be
 ; installed to support the use of #define statements.
 #define MyAppName "DiRefl"
+#define MyAppNameLowercase "direfl"
 #define MyAppVersion "1.0.0"
 #define MyGroupFolderName "DANSE"
 #define MyAppPublisher "University of Maryland"
 #define MyAppURL "http://www.reflectometry.org/danse/"
-#define MyAppExeName "direfl.exe"
+#define MyAppFileName "direfl.exe"
 #define MyIconFileName "direfl.ico"
 #define MyReadmeFileName "README-direfl.txt"
 #define MyLicenseFileName "LICENSE-direfl.txt"
@@ -53,8 +54,8 @@ Compression=lzma/max
 SolidCompression=yes
 DisableProgramGroupPage=yes
 ; A file extension of .exe will be appended to OutputBaseFilename.
-OutputBaseFilename={#MyAppName}-{#MyAppVersion}-win32
-OutputManifestFile={#MyAppName}-{#MyAppVersion}-manifest.txt
+OutputBaseFilename={#MyAppNameLowercase}-{#MyAppVersion}-win32
+OutputManifestFile={#MyAppNameLowercase}-{#MyAppVersion}-manifest.txt
 SetupIconFile={#MyIconFileName}
 LicenseFile={#MyLicenseFileName}
 SourceDir=.
@@ -81,12 +82,12 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Icons]
-Name: "{group}\Launch {#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#MyIconFileName}"
+Name: "{group}\Launch {#MyAppName}"; Filename: "{app}\{#MyAppFileName}"; IconFilename: "{app}\{#MyIconFileName}"
 Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\{#MyAppName}{#Space}{#MyAppVersion}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; WorkingDir: "{app}"; IconFilename: "{app}\{#MyIconFileName}"
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}{#Space}{#MyAppVersion}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon; WorkingDir: "{app}"; IconFilename: "{app}\{#MyIconFileName}"
+Name: "{commondesktop}\{#MyAppName}{#Space}{#MyAppVersion}"; Filename: "{app}\{#MyAppFileName}"; Tasks: desktopicon; WorkingDir: "{app}"; IconFilename: "{app}\{#MyIconFileName}"
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}{#Space}{#MyAppVersion}"; Filename: "{app}\{#MyAppFileName}"; Tasks: quicklaunchicon; WorkingDir: "{app}"; IconFilename: "{app}\{#MyIconFileName}"
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppFileName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
 Filename: "{app}\{#MyReadmeFileName}"; Description: "Read Release Notes"; Verb: "open"; Flags: shellexec waituntilterminated skipifdoesntexist postinstall skipifsilent unchecked
