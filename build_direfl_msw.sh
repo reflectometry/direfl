@@ -61,16 +61,6 @@
 #       advised (but not required) that you specify the same version number to
 #       this script as parameter 1 so that the name of the install image and the
 #       zip source file contain the same version string.
-#
-# NOTE: It is advised that you enable your key for SSH access to the repository
-#       if you do a checkout otherwise you'll be prompted for password 4 times.
-#       $ ssh-agent bash
-#       $ ssh-add
-#       <at prompt enter your key value>
-#
-# NOTE: The file C:\Python25\Lib\site-packages\py2exe\build_exe.py may need to
-#       be updated with a project generated fix if numpy 1.1.1 or later is
-#       installed so that py2exe will properly process the numpy package.
 # ==============================================================================
 
 ### (0) Process the command line parameters.
@@ -123,10 +113,10 @@ else
 fi
 
 ### (2) Fetch the source code.
-###     Export does not require secure access to repositories, preserves file
-###     date and time, and does not include .svn directories.
-###     Checkout requires secure access to repositories, creates file copies
-###     with current date and time, and includes .svn directories.
+###     Export preserves file date and time and does not include .svn
+###     directories.  Checkout creates file copies with current date and time
+###     and includes .svn directories.  In addition, this script will use
+###     secure access when the checkout option is used, but not for export.
 
 if [[ "$3" = "" || "$3" = "ex" ]]
 then
@@ -170,8 +160,7 @@ echo -n "***     "
 ls $MYROOT/inversion/dist/*.exe
 echo "***"
 echo "*** Or you can even run DiRefl from the command line by executing:"
-echo -n "***     "
-echo -n "*** python $MYROOT/packages/inversion/direfl.py"
+echo "***     python $MYROOT/packages/inversion/direfl.py"
 echo
 cd $SAVE_PWD
 exit
