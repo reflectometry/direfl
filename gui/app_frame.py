@@ -133,10 +133,14 @@ class AppFrame(wx.Frame):
         fontname = default_fontname = self.GetFont().GetFaceName()
         fontsize = default_fontsize = self.GetFont().GetPointSize()
 
-        # If requested, override the font name to use.
+        # If requested, override the font name to use.  Note that:
+        # - the MS Windows default font appears to be the same as Tahoma
+        # - Arial tends to be narrower and taller than Tahoma.
+        # - Verdana tends to be wider and shorter than Tahoma.
         if len(sys.argv) > 1:
-            if '-arial' in sys.argv[1:]: fontname = "Arial"
             if '-tahoma' in sys.argv[1:]: fontname = "Tahoma"
+            if '-arial' in sys.argv[1:]: fontname = "Arial"
+            if '-verdana' in sys.argv[1:]: fontname = "Verdana"
 
         fontsize = choose_fontsize(fontname=fontname)
 
