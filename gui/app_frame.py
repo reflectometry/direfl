@@ -54,7 +54,8 @@ import numpy
 
 from wx.lib.wordwrap import wordwrap
 
-from .utilities import (get_appdir, write_to_statusbar,
+from .utilities import (choose_fontsize, display_fontsize,
+                        get_appdir, write_to_statusbar,
                         display_error_message, display_warning_message)
 
 # Add a path one level above 'inversion...' to sys.path so that this app can be
@@ -93,10 +94,6 @@ DEMO_REFLDATA1_2 = "qrd2.refl"
 DEMO_REFLDATA2_1 = "surround_air_4.refl"
 DEMO_REFLDATA2_2 = "surround_d2o_4.refl"
 
-# Default font point size based on a screen set to 96 ppi resolution.
-# Fontsize will be changed later when the actual screen resolution is known.
-FONTSIZE = 9
-
 # Custom colors.
 WINDOW_BKGD_COLOUR = "#ECE9D8"
 PALE_YELLOW = "#FFFFB0"
@@ -133,46 +130,43 @@ class AppFrame(wx.Frame):
         wx.Frame.__init__(self, parent, id, title, pos, size, name=name)
 
         # Save the system default font information before we make any changes.
-        default_fontsize = self.GetFont().GetPointSize()
-        default_fontname = self.GetFont().GetFaceName()
+        fontname = default_fontname = self.GetFont().GetFaceName()
+        fontsize = default_fontsize = self.GetFont().GetPointSize()
 
-        # Determine an appropriate font point size to use so that text displayed
-        # on all platforms using various screen resolutions will appear to be
-        # about the same size as seen on a Windows screen set to its default
-        # resolution.  Screen resolution is given in pixels per inch (PPI),
-        # though 'inch' is an archaic (or historical) term and does not really
-        # correspond to the physical size of the monitor.  Typically a Windows
-        # display is set to a resolution of 96 or sometimes 120; for Linux it
-        # is usually 75 or sometimes 100; for Mac it is almost always set to 72.
-        # In addition, some systems allow the user to pick a non-standard size.
-        # Based on the screen resolution and this app's desired FONTSIZE when
-        # used with a 96 PPI screen setting, we will calculate a point size in
-        # the range of 6 to 12.
-        x, y = wx.ClientDC(self).GetPPI()
-        if x >= 72 and x <= 144:
-            fontsize = FONTSIZE * 96 / x
-        else:
-            fontsize = FONTSIZE  # something is wrong, use the default
+        # If requested, override the font name to use.
+        if len(sys.argv) > 1:
+            if '-arial' in sys.argv[1:]: fontname = "Arial"
+            if '-tahoma' in sys.argv[1:]: fontname = "Tahoma"
 
-        # Specify the font name to use.  For now we'll use the system's default.
-        fontname = default_fontname
+        fontsize = choose_fontsize(fontname=fontname)
 
-        # For testing purposes, we can override the above font settings.
-        if len(sys.argv) > 1 and '-arial' in sys.argv[1:]:
-            fontname = "Arial"
-        if len(sys.argv) > 1 and '-usesysfontsize' in sys.argv[1:]:
-            fontsize = self.GetFont().GetPointSize()
+        # If requested, override the font point size to use.
+        if len(sys.argv) > 1:
+            if '-12pt' in sys.argv[1:]: fontsize = 12
+            if '-11pt' in sys.argv[1:]: fontsize = 11
+            if '-10pt' in sys.argv[1:]: fontsize = 10
+            if '-9pt' in sys.argv[1:]: fontsize = 9
+            if '-8pt' in sys.argv[1:]: fontsize = 8
+            if '-7pt' in sys.argv[1:]: fontsize = 7
+            if '-6pt' in sys.argv[1:]: fontsize = 6
 
-        # Set the default font for this and all child windows.
+        # Set the default font for this and all child windows.  The font of the
+        # frame's title bar is not affected (which is a good thing).  However,
+        # this setting does not affect the font used in the frame's menu bar or
+        # menu items (which is not such a good thing as the menu text may be
+        # larger or smaller than the normal text used in the widgets used by
+        # the application).  Menu text font cannot be changed by wxPython.
         self.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL, False,
                              fontname))
 
+        # If requested, display font related platform information.
         if len(sys.argv) > 1 and '-platform' in sys.argv[1:]:
             print "Platform =", wx.PlatformInfo
-            print "default fontname = %s  actual fontname = %s"\
+            print "Default font is %s  Chosen font is %s"\
                   %(default_fontname, self.GetFont().GetFaceName())
-            print "PPI = %d  default ptsize = %d  actual ptsize = %d"\
-                  %(x, default_fontsize, self.GetFont().GetPointSize())
+            print "Default point size = %d  Chosen point size = %d"\
+                  %(default_fontsize, self.GetFont().GetPointSize())
+            display_fontsize(fontname=fontname)
 
         # Create a panel for the frame.  This will be the only child panel of
         # the frame and it inherits its size from the frame which is useful
@@ -516,7 +510,7 @@ class SimulateDataPage(wx.Panel):
 
         demo_model_params = \
             "# SLDensity  Thickness  Roughness (optional)" + \
-                NEWLINES_2 + NEWLINES_2 + NEWLINES_2 + NEWLINE
+            NEWLINES_2 + NEWLINES_2 + NEWLINES_2 + NEWLINE
 
         # Create an input box to enter and edit the model description and
         # populate it with a header but no layer information.
