@@ -30,7 +30,7 @@ from inversion.version import version as APP_VERSION
 
 APP_NAME = "DiRefl"
 
-APP_TITLE = "Phase Reconstruction and Direct Inversion Reflectometry"
+APP_TITLE = "DiRefl - Direct Inversion Reflectometry"
 
 APP_COPYRIGHT = "(C) 2010 University of Maryland"
 

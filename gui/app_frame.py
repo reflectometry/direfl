@@ -23,6 +23,7 @@
 import wx
 import os
 import sys
+import time
 
 import matplotlib
 
@@ -52,6 +53,7 @@ import pylab
 
 import numpy
 
+from wx.lib import delayedresult
 from wx.lib.wordwrap import wordwrap
 
 from .utilities import (choose_fontsize, display_fontsize,
@@ -304,8 +306,8 @@ class AppFrame(wx.Frame):
         self.page1 = AnalyzeDataPage(nb, colour=PALE_BLUE1, fignum=1)
 
         # Add the pages to the notebook with a label to show on the tab.
-        nb.AddPage(self.page0, "Simulate Data")
-        nb.AddPage(self.page1, "Analyze Data")
+        nb.AddPage(self.page0, "Simulation")
+        nb.AddPage(self.page1, "Analysis")
 
         # For debug - jak
         # Create test page windows and add them to notebook if requested.
@@ -650,8 +652,7 @@ class SimulateDataPage(wx.Panel):
     def init_plot_panel(self):
         """Initialize the plotting panel of the SimulateDataPage."""
 
-        INTRO_TEXT = """Results from phase reconstruction and inversion \
-of two simulated reflectometry data files:"""
+        INTRO_TEXT = "Phase Reconstruction and Inversion of Simulated Data:"
 
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
@@ -719,8 +720,6 @@ from your model."""
         Generate a simulated dataset then perform phase reconstruction and
         phase inversion on the data and plot the results.
         """
-
-        import time
 
         # Part 1 - Process model parameters.
 
@@ -1315,8 +1314,7 @@ class AnalyzeDataPage(wx.Panel):
     def init_plot_panel(self):
         """Initialize the plotting panel of the AnalyzeDataPage."""
 
-        INTRO_TEXT = """Results from phase reconstruction and inversion \
-of two experimental reflectometry measurements:"""
+        INTRO_TEXT = "Phase Reconstruction and Inversion of Experimental Data:"
 
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
@@ -1345,12 +1343,22 @@ of two experimental reflectometry measurements:"""
         font.SetPointSize(font.GetPointSize() + 1)
         font.SetWeight(wx.BOLD)
         intro.SetFont(font)
-        self.pan2_intro_ctrl = intro
+        self.pan2_intro = intro
         self.pan2_intro_text = INTRO_TEXT
+
+        # Create a progress gauge panel.
+        self.pan2_gauge = gauge = GaugePanel(self.pan2)
+        gauge.Show(False)
+
+        # Create a horizontal box sizer.
+        hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox1_sizer.Add(intro, 0, wx.ALIGN_CENTER_VERTICAL)
+        hbox1_sizer.Add((10,25), 1)  # stretchable whitespace
+        hbox1_sizer.Add(gauge, 0)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
+        sizer.Add(hbox1_sizer, 0, wx.EXPAND|wx.ALL, border=10)
         sizer.Add(canvas, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         sizer.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
 
@@ -1383,10 +1391,10 @@ from the data files."""
 
     def OnCompute(self, event):
         """
-        Perform phase reconstruction and phase inversion on the datasets and
-        plot the results.
+        Perform phase reconstruction and phase inversion on the datasets in a
+        separate thread.  OnComputeEnd is called when the computation is
+        finished to plot the results.
         """
-        import time
 
         # Part 1 - Process reflectometry data files.
 
@@ -1477,8 +1485,13 @@ from the data files."""
         write_to_statusbar("Generating new plots ...", 1)
         write_to_statusbar("", 2)
 
+        # Start the display the progress guage.
+        self.pan2_gauge.Start()
+        self.pan2_gauge.Show(True)
+        self.pan2.Layout()
+
         # Keep track of the time it takes to do the computation and plotting.
-        t0 = time.time()
+        self.t0 = time.time()
 
         # Set the plotting figure manager for this class as the active one and
         # erase the current figure.
@@ -1489,21 +1502,36 @@ from the data files."""
         # Apply phase reconstruction and direct inversion techniques on the
         # experimental reflectivity datasets.
         try:
-            perform_recon_inver(files, params)
+            #perform_recon_inver(files, params)
+            ExecuteInThread(self.OnComputeEnd, perform_recon_inver, files, params)
         except Exception, e:
             display_error_message(self, "Operation Failed", str(e))
             return
+        else:
+            self.pan2_intro.SetLabel(self.pan2_intro_text)
+            self.pan2_intro.Refresh()
 
-        # Plot the results.
+
+    def OnComputeEnd(self, delayedResult):
+        """
+        Callback function that plots the results of a phase reconstruction and
+        phase inversion operation.
+        """
+
+        # The delayedResult object is not used to get the results because
+        # currently no results are passed back; instead plots are generated.
+
+        # Stop and hide the progress gauge.
+        self.pan2_gauge.Stop()
+        self.pan2_gauge.Show(False)
+        self.pan2.Layout()
+
         pylab.draw()
 
         # Write the total execution and plotting time to the status bar.
-        secs = time.time() - t0
+        secs = time.time() - self.t0
         write_to_statusbar("Plots updated", 1)
         write_to_statusbar("%g secs" %(secs), 2)
-
-        self.pan2_intro_ctrl.SetLabel(self.pan2_intro_text)
-        self.pan2_intro_ctrl.Refresh()
 
 
     def OnEdit(self, event):
@@ -1718,10 +1746,9 @@ from the data files."""
             display_error_message(self, "Data File Error", str(e))
             return
         else:
-            self.pan2_intro_ctrl.SetLabel("Dataset Reflectivity Plots:")
+            self.pan2_intro.SetLabel("Dataset Reflectivity Plots:")
             self.generate_plot()
             pylab.draw()
-
 
 
     def load_data(self, file1, file2):
@@ -2240,6 +2267,61 @@ class InstrumentParameters():
         self.sample_width[1][self.instr_idx] = value
     def set_sample_broadening(self):
         self.sample_broadening[1][self.instr_idx] = value
+
+#==============================================================================
+
+class GaugePanel(wx.Panel):
+    """
+    This class implements a rotating gauge widget.
+    """
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, wx.ID_ANY)
+
+        self.gauge = wx.Gauge(self, wx.ID_ANY, range=50, size=(250, 25))
+
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.TimerHandler)
+        #self.count = 0
+
+    def Start(self):
+        self.timer.Start(100)
+
+    def Stop(self):
+        self.timer.Stop()
+
+    def TimerHandler(self, event):
+        #self.count += 1
+        #print "*** count = ", self.count
+        self.gauge.Pulse()
+
+#==============================================================================
+
+class ExecuteInThread():
+    """
+    This class executes the specified function in a separate thread and calls a
+    designated callback function when the function completes.  Control is
+    immediately given back to the caller of ExecuteInThread which executes in
+    parallel with the thread.
+    """
+
+    def __init__(self, callback, function, *args, **kwargs):
+        #print "ExecuteInThread func =", function
+        #print "ExecuteInThread args =", args
+        delayedresult.startWorker(callback,
+                                  function, wargs=args, wkwargs=kwargs)
+
+    def _callback(self, delayedResult):
+        '''
+        jobID = delayedResult.getJobID()
+        assert jobID == self.jobID
+        try:
+            result = delayedResult.get()
+        except Exception, e:
+            display_error_message(self, "job %s raised exception: %s"%(jobID, e)
+            return
+        '''
+        return
 
 #==============================================================================
 
