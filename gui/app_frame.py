@@ -310,21 +310,17 @@ class AppFrame(wx.Frame):
         nb.AddPage(self.page0, "Simulation")
         nb.AddPage(self.page1, "Analysis")
 
-        # For debug - jak
         # Create test page windows and add them to notebook if requested.
-        if len(sys.argv) > 1 and '-rtabs' in sys.argv[1:]:
+        if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
             self.page2 = SimulateDataPage(nb, colour=PALE_GREEN2, fignum=2)
             self.page3 = AnalyzeDataPage(nb, colour=PALE_BLUE2, fignum=3)
-
-            nb.AddPage(self.page2, "Simulation Test")
-            nb.AddPage(self.page3, "Analysis Test")
-
-        if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
             self.page4 = TestPlotPage(nb, colour="FIREBRICK", fignum=4)
             self.page5 = TestPlotPage(nb, colour="BLUE", fignum=5)
             self.page6 = TestPlotPage(nb, colour="GREEN", fignum=6)
             self.page7 = TestPlotPage(nb, colour="WHITE", fignum=7)
 
+            nb.AddPage(self.page2, "Simulation Test")
+            nb.AddPage(self.page3, "Analysis Test")
             nb.AddPage(self.page4, "Test 1")
             nb.AddPage(self.page5, "Test 2")
             nb.AddPage(self.page6, "Test 3")
@@ -606,13 +602,13 @@ class SimulateDataPage(wx.Panel):
                    ["Over Sampling Factor:", 4, "int", 'REL', None],
                    ["# Inversion Iterations:", 6, "int", 'RE', None],
                    ["# Monte Carlo Trials:", 10, "int", 'RE', None],
-                ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
-                ###["Back Reflectivity:", "True", "str", 'CRE', ("True", "False")],
-                ###["Inversion Noise Factor:", 1, "int", 'RE', None],
                    ["Simulated Noise (as %):", 5.0, "float", 'RE', None],
                    ["Bound State Energy:", 0.0, "float", 'RE', None],
                    ["Perfect Reconstruction:", "False", "str", 'CRE',
                         ("True", "False")],
+                ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
+                ###["Back Reflectivity:", "True", "str", 'CRE', ("True", "False")],
+                ###["Inversion Noise Factor:", 1, "int", 'RE', None],
                 ###["Show Iterations:", "False", "str", 'CRE', ("True", "False")]
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
@@ -1244,7 +1240,8 @@ class AnalyzeDataPage(wx.Panel):
 
         # Create a vertical box sizer for the input file selectors.
         vbox1_sizer = wx.BoxSizer(wx.VERTICAL)
-        vbox1_sizer.Add(hbox4_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+        vbox1_sizer.Add(hbox4_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT,
+                        border=10)
         vbox1_sizer.Add(hbox5_sizer, 0, wx.EXPAND|wx.ALL, border=10)
 
         # Associate the sizer with its container.
@@ -1323,10 +1320,10 @@ class AnalyzeDataPage(wx.Panel):
                    ["Over Sampling Factor:", 4, "int", 'REL', None],
                    ["# Inversion Iterations:", 6, "int", 'RE', None],
                    ["# Monte Carlo Trials:", 10, "int", 'RE', None],
+                   ["Bound State Energy:", 0.0, "float", 'RE', None],
                 ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
                 ###["Back Reflectivity:", "True", "str", 'C', ("True", "False")],
                 ###["Inversion Noise Factor:", 1, "int", 'RE', None],
-                   ["Bound State Energy:", 0.0, "float", 'RE', None],
                 ###["Show Iterations:", "False", "str", ,'CRE', ("True", "False")]
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
@@ -1967,12 +1964,11 @@ class TestPlotPage(wx.Panel):
         sizer.Fit(self.pan1)
 
         # Execute tests associated with the test tabs.
-        # For debug - jak
         if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
-            if (self.fignum==4 and '-test1' in sys.argv[1:]): test1()
-            if (self.fignum==5 and '-test2' in sys.argv[1:]): test2()
-        if self.fignum==6: test3()
-        if self.fignum==7: test4(figure)
+            if (self.fignum == 4 and '-test1' in sys.argv[1:]): test1()
+            if (self.fignum == 5 and '-test2' in sys.argv[1:]): test2()
+        if self.fignum == 6: test3()
+        if self.fignum == 7: test4(figure)
 
 
     def active_page(self):
@@ -2114,23 +2110,36 @@ class InstrumentParameters():
         fields = [
                    ["Radiation Type:", self.radiation[i], "str", 'RH2B', None,
                        self.instr_names[i]+" Scanning Reflectometer"],
-                   ["Instrument location:", self.instr_location[i], "str", 'R', None],
-                   ["Wavelength (A):", self.wavelength[1][i], "float", 'REH2', None,
-                       "Instrument Attributes"],
-                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
-                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
-                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
-                   ["Theta Lo (degrees):", self.Tlo[1][i], "float", 'REH2', None,
-                      "Measurement Settings"],
-                   ["Theta Hi (degrees):", self.Thi[1][i], "float", 'E', None],
-                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i], "float", 'RE', None],
-                   ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i], "float", 'E', None],
-                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i], "float", 'RE', None],
-                   ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i], "float", 'E', None],
-                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i], "float", 'EL', None],
-                   ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i], "float", 'E', None],
-                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'E', None],
-                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
+                   ["Instrument location:", self.instr_location[i],
+                       "str", 'R', None],
+                   ["Wavelength (A):", self.wavelength[1][i],
+                       "float", 'REH2', None, "Instrument Attributes"],
+                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i],
+                       "float", 'RE', None],
+                   ["Distance to Slit 1 (mm):", self.d_s1[1][i],
+                       "float", 'RE', None],
+                   ["Distance to Slit 2 (mm):", self.d_s2[1][i],
+                       "float", 'RE', None],
+                   ["Theta Lo (degrees):", self.Tlo[1][i],
+                       "float", 'REH2', None, "Measurement Settings"],
+                   ["Theta Hi (degrees):", self.Thi[1][i],
+                       "float", 'E', None],
+                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i],
+                       "float", 'RE', None],
+                   ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i],
+                       "float", 'E', None],
+                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i],
+                       "float", 'RE', None],
+                   ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i],
+                       "float", 'E', None],
+                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i],
+                       "float", 'EL', None],
+                   ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i],
+                       "float", 'E', None],
+                   ["Sample Width (mm):", self.sample_width[1][i],
+                       "float", 'E', None],
+                   ["Sample Broadening (mm):", self.sample_broadening[1][i],
+                       "float", 'E', None],
                  ]
 
         # Get instrument and measurement parameters via a pop-up dialog box.
@@ -2178,19 +2187,28 @@ class InstrumentParameters():
         fields = [
                    ["Radiation Type:", self.radiation[i], "str", 'RH2B', None,
                        self.instr_names[i]+" Time-of-Flight Reflectometer"],
-                   ["Instrument location:", self.instr_location[i], "str", 'R', None],
-                   ["Wavelength Lo (A):", self.wavelength_lo[1][i], "float", 'REH2', None,
-                       "Instrument Attributes"],
-                   ["Wavelength Hi (A):", self.wavelength_hi[1][i], "float", 'RE', None],
-                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i], "float", 'RE', None],
-                   ["Distance to Slit 1 (mm):", self.d_s1[1][i], "float", 'RE', None],
-                   ["Distance to Slit 2 (mm):", self.d_s2[1][i], "float", 'RE', None],
-                   ["Theta (degrees):", self.T[1][i], "float", 'REH2', None,
-                      "Measurement Settings"],
-                   ["Size of Slit 1 (mm):", self.slit1_size[1][i], "float", 'RE', None],
-                   ["Size of Slit 2 (mm):", self.slit2_size[1][i], "float", 'RE', None],
-                   ["Sample Width (mm):", self.sample_width[1][i], "float", 'EL', None],
-                   ["Sample Broadening (mm):", self.sample_broadening[1][i], "float", 'E', None],
+                   ["Instrument location:", self.instr_location[i],
+                       "str", 'R', None],
+                   ["Wavelength Lo (A):", self.wavelength_lo[1][i],
+                       "float", 'REH2', None, "Instrument Attributes"],
+                   ["Wavelength Hi (A):", self.wavelength_hi[1][i],
+                       "float", 'RE', None],
+                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i],
+                       "float", 'RE', None],
+                   ["Distance to Slit 1 (mm):", self.d_s1[1][i],
+                       "float", 'RE', None],
+                   ["Distance to Slit 2 (mm):", self.d_s2[1][i],
+                       "float", 'RE', None],
+                   ["Theta (degrees):", self.T[1][i],
+                       "float", 'REH2', None, "Measurement Settings"],
+                   ["Size of Slit 1 (mm):", self.slit1_size[1][i],
+                       "float", 'RE', None],
+                   ["Size of Slit 2 (mm):", self.slit2_size[1][i],
+                       "float", 'RE', None],
+                   ["Sample Width (mm):", self.sample_width[1][i],
+                       "float", 'EL', None],
+                   ["Sample Broadening (mm):", self.sample_broadening[1][i],
+                       "float", 'E', None],
                  ]
 
         # Get instrument and measurement parameters via a pop-up dialog box.
@@ -2637,6 +2655,7 @@ def test4(figure):
     #pylab.show()
 
 #==============================================================================
+
 # The following code fails because AppFrame is run in a non-package context.
 # Instead it must be imported from a package because it and its imported
 # modules use relative imports which Python does allow from script mode.
@@ -2649,3 +2668,23 @@ if __name__ == '__main__':
     app.SetTopWindow(frame)
     app.MainLoop()
 '''
+
+#==============================================================================
+
+"""
+The following is a list of command line parameters for development and
+debugging purposes.  None are documented and they may change at any time.
+
+To show diagnostic info:
+    -platform       Display platform specific info, especially about fonts
+    -tracep         Display values from user input fields
+    -debug          Display info for debugging purposes (changes frequently)
+To override default font and point size attributes; the parameters within each
+set are mutually exclusive where the last one specified takes precedence:
+    -tahoma, -arial, -verdana
+    -6pt, -7pt, -8pt, -9pt, -10pt, -11pt, -12pt
+To create additional pages for development and testing:
+    -xtabs          Add extra notebook pages for test purposes
+        -test1      Execute test1() in a test page
+        -test2      Execute test2() in a test page
+"""
