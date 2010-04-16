@@ -94,9 +94,10 @@ def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
     fontname = frame.GetFont().GetFaceName()
 
     x, y = wx.ClientDC(frame).GetPPI()
-    print "Benchmark text width and height in pixels = %4d %2d"\
+    print ">>> Benchmark text width and height in pixels = %4d %2d"\
           %(benchmark_width, benchmark_height)
-    print "Compare against %s font with dpi resolution of %d:" %(fontname, x)
+    print ">>> Compare against %s font with dpi resolution of %d:"\
+          %(fontname, x)
 
     for fontsize in xrange(12, 5, -1):
         frame.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL, False,
@@ -104,7 +105,7 @@ def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
         benchmark = wx.StaticText(frame, wx.ID_ANY, label="")
         w, h = benchmark.GetTextExtent(benchmark_text)
         benchmark.Destroy()
-        print "  For point size %2d, benchmark text w, h = %4d  %2d"\
+        print "      For point size %2d, benchmark text w, h = %4d  %2d"\
               %(fontsize, w, h)
 
     frame.Destroy()

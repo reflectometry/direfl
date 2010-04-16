@@ -65,8 +65,9 @@ from .utilities import (choose_fontsize, display_fontsize,
 # directory is in a diffferent location.  Do this before importing (directly or
 # indirectly) from sibling directories (e.g. 'from inversion/...'.  Note that
 # 'from ..core.module' cannot be used as it traverses outside of the package.
-#print "path added to sys.path:", os.path.dirname(get_appdir())
-#print "app root directory:", get_appdir(), " and __file__:", __file__
+
+### print "*** path added to sys.path:", os.path.dirname(get_appdir())
+### print "*** app root directory:", get_appdir(), " and __file__:", __file__
 sys.path.append(os.path.dirname(get_appdir()))
 
 from .about import (APP_NAME, APP_TITLE, APP_VERSION,
@@ -167,10 +168,10 @@ class AppFrame(wx.Frame):
 
         # If requested, display font related platform information.
         if len(sys.argv) > 1 and '-platform' in sys.argv[1:]:
-            print "Platform =", wx.PlatformInfo
-            print "Default font is %s  Chosen font is %s"\
+            print ">>> Platform =", wx.PlatformInfo
+            print ">>> Default font is %s  Chosen font is %s"\
                   %(default_fontname, self.GetFont().GetFaceName())
-            print "Default point size = %d  Chosen point size = %d"\
+            print ">>> Default point size = %d  Chosen point size = %d"\
                   %(default_fontsize, self.GetFont().GetPointSize())
             display_fontsize(fontname=fontname)
 
@@ -354,8 +355,9 @@ class AppFrame(wx.Frame):
         notebook pages (via clicking on the notebook tab).
         """
 
-        #prev_page = self.notebook.GetPage(event.GetOldSelection())
-        #print "*** OnPageChanged:", event.GetOldSelection(), event.GetSelection()
+        ### prev_page = self.notebook.GetPage(event.GetOldSelection())
+        ### print "*** OnPageChanged:", event.GetOldSelection(),
+        ###                             event.GetSelection()
         curr_page = self.notebook.GetPage(event.GetSelection())
         curr_page.active_page()
         event.Skip()
@@ -815,16 +817,15 @@ from your model."""
 
         # Get the validated inversion parameters.
         params = self.inver_param.GetResults()
-        if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
-            print "Results from all inversion parameter fields:"
-            print "  ", params
+        if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+            print ">>> Simulation parameters:"; print params
 
         sample = layers[1:-1]
         params.append(layers[-1][0])  # add SLD of substrate to list
         params.append(layers[-1][2])  # add roughness of substrate to list
-        if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
-            print "Layers:"; print "  ", layers
-            print "Sample:"; print "  ", sample
+        if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+            print ">>> Model parameters (all layers):"; print layers
+            print ">>> Sample layers excluding Surround:"; print sample
 
         # Part 4 - Perform the simulation, reconstruction, and inversion.
 
@@ -945,19 +946,21 @@ from your model."""
                                    sample_broadening=sample_broadening)
 
             # Compute the resolution.
-            Q = numpy.linspace(params[2], params[3], params[4])
             L = bins(wavelength[0], wavelength[1], dLoL)
             dL = binwidths(L)
-            #res = instrument.resolution(Q=Q, L=L, dL=dL)
+            '''
+            Q = numpy.linspace(params[2], params[3], params[4])
+            res = instrument.resolution(Q=Q, L=L, dL=dL)
+            print "*** len of Q, res.Q, res.dQ, L:",
+            print len(Q), len(res.Q), len(res.dQ), len(L)
+            '''
             res = instrument.resolution(L=L, dL=dL)
 
             # Apply phase reconstruction and direct inversion techniques on the
             # experimental reflectivity datasets.
             try:
-                print "*** len of Q, res.Q, res.dQ, L:",\
-                      len(Q), len(res.Q), len(res.dQ), len(L)
-                #perform_simulation(sample, params, Q=res.Q, dQ=res.dQ)
                 # FIXME: perform_simulation fails if either Q or dQ is not None
+                #perform_simulation(sample, params, Q=res.Q, dQ=res.dQ)
                 ExecuteInThread(self.OnComputeEnd, perform_simulation,
                                 sample, params, Q=None, dQ=None)
             except Exception, e:
@@ -1525,9 +1528,8 @@ from the data files."""
 
         # Get the validated inversion parameters.
         params = self.inver_param.GetResults()
-        if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
-            print "Results from all inversion parameter fields:"
-            print "  ", params
+        if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+            print ">>> Inversion parameters:"; print params
 
         # Part 4 - Perform the phase reconstruction and inversion.
 
@@ -2143,9 +2145,8 @@ class InstrumentParameters():
                               align=True)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
-            if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
-                print "Results from all instrument parameter fields:"
-                print "  ", results
+            if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+                print ">>> Instrument (resolution) parameters:"; print results
 
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable
@@ -2204,9 +2205,8 @@ class InstrumentParameters():
                               align=True)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
-            if len(sys.argv) > 1 and '-trace' in sys.argv[1:]:
-                print "Results from all instrument parameter fields:"
-                print "  ", results
+            if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+                print ">>> Instrument (resolution) parameters:"; print results
 
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable
@@ -2359,7 +2359,7 @@ class ExecuteInThread():
 
     def __init__(self, callback, function, *args, **kwargs):
         if callback is None: callback = _callback
-        #print "ExecuteInThread", callback, function, args, kwargs
+        #print "*** ExecuteInThread init:", callback, function, args, kwargs
         delayedresult.startWorker(consumer=callback, workerFn=function,
                                   wargs=args, wkwargs=kwargs)
 
@@ -2384,6 +2384,11 @@ def perform_recon_inver(files, params):
     """
 
     from inversion.core.core import refl, SurroundVariation, Inversion
+
+    if len(sys.argv) > 1 and '-debug' in sys.argv[1:]:
+        print "*** Inputs to perform_recon_inver()"
+        print "*** files =", files
+        print "*** params =", params
 
     # Perform phase reconstruction using two reflectivity measurements of a
     # sample where the only change in the setup between the two runs is that a
@@ -2428,9 +2433,17 @@ def perform_simulation(sample, params, Q=None, dQ=None):
     phase reconstruction and direct inversion on the data to generate a
     scattering length density profile.
     """
-
     from inversion.core.simulate import Simulation
     from numpy import linspace
+
+    if len(sys.argv) > 1 and '-debug' in sys.argv[1:]:
+        print "*** Inputs to perform_simulation()"
+        print "*** sample =", sample
+        print "*** params =", params
+        if Q is not None:
+            print "***  Q len =", len(Q),  "  Q lo:hi =",  Q[0],  Q[-1]
+        if dQ is not None:
+            print "*** dQ len =", len(dQ), " dQ lo:hi =", dQ[0], dQ[-1]
 
     # Construct a dictionary of keyword arguments for the invert_args parameter
     # used by the phase inversion algorithm.
@@ -2577,7 +2590,7 @@ def test3():
     pylab.suptitle("Test use of procedural interface to Pylab", fontsize=16)
 
     pylab.subplot(211)
-    x = numpy.arange(0, 6, .01)
+    x = numpy.arange(0, 6, 0.01)
     y = numpy.sin(x**2)*numpy.exp(-x)
     pylab.xlabel("x-axis")
     pylab.ylabel("y-axis")
@@ -2585,7 +2598,7 @@ def test3():
     pylab.plot(x, y)
 
     pylab.subplot(212)
-    x = numpy.arange(0, 8, .01)
+    x = numpy.arange(0, 8, 0.01)
     y = numpy.sin(x**2)*numpy.exp(-x) + 1
     pylab.xlabel("x-axis")
     pylab.ylabel("y-axis")
@@ -2602,18 +2615,18 @@ def test4(figure):
     """
 
     axes = figure.add_subplot(311)
-    x = numpy.arange(0, 6, .01)
+    x = numpy.arange(0, 6, 0.01)
     y = numpy.sin(x**2)*numpy.exp(-x)
     axes.plot(x, y)
 
     axes = figure.add_subplot(312)
-    x = numpy.arange(0, 8, .01)
+    x = numpy.arange(0, 8, 0.01)
     y = numpy.sin(x**2)*numpy.exp(-x) + 1
     axes.plot(x, y)
     axes.set_ylabel("y-axis")
 
     axes = figure.add_subplot(313)
-    x = numpy.arange(0, 4, .01)
+    x = numpy.arange(0, 4, 0.01)
     y = numpy.sin(x**2)*numpy.exp(-x) + 2
     axes.plot(x, y)
     axes.set_xlabel("x-axis")
