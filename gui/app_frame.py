@@ -675,16 +675,27 @@ class SimulateDataPage(wx.Panel):
         mpl_toolbar = Toolbar(canvas)
         mpl_toolbar.Realize()
 
-        # Create a placeholder for text displayed above the plots.
-        intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
-        font = intro.GetFont()
+        # Display a title above the plots.
+        self.pan2_intro_text = INTRO_TEXT
+        self.pan2_intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
+        font = self.pan2_intro.GetFont()
         font.SetPointSize(font.GetPointSize() + 1)
         font.SetWeight(wx.BOLD)
-        intro.SetFont(font)
+        self.pan2_intro.SetFont(font)
+
+        # Create a progress bar to be displayed during a lengthy computation.
+        self.pan2_gauge = GaugePanel(self.pan2)
+        self.pan2_gauge.Show(False)
+
+        # Create a horizontal box sizer to hold the title and progress bar.
+        hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox1_sizer.Add(self.pan2_intro, 0, wx.ALIGN_CENTER_VERTICAL)
+        hbox1_sizer.Add((10,25), 1)  # stretchable whitespace
+        hbox1_sizer.Add(self.pan2_gauge, 0)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(intro, 0, wx.EXPAND|wx.ALL, border=10)
+        sizer.Add(hbox1_sizer, 0, wx.EXPAND|wx.ALL, border=10)
         sizer.Add(canvas, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         sizer.Add(mpl_toolbar, 0, wx.EXPAND|wx.ALL, border=10)
 
@@ -821,8 +832,13 @@ from your model."""
         write_to_statusbar("Generating new plots ...", 1)
         write_to_statusbar("", 2)
 
+        # Display the progress gauge.
+        self.pan2_gauge.Start()
+        self.pan2_gauge.Show(True)
+        self.pan2.Layout()
+
         # Keep track of the time it takes to do the computation and plotting.
-        t0 = time.time()
+        self.t0 = time.time()
 
         # Set the plotting figure manager for this class as the active one and
         # erase the current figure.
@@ -879,12 +895,21 @@ from your model."""
                                    sample_broadening=sample_broadening)
 
             # Compute the resolution.
-            Q=numpy.linspace(params[2], params[3], params[4])
+            Q = numpy.linspace(params[2], params[3], params[4])
             res = instrument.resolution(Q=Q)
 
             # Apply phase reconstruction and direct inversion techniques on the
-            # simulated reflectivity datasets.
-            perform_simulation(sample, params, dQ=res.dQ)
+            # experimental reflectivity datasets.
+            try:
+                #perform_simulation(sample, params, dQ=res.dQ)
+                ExecuteInThread(self.OnComputeEnd, perform_simulation,
+                                sample, params, Q=res.Q, dQ=res.dQ)
+            except Exception, e:
+                display_error_message(self, "Operation Failed", str(e))
+                return
+            else:
+                self.pan2_intro.SetLabel(self.pan2_intro_text)
+                self.pan2_intro.Refresh()
 
         else:  # polychromatic
             # Calculate the resolution of the instrument, specifically compute
@@ -920,22 +945,48 @@ from your model."""
                                    sample_broadening=sample_broadening)
 
             # Compute the resolution.
-            Q=numpy.linspace(params[2], params[3], params[4])
+            Q = numpy.linspace(params[2], params[3], params[4])
             L = bins(wavelength[0], wavelength[1], dLoL)
             dL = binwidths(L)
-            res = instrument.resolution(Q=Q, L=L, dL=dL)
+            #res = instrument.resolution(Q=Q, L=L, dL=dL)
+            res = instrument.resolution(L=L, dL=dL)
 
             # Apply phase reconstruction and direct inversion techniques on the
-            # simulated reflectivity datasets.
-            perform_simulation(sample, params, Q=None, dQ=None)
-            #print "*** len of Q, res.Q, res.dQ, L:", len(Q), len(res.Q), len(res.dQ), len(L)
-            #perform_simulation(sample, params, Q=res.Q, dQ=res.dQ)
+            # experimental reflectivity datasets.
+            try:
+                print "*** len of Q, res.Q, res.dQ, L:",\
+                      len(Q), len(res.Q), len(res.dQ), len(L)
+                #perform_simulation(sample, params, Q=res.Q, dQ=res.dQ)
+                # FIXME: perform_simulation fails if either Q or dQ is not None
+                ExecuteInThread(self.OnComputeEnd, perform_simulation,
+                                sample, params, Q=None, dQ=None)
+            except Exception, e:
+                display_error_message(self, "Operation Failed", str(e))
+                return
+            else:
+                self.pan2_intro.SetLabel(self.pan2_intro_text)
+                self.pan2_intro.Refresh()
 
-        # Finally, plot the results.
+
+    def OnComputeEnd(self, delayedResult):
+        """
+        Callback function that plots the results of a phase reconstruction and
+        phase inversion operation.
+        """
+
+        # The delayedResult object is not used to get the results because
+        # currently no results are passed back; instead plots are generated.
+
+        # Stop and hide the progress gauge.
+        self.pan2_gauge.Stop()
+        self.pan2_gauge.Show(False)
+        self.pan2.Layout()
+
+        # Make the plots visible.
         pylab.draw()
 
         # Write the total execution and plotting time to the status bar.
-        secs = time.time() - t0
+        secs = time.time() - self.t0
         write_to_statusbar("Plots updated", 1)
         write_to_statusbar("%g secs" %(secs), 2)
 
@@ -1337,24 +1388,23 @@ class AnalyzeDataPage(wx.Panel):
         mpl_toolbar = Toolbar(canvas)
         mpl_toolbar.Realize()
 
-        # Create a placeholder for text displayed above the plots.
-        intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
-        font = intro.GetFont()
+        # Display a title above the plots.
+        self.pan2_intro_text = INTRO_TEXT
+        self.pan2_intro = wx.StaticText(self.pan2, wx.ID_ANY, label=INTRO_TEXT)
+        font = self.pan2_intro.GetFont()
         font.SetPointSize(font.GetPointSize() + 1)
         font.SetWeight(wx.BOLD)
-        intro.SetFont(font)
-        self.pan2_intro = intro
-        self.pan2_intro_text = INTRO_TEXT
+        self.pan2_intro.SetFont(font)
 
-        # Create a progress gauge panel.
-        self.pan2_gauge = gauge = GaugePanel(self.pan2)
-        gauge.Show(False)
+        # Create a progress bar to be displayed during a lengthy computation.
+        self.pan2_gauge = GaugePanel(self.pan2)
+        self.pan2_gauge.Show(False)
 
-        # Create a horizontal box sizer.
+        # Create a horizontal box sizer to hold the title and progress bar.
         hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox1_sizer.Add(intro, 0, wx.ALIGN_CENTER_VERTICAL)
+        hbox1_sizer.Add(self.pan2_intro, 0, wx.ALIGN_CENTER_VERTICAL)
         hbox1_sizer.Add((10,25), 1)  # stretchable whitespace
-        hbox1_sizer.Add(gauge, 0)
+        hbox1_sizer.Add(self.pan2_gauge, 0)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1479,13 +1529,13 @@ from the data files."""
             print "Results from all inversion parameter fields:"
             print "  ", params
 
-        # Part 4 - Perform the simulation, reconstruction, and inversion.
+        # Part 4 - Perform the phase reconstruction and inversion.
 
         # Inform the user that we're starting the computation.
         write_to_statusbar("Generating new plots ...", 1)
         write_to_statusbar("", 2)
 
-        # Start the display the progress guage.
+        # Display the progress gauge.
         self.pan2_gauge.Start()
         self.pan2_gauge.Show(True)
         self.pan2.Layout()
@@ -1503,7 +1553,8 @@ from the data files."""
         # experimental reflectivity datasets.
         try:
             #perform_recon_inver(files, params)
-            ExecuteInThread(self.OnComputeEnd, perform_recon_inver, files, params)
+            ExecuteInThread(self.OnComputeEnd, perform_recon_inver,
+                                               files, params)
         except Exception, e:
             display_error_message(self, "Operation Failed", str(e))
             return
@@ -1526,6 +1577,7 @@ from the data files."""
         self.pan2_gauge.Show(False)
         self.pan2.Layout()
 
+        # Make the plots visible.
         pylab.draw()
 
         # Write the total execution and plotting time to the status bar.
@@ -2306,10 +2358,10 @@ class ExecuteInThread():
     """
 
     def __init__(self, callback, function, *args, **kwargs):
-        #print "ExecuteInThread func =", function
-        #print "ExecuteInThread args =", args
-        delayedresult.startWorker(callback,
-                                  function, wargs=args, wkwargs=kwargs)
+        if callback is None: callback = _callback
+        #print "ExecuteInThread", callback, function, args, kwargs
+        delayedresult.startWorker(consumer=callback, workerFn=function,
+                                  wargs=args, wkwargs=kwargs)
 
     def _callback(self, delayedResult):
         '''
@@ -2393,6 +2445,7 @@ def perform_simulation(sample, params, Q=None, dQ=None):
                           noise=1,
                           showiters=False,
                           monitor=None)
+
     # Construct a dictionary of keyword arguments for the phase_args parameter
     # used by the phase reconstruction algorithm.
     reconstruction_args = dict(stages=100)
@@ -2408,10 +2461,8 @@ def perform_simulation(sample, params, Q=None, dQ=None):
     perfect_reconstruction = True if params[10] == "True" else False
 
     # For monochromatic instruments, Q will be None.
-    # The Q parameter is here for debugging purposes to allow the caller to
-    # compute Q instead of using the input panel parameter list.
     if Q is None:
-        Q=numpy.linspace(params[2], params[3], params[4])
+        Q = numpy.linspace(params[2], params[3], params[4])
 
     # Create simulated datasets and perform phase reconstruction and phase
     # inversion using the simulated datasets.
