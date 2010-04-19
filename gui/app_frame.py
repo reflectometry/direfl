@@ -232,42 +232,44 @@ class AppFrame(wx.Frame):
         # Add a 'File' menu to the menu bar and define its options.
         file_menu = wx.Menu()
 
-        _id = file_menu.Append(wx.ID_ANY, "&Load Model ...")
-        self.Bind(wx.EVT_MENU, self.OnLoadModel, _id)
-        _id = file_menu.Append(wx.ID_ANY, "&Save Model ...")
-        self.Bind(wx.EVT_MENU, self.OnSaveModel, _id)
+        _item = file_menu.Append(wx.ID_ANY, "&Load Model ...")
+        self.Bind(wx.EVT_MENU, self.OnLoadModel, _item)
+        _item = file_menu.Append(wx.ID_ANY, "&Save Model ...")
+        self.Bind(wx.EVT_MENU, self.OnSaveModel, _item)
 
         file_menu.AppendSeparator()
 
-        _id = file_menu.Append(wx.ID_ANY, "Load &Demo Model 1")
-        self.Bind(wx.EVT_MENU, self.OnLoadDemoModel1, _id)
+        _item = file_menu.Append(wx.ID_ANY, "Load &Demo Model 1")
+        self.Bind(wx.EVT_MENU, self.OnLoadDemoModel1, _item)
 
-        _id = file_menu.Append(wx.ID_ANY, "Load &Demo Model 2")
-        self.Bind(wx.EVT_MENU, self.OnLoadDemoModel2, _id)
-
-        file_menu.AppendSeparator()
-
-        _id = file_menu.Append(wx.ID_ANY, "Load &Demo Dataset 1")
-        self.Bind(wx.EVT_MENU, self.OnLoadDemoDataset1, _id)
-        _id = file_menu.Append(wx.ID_ANY, "Load &Demo Dataset 2")
-        self.Bind(wx.EVT_MENU, self.OnLoadDemoDataset2, _id)
+        _item = file_menu.Append(wx.ID_ANY, "Load &Demo Model 2")
+        self.Bind(wx.EVT_MENU, self.OnLoadDemoModel2, _item)
 
         file_menu.AppendSeparator()
 
-        _id = file_menu.Append(wx.ID_ANY, "&Exit")
-        self.Bind(wx.EVT_MENU, self.OnExit, _id)
+        _item = file_menu.Append(wx.ID_ANY, "Load &Demo Dataset 1")
+        self.Bind(wx.EVT_MENU, self.OnLoadDemoDataset1, _item)
+        self.load_demo_dataset_1_item = _item  # handle for hide/show
+        _item = file_menu.Append(wx.ID_ANY, "Load &Demo Dataset 2")
+        self.Bind(wx.EVT_MENU, self.OnLoadDemoDataset2, _item)
+        self.load_demo_dataset_2_item = _item  # handle for hide/show
+
+        file_menu.AppendSeparator()
+
+        _item = file_menu.Append(wx.ID_ANY, "&Exit")
+        self.Bind(wx.EVT_MENU, self.OnExit, _item)
 
         mb.Append(file_menu, "&File")
 
         # Add a 'Help' menu to the menu bar and define its options.
         help_menu = wx.Menu()
 
-        _id = help_menu.Append(wx.ID_ANY, "&Tutorial")
-        self.Bind(wx.EVT_MENU, self.OnTutorial, _id)
-        _id = help_menu.Append(wx.ID_ANY, "&License")
-        self.Bind(wx.EVT_MENU, self.OnLicense, _id)
-        _id = help_menu.Append(wx.ID_ANY, "&About")
-        self.Bind(wx.EVT_MENU, self.OnAbout, _id)
+        _item = help_menu.Append(wx.ID_ANY, "&Tutorial")
+        self.Bind(wx.EVT_MENU, self.OnTutorial, _item)
+        _item = help_menu.Append(wx.ID_ANY, "&License")
+        self.Bind(wx.EVT_MENU, self.OnLicense, _item)
+        _item = help_menu.Append(wx.ID_ANY, "&About")
+        self.Bind(wx.EVT_MENU, self.OnAbout, _item)
 
         mb.Append(help_menu, "&Help")
 
@@ -438,7 +440,7 @@ class AppFrame(wx.Frame):
 
 
     def OnLoadDemoDataset2(self, event):
-        """Load demo 2 reflectometry data from resource files"""
+        """Load demo 2 reflectometry data from resource files."""
 
         self.page1.OnLoadDemoDataset2(event)
         self.notebook.SetSelection(1)
@@ -627,13 +629,13 @@ class SimulateDataPage(wx.Panel):
         # Finalize the layout of the simulation parameter panel.
 
         # Create button controls.
-        btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
-        self.Bind(wx.EVT_BUTTON, self.OnCompute, btn_compute)
+        self.btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
+        self.Bind(wx.EVT_BUTTON, self.OnCompute, self.btn_compute)
 
         # Create a horizontal box sizer for the buttons.
         hbox3_sizer = wx.BoxSizer(wx.HORIZONTAL)
         hbox3_sizer.Add((10,20), 1)  # stretchable whitespace
-        hbox3_sizer.Add(btn_compute, 0)
+        hbox3_sizer.Add(self.btn_compute, 0)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -825,6 +827,13 @@ from your model."""
 
         # Part 4 - Perform the simulation, reconstruction, and inversion.
 
+        # Hide widgets that can change the active plotting canvas or initiate
+        # another compute operation before we're finished with the current one.
+        self.btn_compute.Enable(False)
+        frame = wx.FindWindowByName("AppFrame")
+        frame.load_demo_dataset_1_item.Enable(False)
+        frame.load_demo_dataset_2_item.Enable(False)
+
         # Inform the user that we're starting the computation.
         write_to_statusbar("Generating new plots ...", 1)
         write_to_statusbar("", 2)
@@ -988,6 +997,12 @@ from your model."""
         secs = time.time() - self.t0
         write_to_statusbar("Plots updated", 1)
         write_to_statusbar("%g secs" %(secs), 2)
+
+        # Show widgets previously hidden at the start of this computation.
+        self.btn_compute.Enable(True)
+        frame = wx.FindWindowByName("AppFrame")
+        frame.load_demo_dataset_1_item.Enable(True)
+        frame.load_demo_dataset_2_item.Enable(True)
 
 
     def OnEdit(self, event):
@@ -1342,13 +1357,13 @@ class AnalyzeDataPage(wx.Panel):
         # Finalize the layout of the analysis parameter panel.
 
         # Create button controls.
-        btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
-        self.Bind(wx.EVT_BUTTON, self.OnCompute, btn_compute)
+        self.btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
+        self.Bind(wx.EVT_BUTTON, self.OnCompute, self.btn_compute)
 
         # Create a horizontal box sizer for the buttons.
         hbox3_sizer = wx.BoxSizer(wx.HORIZONTAL)
         hbox3_sizer.Add((10,20), 1)  # stretchable whitespace
-        hbox3_sizer.Add(btn_compute, 0)
+        hbox3_sizer.Add(self.btn_compute, 0)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1530,6 +1545,14 @@ from the data files."""
 
         # Part 4 - Perform the phase reconstruction and inversion.
 
+        # Hide widgets that can change the active plotting canvas or initiate
+        # another compute operation before we're finished with the current one.
+        self.btn_compute.Enable(False)
+        self.pan11.Enable(False)
+        frame = wx.FindWindowByName("AppFrame")
+        frame.load_demo_dataset_1_item.Enable(False)
+        frame.load_demo_dataset_2_item.Enable(False)
+
         # Inform the user that we're starting the computation.
         write_to_statusbar("Generating new plots ...", 1)
         write_to_statusbar("", 2)
@@ -1583,6 +1606,13 @@ from the data files."""
         secs = time.time() - self.t0
         write_to_statusbar("Plots updated", 1)
         write_to_statusbar("%g secs" %(secs), 2)
+
+        # Show widgets previously hidden at the start of this computation.
+        self.btn_compute.Enable(True)
+        self.pan11.Enable(True)
+        frame = wx.FindWindowByName("AppFrame")
+        frame.load_demo_dataset_1_item.Enable(True)
+        frame.load_demo_dataset_2_item.Enable(True)
 
 
     def OnEdit(self, event):
