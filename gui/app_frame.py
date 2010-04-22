@@ -20,6 +20,13 @@
 #
 # Author: James Krycka
 
+"""
+This module builds the GUI for the Direct Inversion Reflectometry application
+on top of an wxPython frame previously constructed.
+"""
+
+#==============================================================================
+
 import wx
 import os
 import sys
@@ -54,10 +61,8 @@ import pylab
 import numpy
 
 from wx.lib import delayedresult
-from wx.lib.wordwrap import wordwrap
 
-from .utilities import (choose_fontsize, display_fontsize,
-                        get_appdir, write_to_statusbar,
+from .utilities import (get_appdir, write_to_statusbar,
                         display_error_message, display_warning_message)
 
 # Add a path one level above 'inversion...' to sys.path so that this app can be
@@ -70,12 +75,8 @@ from .utilities import (choose_fontsize, display_fontsize,
 ### print "*** app root directory:", get_appdir(), " and __file__:", __file__
 sys.path.append(os.path.dirname(get_appdir()))
 
-from .about import (APP_NAME, APP_TITLE, APP_VERSION,
-                    APP_COPYRIGHT, APP_DESCRIPTION, APP_LICENSE,
-                    APP_PROJECT_URL, APP_PROJECT_TAG,
-                    APP_TUTORIAL_URL, APP_TUTORIAL_TXT)
-from .images import getOpenBitmap
 from .input_list import InputListDialog, InputListPanel
+from .images import getOpenBitmap
 
 from inversion.core.ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
 from inversion.core.snsdata import Liquids, Magnetic, SNSLoader
@@ -88,8 +89,6 @@ TEXT_FILES = "Text files (*.txt)|*.txt"
 ALL_FILES = "All files (*.*)|*.*"
 
 # Resource files.
-PROG_ICON = "direfl.ico"
-PROG_SPLASH_SCREEN = "splash.png"
 DEMO_MODEL1_DESC = "demo_model_1.dat"
 DEMO_MODEL2_DESC = "demo_model_2.dat"
 DEMO_REFLDATA1_1 = "qrd1.refl"
@@ -112,7 +111,7 @@ NEWLINES_2 = "\n\n"
 DATA_ENTRY_ERRMSG = """\
 Please correct any highlighted field in error,
 then retry the operation.\n
-Yellow incidates an input value is required.
+Yellow indicates an input value is required.
 Red means the input value has incorrect syntax."""
 
 INSTR_PARAM_ERRMSG = """\
@@ -122,178 +121,87 @@ the simulated datasets."""
 
 #==============================================================================
 
-class AppFrame(wx.Frame):
+class AppPanel(wx.Panel):
     """
-    This class implements the top-level frame for the application.
+    This class creates the main panel of the frame and builds the GUI for the
+    application on it.
     """
 
-    def __init__(self, parent=None, id=wx.ID_ANY, title=APP_TITLE,
-                 pos=wx.DefaultPosition, size=(800, 600), name="AppFrame"
+    def __init__(self, frame, id=wx.ID_ANY, style=wx.RAISED_BORDER,
+                 name="AppPanel"
                 ):
-        wx.Frame.__init__(self, parent, id, title, pos, size, name=name)
-
-        # Save the system default font information before we make any changes.
-        fontname = default_fontname = self.GetFont().GetFaceName()
-        fontsize = default_fontsize = self.GetFont().GetPointSize()
-
-        # If requested, override the font name to use.  Note that:
-        # - the MS Windows default font appears to be the same as Tahoma
-        # - Arial tends to be narrower and taller than Tahoma.
-        # - Verdana tends to be wider and shorter than Tahoma.
-        if len(sys.argv) > 1:
-            if '-tahoma' in sys.argv[1:]: fontname = "Tahoma"
-            if '-arial' in sys.argv[1:]: fontname = "Arial"
-            if '-verdana' in sys.argv[1:]: fontname = "Verdana"
-
-        fontsize = choose_fontsize(fontname=fontname)
-
-        # If requested, override the font point size to use.
-        if len(sys.argv) > 1:
-            if '-12pt' in sys.argv[1:]: fontsize = 12
-            if '-11pt' in sys.argv[1:]: fontsize = 11
-            if '-10pt' in sys.argv[1:]: fontsize = 10
-            if '-9pt' in sys.argv[1:]: fontsize = 9
-            if '-8pt' in sys.argv[1:]: fontsize = 8
-            if '-7pt' in sys.argv[1:]: fontsize = 7
-            if '-6pt' in sys.argv[1:]: fontsize = 6
-
-        # Set the default font for this and all child windows.  The font of the
-        # frame's title bar is not affected (which is a good thing).  However,
-        # this setting does not affect the font used in the frame's menu bar or
-        # menu items (which is not such a good thing as the menu text may be
-        # larger or smaller than the normal text used in the widgets used by
-        # the application).  Menu text font cannot be changed by wxPython.
-        self.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL, False,
-                             fontname))
-
-        # If requested, display font related platform information.
-        if len(sys.argv) > 1 and '-platform' in sys.argv[1:]:
-            print ">>> Platform =", wx.PlatformInfo
-            print ">>> Default font is %s  Chosen font is %s"\
-                  %(default_fontname, self.GetFont().GetFaceName())
-            print ">>> Default point size = %d  Chosen point size = %d"\
-                  %(default_fontsize, self.GetFont().GetPointSize())
-            display_fontsize(fontname=fontname)
-
-        # Create a panel for the frame.  This will be the only child panel of
+        # Create a panel on the frame.  This will be the only child panel of
         # the frame and it inherits its size from the frame which is useful
         # during resize operations (as it provides a minimal size to sizers).
-        self.panel = wx.Panel(self, wx.ID_ANY, style=wx.RAISED_BORDER)
-        self.panel.SetBackgroundColour("WHITE")
+        wx.Panel.__init__(self, parent=frame, id=id, style=style, name=name)
 
-        # Display the DiRefl icon in the title bar.
-        icon = wx.Icon(os.path.join(get_appdir(), PROG_ICON),
-                       wx.BITMAP_TYPE_ICO)
-        self.SetIcon(icon)
+        self.SetBackgroundColour("WHITE")
+        self.frame = frame
 
-        # Display a splash screen.
-        self.display_splash_screen()
+        # Modify the menu bar.
+        self.modify_menubar()
 
-        # Initialize the menu bar.
-        self.add_menubar()
+        # Modify the tool bar.
+        self.modify_toolbar()
 
-        # Initialize the tool bar.
-        self.add_toolbar()
-
-        # Initialize the status bar.
-        self.add_statusbar([-64, -16, -10, -10])
+        # Reconfigure the status bar.
+        self.modify_statusbar([-64, -16, -10, -10])
 
         # Initialize the notebook bar.
         self.add_notebookbar()
 
-        # Comment out the call to Fit() to keep the frame at its initial size,
-        # otherwise it will be reduced to its minimum size.
-        #self.Fit()
+
+    def modify_menubar(self):
+        """Add items to the menu bar, menus, and menu options."""
+
+        frame = self.frame
+        mb = frame.GetMenuBar()
+
+        # Add items to the "File" menu (prepending them in reverse order).
+        file_menu = mb.GetMenu(0)
+        file_menu.PrependSeparator()
+        _item = file_menu.Prepend(wx.ID_ANY, "&Save Model ...")
+        frame.Bind(wx.EVT_MENU, self.OnSaveModel, _item)
+        _item = file_menu.Prepend(wx.ID_ANY, "&Load Model ...")
+        frame.Bind(wx.EVT_MENU, self.OnLoadModel, _item)
+
+        # Add a 'Demo' menu to the menu bar and define its options.
+        demo_menu = wx.Menu()
+
+        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 1")
+        frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel1, _item)
+
+        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 2")
+        frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel2, _item)
+
+        demo_menu.AppendSeparator()
+
+        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Dataset 1")
+        frame.Bind(wx.EVT_MENU, self.OnLoadDemoDataset1, _item)
+        frame.load_demo_dataset_1_item = _item  # handle for hide/show
+        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Dataset 2")
+        frame.Bind(wx.EVT_MENU, self.OnLoadDemoDataset2, _item)
+        frame.load_demo_dataset_2_item = _item  # handle for hide/show
+
+        mb.Insert(1, demo_menu, "&Demo")
 
 
-    def display_splash_screen(self):
-        """Display the splash screen.  It will exactly cover the main frame."""
+    def modify_toolbar(self):
+        """Populate the tool bar."""
 
-        x, y = self.GetSizeTuple()
-        image = wx.Image(os.path.join(get_appdir(), PROG_SPLASH_SCREEN),
-                         wx.BITMAP_TYPE_PNG)
-        image.Rescale(x, y, wx.IMAGE_QUALITY_HIGH)
-        bm = image.ConvertToBitmap()
-        wx.SplashScreen(bitmap=bm,
-                        splashStyle=(wx.SPLASH_CENTRE_ON_PARENT|
-                                     wx.SPLASH_TIMEOUT|wx.STAY_ON_TOP),
-                        milliseconds=3000,
-                        parent=self,
-                        id=wx.ID_ANY)
-        wx.Yield()
-
-
-    def add_menubar(self):
-        """Create a menu bar, menus, and menu options."""
-
-        # Create the menubar.
-        mb = wx.MenuBar()
-
-        # Add a 'File' menu to the menu bar and define its options.
-        file_menu = wx.Menu()
-
-        _item = file_menu.Append(wx.ID_ANY, "&Load Model ...")
-        self.Bind(wx.EVT_MENU, self.OnLoadModel, _item)
-        _item = file_menu.Append(wx.ID_ANY, "&Save Model ...")
-        self.Bind(wx.EVT_MENU, self.OnSaveModel, _item)
-
-        file_menu.AppendSeparator()
-
-        _item = file_menu.Append(wx.ID_ANY, "Load &Demo Model 1")
-        self.Bind(wx.EVT_MENU, self.OnLoadDemoModel1, _item)
-
-        _item = file_menu.Append(wx.ID_ANY, "Load &Demo Model 2")
-        self.Bind(wx.EVT_MENU, self.OnLoadDemoModel2, _item)
-
-        file_menu.AppendSeparator()
-
-        _item = file_menu.Append(wx.ID_ANY, "Load &Demo Dataset 1")
-        self.Bind(wx.EVT_MENU, self.OnLoadDemoDataset1, _item)
-        self.load_demo_dataset_1_item = _item  # handle for hide/show
-        _item = file_menu.Append(wx.ID_ANY, "Load &Demo Dataset 2")
-        self.Bind(wx.EVT_MENU, self.OnLoadDemoDataset2, _item)
-        self.load_demo_dataset_2_item = _item  # handle for hide/show
-
-        file_menu.AppendSeparator()
-
-        _item = file_menu.Append(wx.ID_ANY, "&Exit")
-        self.Bind(wx.EVT_MENU, self.OnExit, _item)
-
-        mb.Append(file_menu, "&File")
-
-        # Add a 'Help' menu to the menu bar and define its options.
-        help_menu = wx.Menu()
-
-        _item = help_menu.Append(wx.ID_ANY, "&Tutorial")
-        self.Bind(wx.EVT_MENU, self.OnTutorial, _item)
-        _item = help_menu.Append(wx.ID_ANY, "&License")
-        self.Bind(wx.EVT_MENU, self.OnLicense, _item)
-        _item = help_menu.Append(wx.ID_ANY, "&About")
-        self.Bind(wx.EVT_MENU, self.OnAbout, _item)
-
-        mb.Append(help_menu, "&Help")
-
-        # Attach the menubar to the frame.
-        self.SetMenuBar(mb)
-
-
-    def add_toolbar(self):
-        """Create a tool bar and populate it."""
-
-        #tb = self.CreateToolBar()
-        tb = wx.ToolBar(parent=self, style=wx.TB_HORIZONTAL|wx.NO_BORDER)
+        tb = self.frame.GetToolBar()
 
         #tb.AddSimpleTool(wx.ID_OPEN, getOpenBitmap(),
         #                 wx.GetTranslation("Open Data Files"),
         #                 wx.GetTranslation("Open reflectometry data files"))
         tb.Realize()
-        self.SetToolBar(tb)
+        self.frame.SetToolBar(tb)
 
 
-    def add_statusbar(self, subbars):
-        """Create a status bar."""
+    def modify_statusbar(self, subbars):
+        """Divide the status bar into multiple segments."""
 
-        sb = self.statusbar = self.CreateStatusBar()
+        sb = self.frame.GetStatusBar()
         sb.SetFieldsCount(len(subbars))
         sb.SetStatusWidths(subbars)
 
@@ -301,7 +209,7 @@ class AppFrame(wx.Frame):
     def add_notebookbar(self):
         """Create a notebook bar and a set of tabs, one for each page."""
 
-        nb = self.notebook = wx.Notebook(self.panel, wx.ID_ANY,
+        nb = self.notebook = wx.Notebook(self, wx.ID_ANY,
                                          style=wx.NB_TOP|wx.NB_FIXEDWIDTH)
 
         # Create page windows as children of the notebook.
@@ -331,8 +239,8 @@ class AppFrame(wx.Frame):
         # Put the notebook in a sizer attached to the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(nb, 1, wx.EXPAND)
-        self.panel.SetSizer(sizer)
-        sizer.Fit(self.panel)
+        self.SetSizer(sizer)
+        sizer.Fit(self)
 
         '''
         # Sample code to switch windows in notebook tabs
@@ -359,49 +267,6 @@ class AppFrame(wx.Frame):
         curr_page = self.notebook.GetPage(event.GetSelection())
         curr_page.active_page()
         event.Skip()
-
-
-    def OnAbout(self, evt):
-        """
-        Show the About dialog box.
-
-        Note that use of Website or License information causes wx to default
-        to the generic About Box implementation instead of the native one.
-        In addition, the generic form centers each line of the license text
-        which is undesirable (and there is no way to disable centering).  The
-        workaround is to use About Box only with parameters that result in the
-        native mode being used, and to display the other info as separate menu
-        items (this is the wx recommended approach to handle the shortcoming).
-        """
-
-        info = wx.AboutDialogInfo()
-        info.Name = APP_NAME
-        info.Version = APP_VERSION + NEWLINE
-        info.Copyright = APP_COPYRIGHT + NEWLINE
-        info.Description = wordwrap(APP_DESCRIPTION, 500, wx.ClientDC(self))
-        #info.WebSite = (APP_PROJECT_URL, APP_PROJECT_TAG)
-        wx.AboutBox(info)
-
-
-    def OnExit(self, event):
-        """Terminate the program."""
-        self.Close()
-
-
-    def OnLicense(self, evt):
-        """
-        Show the License dialog box.
-
-        See the comments in OnAbout for explanation why this is not part of the
-        About dialog box as 'info.License' item.
-        """
-
-        info = wx.AboutDialogInfo()
-        info.Name = APP_NAME
-        info.Version = APP_VERSION + NEWLINE
-        info.Copyright = APP_COPYRIGHT + NEWLINE
-        info.Description = wordwrap(APP_LICENSE, 500, wx.ClientDC(self))
-        wx.AboutBox(info)
 
 
     def OnLoadDemoModel1(self, event):
@@ -444,20 +309,6 @@ class AppFrame(wx.Frame):
 
         self.page1.OnLoadDemoDataset2(event)
         self.notebook.SetSelection(1)
-
-
-    def OnTutorial(self, event):
-        """Show the Tutorial dialog box."""
-
-        dlg =wx.MessageDialog(self,
-                              message = wordwrap(APP_TUTORIAL_TXT +
-                                                 NEWLINES_2 +
-                                                 APP_TUTORIAL_URL,
-                                                 500, wx.ClientDC(self)),
-                              caption = 'Tutorial',
-                              style=wx.OK|wx.CENTRE)
-        dlg.ShowModal()
-        dlg.Destroy()
 
 #==============================================================================
 
@@ -2698,23 +2549,3 @@ if __name__ == '__main__':
     app.SetTopWindow(frame)
     app.MainLoop()
 '''
-
-#==============================================================================
-
-"""
-The following is a list of command line parameters for development and
-debugging purposes.  None are documented and they may change at any time.
-
-To show diagnostic info:
-    -platform       Display platform specific info, especially about fonts
-    -tracep         Display values from user input fields
-    -debug          Display info for debugging purposes (changes frequently)
-To override default font and point size attributes; the parameters within each
-set are mutually exclusive where the last one specified takes precedence:
-    -tahoma, -arial, -verdana
-    -6pt, -7pt, -8pt, -9pt, -10pt, -11pt, -12pt
-To create additional pages for development and testing:
-    -xtabs          Add extra notebook pages for test purposes
-        -test1      Execute test1() in a test page
-        -test2      Execute test2() in a test page
-"""
