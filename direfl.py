@@ -75,7 +75,8 @@ from gui.about import (APP_NAME, APP_TITLE, APP_VERSION,
                        APP_COPYRIGHT, APP_DESCRIPTION, APP_LICENSE,
                        APP_PROJECT_URL, APP_PROJECT_TAG,
                        APP_TUTORIAL_URL, APP_TUTORIAL_TXT)
-from gui.utilities import (choose_fontsize, display_fontsize, get_appdir)
+from gui.utilities import (choose_fontsize, display_fontsize,
+                           get_appdir, log_time)
 
 # Desired initial window size (if physical screen size permits).
 DISPLAY_WIDTH = 1200
@@ -150,6 +151,9 @@ class DiReflApp(wx.App):
     def display_splash_screen(self, parent):
         """Display the splash screen.  It will exactly cover the main frame."""
 
+        if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+            log_time("Preparing splash screen image")
+
         # Prepare the picture.  On a 2GHz intel cpu, this takes about a second.
         x, y = parent.GetSizeTuple()
         image = wx.Image(os.path.join(get_appdir(), PROG_SPLASH_SCREEN),
@@ -166,6 +170,9 @@ class DiReflApp(wx.App):
         #
         # Note that on Linux, the timeout appears to occur immediately in which
         # case the splash screen disappears upon entering the event loop.
+        if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+            log_time("Displaying the splash screen, then wait 2 sec")
+
         wx.SplashScreen(bitmap=bm,
                         splashStyle=(wx.SPLASH_CENTRE_ON_PARENT|
                                      wx.SPLASH_TIMEOUT|wx.STAY_ON_TOP),
@@ -222,6 +229,9 @@ class AppFrame(wx.Frame):
         # already created.  The GUI should be built after the splash screen
         # (if used) is displayed so that this work is done while the user is
         # viewing the splash screen.
+        if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+            log_time("Building the GUI on the frame")
+
         AppPanel(frame=self)
 
 
@@ -380,6 +390,9 @@ class AppFrame(wx.Frame):
 #==============================================================================
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+        log_time("Starting DiRefl")
+
     # Instantiate the application class and give control to wxPython.
     app = DiReflApp(redirect=False, filename=None)
 
@@ -388,5 +401,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 1 and '-inspect' in sys.argv[1:]:
         import wx.lib.inspection
         wx.lib.inspection.InspectionTool().Show()
+
+    if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+        log_time("Done initializing - entering the event loop")
 
     app.MainLoop()

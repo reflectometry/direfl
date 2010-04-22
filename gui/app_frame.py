@@ -62,7 +62,7 @@ import numpy
 
 from wx.lib import delayedresult
 
-from .utilities import (get_appdir, write_to_statusbar,
+from .utilities import (get_appdir, write_to_statusbar, log_time,
                         display_error_message, display_warning_message)
 
 # Add a path one level above 'inversion...' to sys.path so that this app can be

@@ -20,9 +20,16 @@
 #
 # Author: James Krycka
 
+"""
+This module contains utility functions and classes for the application.
+"""
+
+#==============================================================================
+
 import wx
 import os
 import sys
+import time
 
 # Text string used to compare the string width in pixels for different fonts.
 # This benchmark string has 273 characters, containing 92 distinct characters
@@ -43,6 +50,7 @@ BENCHMARK_TEXT =\
 BENCHMARK_WIDTH = 1600
 BENCHMARK_HEIGHT = 14
 
+#==============================================================================
 
 def choose_fontsize(fontname=None):
     """
@@ -165,3 +173,72 @@ def display_question(parent, caption, message):
                            style=wx.ICON_QUESTION|wx.YES_NO)
     msg.ShowModal()
     msg.Destroy()
+
+#==============================================================================
+
+log_time_handle = None
+def log_time(text=None, reset=False):
+    """
+    Convenience function for logging elapsed and delta time that can be called
+    from different modules in the application without needing to know the handle
+    to the underlying class (i.e, log_time maintains the TimeStamp instance).
+    """
+
+    global log_time_handle
+    if log_time_handle is None:
+        log_time_handle = TimeStamp()
+    if reset:
+        log_time_handle.reset()
+    log_time_handle.log_interval(text=text)
+
+
+class TimeStamp():
+    """
+    This class provides timestamp, elapsed time, and delta time services for
+    monitoring wall clock time usage in the application.
+    """
+
+    def __init__(self):
+        self.reset()
+
+
+    def reset(self):
+        # Start new timing interval.
+        self.t0 = self.t1 = time.time()
+
+
+    def gettime3(self):
+        # Get current time as timestamp, elasped time, and delta time.
+        now = time.time()
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now))
+        elapsed = now - self.t0
+        delta = now - self.t1
+        self.t1 = now
+        return timestamp, elapsed, delta
+
+
+    def gettime2(self):
+        # Get current time as elasped time and delta time.
+        now = time.time()
+        elapsed = now - self.t0
+        delta = now - self.t1
+        self.t1 = now
+        return elapsed, delta
+
+
+    def log_timing_data(self, text=""):
+        # Print timestamp, elapsed time, delta time, and optional comment.
+        t, e, d = self.gettime3()
+        print ">>> %s %9.3fs%8.3fs  %s" %(t, e, d, text)
+
+
+    def log_timestamp(self, text=""):
+        # Print timestamp and optional comment.
+        t, e, d = self.gettime3()
+        print ">>> %s  %s" %(t, text)
+
+
+    def log_interval(self, text=""):
+        # Print elapsed time, delta time, and optional comment.
+        e, d = self.gettime2()
+        print ">>> %9.3fs%8.3fs  %s" %(e, d, text)
