@@ -47,6 +47,7 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as Toolbar
 
 # The Figure object is used to create backend-independent plot representations.
 from matplotlib.figure import Figure
+from matplotlib.font_manager import FontProperties
 
 # For use in the matplotlib toolbar.
 from matplotlib.widgets import Slider, Button, RadioButtons
@@ -59,25 +60,19 @@ from matplotlib.backend_bases import FigureManagerBase
 import pylab
 
 import numpy
+from numpy import linspace, inf
 
 from wx.lib import delayedresult
 
-from .utilities import (get_appdir, write_to_statusbar, log_time,
-                        display_error_message, display_warning_message)
-
-# Add a path one level above 'inversion...' to sys.path so that this app can be
-# run even if the inversion package is not installed and the current working
-# directory is in a diffferent location.  Do this before importing (directly or
-# indirectly) from sibling directories (e.g. 'from inversion/...'.  Note that
-# 'from ..core.module' cannot be used as it traverses outside of the package.
-
-### print "*** path added to sys.path:", os.path.dirname(get_appdir())
-### print "*** app root directory:", get_appdir(), " and __file__:", __file__
-sys.path.append(os.path.dirname(get_appdir()))
+from .utilities import (get_appdir, write_to_statusbar,
+                        display_error_message, display_warning_message,
+                        log_time, WorkingIndicator)
 
 from .input_list import InputListDialog, InputListPanel
 from .images import getOpenBitmap
 
+from inversion.core.core import SurroundVariation, Inversion
+from inversion.core.simulate import Simulation
 from inversion.core.ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
 from inversion.core.snsdata import Liquids, Magnetic, SNSLoader
 from inversion.core.resolution import bins, binwidths
@@ -152,7 +147,7 @@ class AppPanel(wx.Panel):
 
 
     def modify_menubar(self):
-        """Add items to the menu bar, menus, and menu options."""
+        """Adds items to the menu bar, menus, and menu options."""
 
         frame = self.frame
         mb = frame.GetMenuBar()
@@ -187,7 +182,7 @@ class AppPanel(wx.Panel):
 
 
     def modify_toolbar(self):
-        """Populate the tool bar."""
+        """Populates the tool bar."""
 
         tb = self.frame.GetToolBar()
 
@@ -199,7 +194,7 @@ class AppPanel(wx.Panel):
 
 
     def modify_statusbar(self, subbars):
-        """Divide the status bar into multiple segments."""
+        """Divides the status bar into multiple segments."""
 
         sb = self.frame.GetStatusBar()
         sb.SetFieldsCount(len(subbars))
@@ -207,7 +202,7 @@ class AppPanel(wx.Panel):
 
 
     def add_notebookbar(self):
-        """Create a notebook bar and a set of tabs, one for each page."""
+        """Creates a notebook bar and a set of tabs, one for each page."""
 
         nb = self.notebook = wx.Notebook(self, wx.ID_ANY,
                                          style=wx.NB_TOP|wx.NB_FIXEDWIDTH)
@@ -257,7 +252,7 @@ class AppPanel(wx.Panel):
 
     def OnPageChanged(self, event):
         """
-        Perform any save, restore, or update operations when the user switches
+        Performs any save, restore, or update operations when the user switches
         notebook pages (via clicking on the notebook tab).
         """
 
@@ -270,42 +265,42 @@ class AppPanel(wx.Panel):
 
 
     def OnLoadDemoModel1(self, event):
-        """Load Demo Model 1 from a resource file."""
+        """Loads Demo Model 1 from a resource file."""
 
         self.page0.OnLoadDemoModel1(event)
         self.notebook.SetSelection(0)
 
 
     def OnLoadDemoModel2(self, event):
-        """Load Demo Model 2 from a resource file."""
+        """Loads Demo Model 2 from a resource file."""
 
         self.page0.OnLoadDemoModel2(event)
         self.notebook.SetSelection(0)
 
 
     def OnLoadModel(self, event):
-        """Load Model from a user specified file."""
+        """Loads the Model from a user specified file."""
 
         self.page0.OnLoadModel(event)
         self.notebook.SetSelection(0)
 
 
     def OnSaveModel(self, event):
-        """Save Model to a user specified file."""
+        """Saves the Model to a user specified file."""
 
         self.page0.OnSaveModel(event)
         self.notebook.SetSelection(0)
 
 
     def OnLoadDemoDataset1(self, event):
-        """Load demo 1 reflectometry data from resource files."""
+        """Loads demo 1 reflectometry data from resource files."""
 
         self.page1.OnLoadDemoDataset1(event)
         self.notebook.SetSelection(1)
 
 
     def OnLoadDemoDataset2(self, event):
-        """Load demo 2 reflectometry data from resource files."""
+        """Loads demo 2 reflectometry data from resource files."""
 
         self.page1.OnLoadDemoDataset2(event)
         self.notebook.SetSelection(1)
@@ -352,7 +347,7 @@ class SimulateDataPage(wx.Panel):
 
 
     def init_param_panel(self):
-        """Initialize the parameter input panel of the SimulateDataPage."""
+        """Initializes the parameter input panel of the SimulateDataPage."""
 
         #----------------------------------------------------------------------
         # Part 1 - Model Parameters
@@ -501,7 +496,7 @@ class SimulateDataPage(wx.Panel):
 
 
     def init_plot_panel(self):
-        """Initialize the plotting panel of the SimulateDataPage."""
+        """Initializes the plotting panel of the SimulateDataPage."""
 
         INTRO_TEXT = "Phase Reconstruction and Inversion of Simulated Data:"
 
@@ -535,7 +530,7 @@ class SimulateDataPage(wx.Panel):
         self.pan2_intro.SetFont(font)
 
         # Create a progress bar to be displayed during a lengthy computation.
-        self.pan2_gauge = GaugePanel(self.pan2)
+        self.pan2_gauge = WorkingIndicator(self.pan2)
         self.pan2_gauge.Show(False)
 
         # Create a horizontal box sizer to hold the title and progress bar.
@@ -567,7 +562,7 @@ from your model."""
 
 
     def OnComboBoxSelect(self, event):
-        """Process the user's choice of instrument."""
+        """Processes the user's choice of instrument."""
 
         sel = event.GetEventObject().GetSelection()
         self.instr_param.set_instr_idx(sel)
@@ -579,8 +574,9 @@ from your model."""
 
     def OnCompute(self, event):
         """
-        Generate a simulated dataset then perform phase reconstruction and
-        phase inversion on the data and plot the results.
+        Generates a simulated dataset then performs phase reconstruction and
+        phase inversion on the data in a separate thread.  OnComputeEnd is
+        called when the computation is finished to plot the results.
         """
 
         # Part 1 - Process model parameters.
@@ -857,7 +853,7 @@ from your model."""
 
 
     def OnEdit(self, event):
-        """Show the instrument metadata to the user and allow edits to it."""
+        """Shows the instrument metadata to the user and allows editing."""
 
         if self.instr_param.get_instr_idx() < 0:
             display_warning_message(self, "Select an Instrument",
@@ -867,12 +863,14 @@ from your model."""
 
 
     def OnReset(self, event):
-        # Restore default parameters for the currently selected instrument.
+        """
+        Restores default parameters for the currently selected instrument.
+        """
         self.instr_param.init_metadata()
 
 
     def OnLoadDemoModel1(self, event):
-        """Load Demo Model 1 from a file."""
+        """Loads Demo Model 1 from a file."""
 
         filespec = os.path.join(self.app_root_dir, DEMO_MODEL1_DESC)
 
@@ -912,7 +910,7 @@ from your model."""
 
 
     def OnLoadDemoModel2(self, event):
-        """Load Demo Model 2 from a file."""
+        """Loads Demo Model 2 from a file."""
 
         filespec = os.path.join(self.app_root_dir, DEMO_MODEL2_DESC)
 
@@ -952,7 +950,7 @@ from your model."""
 
 
     def OnLoadModel(self, event):
-        """Load Model from a file."""
+        """Loads the Model from a file."""
 
         dlg = wx.FileDialog(self,
                             message="Load Model from File ...",
@@ -987,7 +985,7 @@ from your model."""
 
 
     def OnSaveModel(self, event):
-        """Save Model to a file."""
+        """Saves the  Model to a file."""
 
         dlg = wx.FileDialog(self,
                             message="Save Model to File ...",
@@ -1062,7 +1060,7 @@ class AnalyzeDataPage(wx.Panel):
 
 
     def init_param_panel(self):
-        """Initialize the parameter input panel of the AnalyzeDataPage."""
+        """Initializes the parameter input panel of the AnalyzeDataPage."""
 
         #----------------------------------------------------------------------
         # Part 1 - Input Data Files
@@ -1229,7 +1227,7 @@ class AnalyzeDataPage(wx.Panel):
 
 
     def init_plot_panel(self):
-        """Initialize the plotting panel of the AnalyzeDataPage."""
+        """Initializes the plotting panel of the AnalyzeDataPage."""
 
         INTRO_TEXT = "Phase Reconstruction and Inversion of Experimental Data:"
 
@@ -1263,7 +1261,7 @@ class AnalyzeDataPage(wx.Panel):
         self.pan2_intro.SetFont(font)
 
         # Create a progress bar to be displayed during a lengthy computation.
-        self.pan2_gauge = GaugePanel(self.pan2)
+        self.pan2_gauge = WorkingIndicator(self.pan2)
         self.pan2_gauge.Show(False)
 
         # Create a horizontal box sizer to hold the title and progress bar.
@@ -1295,7 +1293,7 @@ from the data files."""
 
 
     def OnComboBoxSelect(self, event):
-        """Process the user's choice of instrument."""
+        """Processes the user's choice of instrument."""
 
         sel = event.GetEventObject().GetSelection()
         self.instr_param.set_instr_idx(sel)
@@ -1307,7 +1305,7 @@ from the data files."""
 
     def OnCompute(self, event):
         """
-        Perform phase reconstruction and phase inversion on the datasets in a
+        Performs phase reconstruction and phase inversion on the datasets in a
         separate thread.  OnComputeEnd is called when the computation is
         finished to plot the results.
         """
@@ -1467,7 +1465,7 @@ from the data files."""
 
 
     def OnEdit(self, event):
-        """Show the instrument metadata to the user and allow edits to it."""
+        """Shows the instrument metadata to the user and allows editing."""
 
         if self.instr_param.get_instr_idx() < 0:
             display_warning_message(self, "Select an Instrument",
@@ -1477,7 +1475,7 @@ from the data files."""
 
 
     def OnLoadDemoDataset1(self, event):
-        """Load demo 1 reflectometry data files for measurements 1 and 2."""
+        """Loads demo 1 reflectometry data files for measurements 1 and 2."""
 
         # Locate the demo data files.
         datafile_1 = os.path.join(self.app_root_dir, DEMO_REFLDATA1_1)
@@ -1517,7 +1515,7 @@ from the data files."""
 
 
     def OnLoadDemoDataset2(self, event):
-        """Load demo 1 reflectometry data files for measurements 1 and 2."""
+        """Loads demo 2 reflectometry data files for measurements 1 and 2."""
 
         # Locate the demo data files.
         datafile_1 = os.path.join(self.app_root_dir, DEMO_REFLDATA2_1)
@@ -1557,12 +1555,12 @@ from the data files."""
 
 
     def OnReset(self, event):
-        # Restore default parameters for the currently selected instrument.
+        """Restores default parameters for the currently selected instrument."""
         self.instr_param.init_metadata()
 
 
     def OnSelectFile1(self, event):
-        """Select the first reflectometry data file."""
+        """Selects the first reflectometry data file."""
 
         # The user can select both file1 and file2 from the file dialog box
         # by using the shift or control key to pick two files.  The order in
@@ -1610,7 +1608,7 @@ from the data files."""
 
 
     def OnSelectFile2(self, event):
-        """Select the second reflectometry data file."""
+        """Selects the second reflectometry data file."""
 
         dlg = wx.FileDialog(self,
                             message="Select 2nd Data File",
@@ -1641,10 +1639,9 @@ from the data files."""
             self.plot_dataset(file1, file2)
 
 
-
     def plot_dataset(self, file1, file2):
         """
-        Plot the Q, R, and dR of the two data files.
+        Plots the Q, R, and dR of the two data files.
         """
 
         # Set the plotting figure manager for this class as the active one and
@@ -1685,8 +1682,8 @@ from the data files."""
 
     def load_data(self, file1, file2):
         """
-        Load the data from files or from tuples of (Q,R) or (Q,R,dR),
-        (Q,dQ,R,dR) or (Q,dQ,R,dR,L).
+        Loads the data from files or alternatively from tuples of (Q,R) or
+        (Q,R,dR), (Q,dQ,R,dR) or (Q,dQ,R,dR,L).
 
         This code is cloned from SurroundVariation._load().
         TODO: Replace this loader with a general purpose loader in development.
@@ -1742,7 +1739,6 @@ from the data files."""
 
     def generate_plot(self):
         """Plot Q vs R and uncertainly dR if available."""
-        from matplotlib.font_manager import FontProperties
 
         '''
         # This simpler version of the function does not handle negative nor
@@ -1792,7 +1788,7 @@ from the data files."""
 
 class TestPlotPage(wx.Panel):
     """
-    This class adds a page to the notebook.
+    This class adds a page to the notebook for test purposes.
     """
 
     def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
@@ -1812,7 +1808,7 @@ class TestPlotPage(wx.Panel):
 
 
     def init_testplot_panel(self):
-        """Initialize the main panel of the TestPlotPage."""
+        """Initializes the main panel of the TestPlotPage."""
 
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
@@ -1864,7 +1860,7 @@ class TestPlotPage(wx.Panel):
 class InstrumentParameters():
     """
     This class is responsible for processing the instrument parameters
-    (also known as instrument metadata) for all support instruments.
+    (also known as instrument metadata) for all supporteds instruments.
     """
 
     def __init__(self):
@@ -1918,8 +1914,7 @@ class InstrumentParameters():
 
 
     def set_default_values(self, i, iclass):
-        """ Set default values for reflectometer parameters."""
-        from numpy import inf
+        """ Sets default values for reflectometer parameters."""
 
         if hasattr(iclass, 'wavelength'):
             try:
@@ -1951,7 +1946,10 @@ class InstrumentParameters():
 
 
     def init_metadata(self):
-        # Set current metadata values for insturment to their default values.
+        """
+        Sets current metadata values for insturments to their default values.
+        """
+
         i = self.instr_idx
         self.wavelength[1][i] = self.wavelength[0][i]
         self.wavelength_lo[1][i] = self.wavelength_lo[0][i]
@@ -1975,6 +1973,8 @@ class InstrumentParameters():
 
 
     def edit_metadata(self):
+        """Dispatches to the appropriate class of instrument."""
+
         if self.instr_idx <= 3:
             self.edit_metadata_monochromatic()
         else:
@@ -1983,7 +1983,7 @@ class InstrumentParameters():
 
     def edit_metadata_monochromatic(self):
         """
-        Allow user to edit the values for parameters of a monochromatic
+        Allows the user to edit the values for parameters of a monochromatic
         scanning instrument.
         """
 
@@ -2060,7 +2060,7 @@ class InstrumentParameters():
 
     def edit_metadata_polychromatic(self):
         """
-        Allow user to edit the values for parameters of a polychromatic
+        Allows the user to edit the values for parameters of a polychromatic
         time-of-flight instrument.
         """
 
@@ -2131,7 +2131,7 @@ class InstrumentParameters():
     def get_radiation(self):
         return self.radiation[self.instr_idx]
 
-    # Get methods.
+    # Get methods (with corresponding set methods).
     def get_wavelength(self):
         return self.wavelength[1][self.instr_idx]
     def get_wavelength_lo(self):
@@ -2175,7 +2175,7 @@ class InstrumentParameters():
     def get_sample_broadening(self):
         return self.sample_broadening[1][self.instr_idx]
 
-    # Set methods.
+    # Set methods (with corresponding get methods).
     def set_wavelength(self):
         self.wavelength[1][self.instr_idx] = value
     def set_wavelength_lo(self):
@@ -2221,33 +2221,6 @@ class InstrumentParameters():
 
 #==============================================================================
 
-class GaugePanel(wx.Panel):
-    """
-    This class implements a rotating gauge widget.
-    """
-
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent, wx.ID_ANY)
-
-        self.gauge = wx.Gauge(self, wx.ID_ANY, range=50, size=(250, 25))
-
-        self.timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.TimerHandler)
-        #self.count = 0
-
-    def Start(self):
-        self.timer.Start(100)
-
-    def Stop(self):
-        self.timer.Stop()
-
-    def TimerHandler(self, event):
-        #self.count += 1
-        #print "*** count = ", self.count
-        self.gauge.Pulse()
-
-#==============================================================================
-
 class ExecuteInThread():
     """
     This class executes the specified function in a separate thread and calls a
@@ -2278,11 +2251,9 @@ class ExecuteInThread():
 
 def perform_recon_inver(files, params):
     """
-    Perform phase reconstruction and direct inversion on two reflectometry data
-    sets to generate a scattering length depth profile of the sample.
+    Performs phase reconstruction and direct inversion on two reflectometry
+    data sets to generate a scattering length depth profile of the sample.
     """
-
-    from inversion.core.core import refl, SurroundVariation, Inversion
 
     if len(sys.argv) > 1 and '-debug' in sys.argv[1:]:
         print "*** Inputs to perform_recon_inver()"
@@ -2328,12 +2299,10 @@ def perform_recon_inver(files, params):
 
 def perform_simulation(sample, params, Q=None, dQ=None):
     """
-    Simulate reflectometry data sets from model information then perform
+    Simulates reflectometry data sets from model information then performs
     phase reconstruction and direct inversion on the data to generate a
     scattering length density profile.
     """
-    from inversion.core.simulate import Simulation
-    from numpy import linspace
 
     if len(sys.argv) > 1 and '-debug' in sys.argv[1:]:
         print "*** Inputs to perform_simulation()"
@@ -2403,23 +2372,22 @@ def perform_simulation(sample, params, Q=None, dQ=None):
 
 def test1():
     """
-    Test interface to simulation routine in simulation.py using a reconstructed
+    Tests use of the Simulation class in simulation.py using a reconstructed
     reflectometry data file.
     """
-
     from inversion.core.simulate import Simulation
     from numpy import linspace
 
-    # Roughness parameters (surface, sample, substrate)
+    # Roughness parameters (surface, sample, substrate).
     sv, s, su = 3, 5, 2
-    # Surround parameters
+    # Surround parameters.
     u, v1, v2 = 2.07, 0, 4.5
-    # Default sample
+    # Default sample.
     sample = ([5,100,s], [1,123,s], [3,47,s], [-1,25,s])
     sample[0][2] = sv
     bse = 0
 
-    # Run the simulation
+    # Run the simulation.
     inv = dict(showiters=False, iters=6, monitor=None, bse=bse,
                noise=1, stages=10, calcpoints=4, rhopoints=128)
 
@@ -2436,11 +2404,10 @@ def test1():
 
 def test2():
     """
-    Test interface to phase reconstruction and direct inversion routines
-    in core.py using two actual reflectometry data files.
+    Tests use of the SurroundVariation and Inversion classes in core.py using
+    two actual reflectometry data files.
     """
-
-    from inversion.core.core import refl, SurroundVariation, Inversion
+    from inversion.core.core import SurroundVariation, Inversion
 
     root = get_appdir()
     #args = [os.path.join(root, 'wsh02_re.dat')]
@@ -2482,7 +2449,7 @@ def test2():
 
 def test3():
     """
-    Test the ability to utilize code that uses the procedural interface
+    Tests the ability to utilize code that uses the procedural interface
     to pylab to generate subplots.
     """
 
@@ -2509,7 +2476,7 @@ def test3():
 
 def test4(figure):
     """
-    Test the ability to utilize code that uses the object oriented interface
+    Tests the ability to utilize code that uses the object oriented interface
     to pylab to generate subplots.
     """
 
@@ -2534,18 +2501,3 @@ def test4(figure):
                    fontsize=16)
     pylab.subplots_adjust(hspace=0.35)
     #pylab.show()
-
-#==============================================================================
-
-# The following code fails because AppFrame is run in a non-package context.
-# Instead it must be imported from a package because it and its imported
-# modules use relative imports which Python does allow from script mode.
-'''
-if __name__ == '__main__':
-    # Instantiate the application class and give control to wxPython.
-    app = wx.PySimpleApp()
-    frame = AppFrame(title="DiRefl Test")
-    frame.Show(True)
-    app.SetTopWindow(frame)
-    app.MainLoop()
-'''

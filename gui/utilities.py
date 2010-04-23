@@ -54,7 +54,7 @@ BENCHMARK_HEIGHT = 14
 
 def choose_fontsize(fontname=None):
     """
-    Determine the largest font size (in points) to use for a given font such
+    Determines the largest font size (in points) to use for a given font such
     that the rendered width of the benchmark string is less than or equal to
     101% of the rendered width of the string on a Windows machine using the
     Windows default font at 96 dpi.
@@ -85,7 +85,7 @@ def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
                                     benchmark_width=BENCHMARK_WIDTH,
                                     benchmark_height=BENCHMARK_HEIGHT):
     """
-    Display the width in pixels of a benchmark text string for a given font
+    Displays the width in pixels of a benchmark text string for a given font
     at various point sizes when rendered on the application's output device
     (which implicitly takes into account the resolution in dpi of the font
     faces at the various point sizes).
@@ -121,7 +121,7 @@ def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
 
 def get_appdir():
     """
-    Return the directory path of the main module of the application, i.e, the
+    Returns the directory path of the main module of the application, i.e, the
     root directory from which the application was started.  Note that this may
     be different than the current working directory.
     """
@@ -134,14 +134,14 @@ def get_appdir():
 
 
 def write_to_statusbar(text, index):
-    """Write a message to the status bar in the specified slot."""
+    """Writes a message to the status bar in the specified slot."""
 
     frame = wx.FindWindowByName("AppFrame", parent=None)
     frame.statusbar.SetStatusText(text, index)
 
 
 def display_error_message(parent, caption, message):
-    """Display an error message in a pop-up dialog box with an OK button."""
+    """Displays an error message in a pop-up dialog box with an OK button."""
 
     msg = wx.MessageDialog(parent, message, caption, style=wx.ICON_ERROR|wx.OK)
     msg.ShowModal()
@@ -149,7 +149,7 @@ def display_error_message(parent, caption, message):
 
 
 def display_warning_message(parent, caption, message):
-    """Display a warning message in a pop-up dialog box with an OK button."""
+    """Displays a warning message in a pop-up dialog box with an OK button."""
 
     msg = wx.MessageDialog(parent, message, caption,
                            style=wx.ICON_WARNING|wx.OK)
@@ -158,7 +158,7 @@ def display_warning_message(parent, caption, message):
 
 
 def display_information_message(parent, caption, message):
-    """Display an informational message in a pop-up with an OK button."""
+    """Displays an informational message in a pop-up with an OK button."""
 
     msg = wx.MessageDialog(parent, message, caption,
                            style=wx.ICON_INFORMATION|wx.OK)
@@ -167,7 +167,7 @@ def display_information_message(parent, caption, message):
 
 
 def display_question(parent, caption, message):
-    """Display a question in a pop-up dialog box with YES and NO buttons."""
+    """Displays a question in a pop-up dialog box with YES and NO buttons."""
 
     msg = wx.MessageDialog(parent, message, caption,
                            style=wx.ICON_QUESTION|wx.YES_NO)
@@ -176,12 +176,47 @@ def display_question(parent, caption, message):
 
 #==============================================================================
 
-log_time_handle = None
+class WorkingIndicator(wx.Panel):
+    """
+    This class implements a rotating 'in progress' gauge.
+    """
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, wx.ID_ANY)
+
+        self.gauge = wx.Gauge(self, wx.ID_ANY, range=50, size=(250, 25))
+
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.TimerHandler)
+        #self.count = 0
+
+    def Start(self):
+        self.timer.Start(100)
+
+    def Stop(self):
+        self.timer.Stop()
+
+    def TimerHandler(self, event):
+        #self.count += 1
+        #print "*** count = ", self.count
+        self.gauge.Pulse()
+
+#==============================================================================
+
+log_time_handle = None  # global variable for holding TimeStamp instance handle
+
 def log_time(text=None, reset=False):
     """
-    Convenience function for logging elapsed and delta time that can be called
-    from different modules in the application without needing to know the handle
-    to the underlying class (i.e, log_time maintains the TimeStamp instance).
+    This is a convenience function for using the TimeStamp class from any
+    module in the application for logging elapsed and delta time information.
+    This data is prefixed by a timestamp and optionally suffixed by a comment.
+    log_time maintains a single instance of TimeStamp during program execution.
+    Example output from calls to log_time('...'):
+
+    >>>     0.000s   0.000s  Starting DiRefl
+    >>>     0.031s   0.031s  Starting to display the splash screen
+    >>>     1.141s   1.110s  Starting to build the GUI on the frame
+    >>>     1.422s   0.281s  Done initializing - entering the event loop
     """
 
     global log_time_handle

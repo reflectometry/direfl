@@ -59,15 +59,18 @@ import time
 import wx
 from wx.lib.wordwrap import wordwrap
 
-# Add a path one level above 'inversion...' to sys.path so that this app can be
+# Add a path to sys.path that is the parent directory of the directory from
+# which the application (i.e. this file) is being run.  This allows the app to
 # run even if the inversion package is not installed and the current working
 # directory is in a diffferent location.  Do this before importing (directly or
 # indirectly) from sibling directories (e.g. 'from inversion/...'.  Note that
 # 'from ..core.module' cannot be used as it traverses outside of the package.
+# Note also that this technique works when running the py2exe image of the app.
 
-### print "*** path added to sys.path:", os.path.dirname(get_appdir())
-### print "*** app root directory:", get_appdir(), " and __file__:", __file__
-#sys.path.append(os.path.dirname(get_appdir()))
+from gui.utilities import get_appdir
+# print "*** path added to sys.path is", os.path.dirname(get_appdir())
+# print "*** app root directory is", get_appdir(), "and __file__ is" , __file__
+sys.path.append(os.path.dirname(get_appdir()))
 
 from gui.app_frame import AppPanel
 from gui.images import getOpenBitmap
@@ -75,8 +78,7 @@ from gui.about import (APP_NAME, APP_TITLE, APP_VERSION,
                        APP_COPYRIGHT, APP_DESCRIPTION, APP_LICENSE,
                        APP_PROJECT_URL, APP_PROJECT_TAG,
                        APP_TUTORIAL_URL, APP_TUTORIAL_TXT)
-from gui.utilities import (choose_fontsize, display_fontsize,
-                           get_appdir, log_time)
+from gui.utilities import (choose_fontsize, display_fontsize, log_time)
 
 # Desired initial window size (if physical screen size permits).
 DISPLAY_WIDTH = 1200
@@ -104,32 +106,40 @@ class DiReflApp(wx.App):
     # application specific packages are imported.
 
     def OnInit(self):
-        # Determine the position and size of the application frame and also for
-        # the splash window on top of it.
+        # Determine the position and size of the application frame and likewise
+        # for the splash window that will cover it.
         pos, size = self.window_placement()
 
+        # Create a basic application frame without any child panels.
         frame = AppFrame(parent=None, title=APP_TITLE, pos=pos, size=size)
 
-        # Display a splash screen.
+        # Display a splash screen on top of the frame.
+        if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+            log_time("Starting to display the splash screen")
         self.display_splash_screen(frame)
 
-        # Create the graphical user interface for the application.
+        # Create the graphical user interface for the application on the frame.
+        if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+            log_time("Starting to build the GUI on the frame")
         frame.init_GUI()
+
         frame.Show(True)
         self.SetTopWindow(frame)
 
         # The splash screen can be dismissed by the user (or the splash screen
         # exits due to its timeout mechanism) as soon as the wxPython event
-        # loop is entered (i.e. when the caller executes app.MainLoop().
+        # loop is entered (i.e. when the caller executes app.MainLoop()).
         return True
 
 
     def window_placement(self):
-        # Determine the position and size of the application frame such that it
-        # fits on the user's screen without obstructing (or being obstructed by)
-        # the Windows task bar.  The maximum initial size in pixels is bounded
-        # by DISPLAY_WIDTH x DISPLAY_HEIGHT.
-        #
+        """
+        Determines the position and size of the application frame such that it
+        fits on the user's screen without obstructing (or being obstructed by)
+        the Windows task bar.  The maximum initial size in pixels is bounded by
+        DISPLAY_WIDTH x DISPLAY_HEIGHT.
+        """
+
         # Note that when running Linux and using an Xming (X11) server on a PC
         # with a dual  monitor configuration, the reported display size of the
         # PC may be that of both monitors combined with an incorrect display
@@ -149,10 +159,7 @@ class DiReflApp(wx.App):
 
 
     def display_splash_screen(self, parent):
-        """Display the splash screen.  It will exactly cover the main frame."""
-
-        if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
-            log_time("Preparing splash screen image")
+        """Displays the splash screen.  It will exactly cover the main frame."""
 
         # Prepare the picture.  On a 2GHz intel cpu, this takes about a second.
         x, y = parent.GetSizeTuple()
@@ -170,9 +177,6 @@ class DiReflApp(wx.App):
         #
         # Note that on Linux, the timeout appears to occur immediately in which
         # case the splash screen disappears upon entering the event loop.
-        if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
-            log_time("Displaying the splash screen, then wait 2 sec")
-
         wx.SplashScreen(bitmap=bm,
                         splashStyle=(wx.SPLASH_CENTRE_ON_PARENT|
                                      wx.SPLASH_TIMEOUT|wx.STAY_ON_TOP),
@@ -180,8 +184,13 @@ class DiReflApp(wx.App):
                         parent=parent,
                         id=wx.ID_ANY)
 
-        # Keep the splash screen up a minimum amount of time.
-        time.sleep(2)
+        # Keep the splash screen up a minimum amount of time for non-Windows
+        # systems.  This is a workaround for Linux and possibly MacOS that
+        # appear to ignore the splash screen timeout option.
+        if '__WXMSW__' not in wx.PlatformInfo:
+            if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+                log_time("Starting sleep of 2 secs")
+            time.sleep(2)
 
         # A call to wx.Yield does not appear to be required.  If used on
         # Windows, the cursor changes from 'busy' to 'ready' before the event
@@ -194,7 +203,7 @@ class DiReflApp(wx.App):
 class AppFrame(wx.Frame):
     """
     This class creates the top-level frame for the application and populates it
-    application specific panels and widgets.
+    with application specific panels and widgets.
     """
 
     def __init__(self, parent=None, id=wx.ID_ANY, title=APP_TITLE,
@@ -225,19 +234,18 @@ class AppFrame(wx.Frame):
 
 
     def init_GUI(self):
-        # Construct the GUI for the application on top of the basic frame
-        # already created.  The GUI should be built after the splash screen
-        # (if used) is displayed so that this work is done while the user is
-        # viewing the splash screen.
-        if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
-            log_time("Building the GUI on the frame")
-
+        """
+        Constructs the GUI for the application on top of the basic frame
+        already created.  The GUI should be built after the splash screen
+        (if used) is displayed so that this work is done while the user is
+        viewing the splash screen.
+        """
         AppPanel(frame=self)
 
 
     def set_default_font(self):
         """
-        Set the default font family and font size for the frame which will be
+        Sets the default font family and font size for the frame which will be
         inherited by all child windows subsequently created.
         """
 
@@ -286,7 +294,7 @@ class AppFrame(wx.Frame):
 
 
     def add_menubar(self):
-        """Create a default menu bar, menus, and menu options."""
+        """Creates a default menu bar, menus, and menu options."""
 
         # Create the menu bar.
         mb = wx.MenuBar()
@@ -316,7 +324,7 @@ class AppFrame(wx.Frame):
 
 
     def add_toolbar(self):
-        """Create a default tool bar."""
+        """Creates a default tool bar."""
 
         #tb = self.CreateToolBar()
         tb = wx.ToolBar(parent=self, style=wx.TB_HORIZONTAL|wx.NO_BORDER)
@@ -329,13 +337,12 @@ class AppFrame(wx.Frame):
 
 
     def add_statusbar(self):
-        """Create a default status bar."""
-
+        """Creates a default status bar."""
         sb = self.statusbar = self.CreateStatusBar()
 
 
     def OnAbout(self, evt):
-        """Show the About dialog box."""
+        """Shows the About dialog box."""
 
         # Note that use of Website or License information causes wx to default
         # to the generic About Box implementation instead of the native one.
@@ -356,12 +363,12 @@ class AppFrame(wx.Frame):
 
 
     def OnExit(self, event):
-        """Terminate the program."""
+        """Terminates the program."""
         self.Close()
 
 
     def OnLicense(self, evt):
-        """Show the License dialog box."""
+        """Shows the License dialog box."""
 
         # See the comments in OnAbout for explanation why this is not part of
         # the About dialog box as 'info.License' item.
@@ -375,7 +382,7 @@ class AppFrame(wx.Frame):
 
 
     def OnTutorial(self, event):
-        """Show the Tutorial dialog box."""
+        """Shows the Tutorial dialog box."""
 
         dlg =wx.MessageDialog(self,
                               message = wordwrap(APP_TUTORIAL_TXT +
