@@ -27,10 +27,11 @@ on top of an wxPython frame previously constructed.
 
 #==============================================================================
 
-import wx
 import os
 import sys
 import time
+
+import wx
 
 import matplotlib
 
