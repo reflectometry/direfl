@@ -114,8 +114,12 @@ APP_PROJECT_URL = "http://reflectometry.org/danse"
 APP_PROJECT_TAG = "DANSE/Reflectometry home page"
 
 APP_TUTORIAL_URL = "http://www.reflectometry.org/danse/packages.html"
-APP_TUTORIAL = \
-"""For a tutorial and other documentation on DiRefl, please visit:"""
+APP_TUTORIAL_TAG = "DANSE/Reflectometry documentation"
+APP_TUTORIAL = """\
+Note: the tutorial is not currently available.
+
+For a tutorial and other documentation on DiRefl, please visit:\
+"""
 
 #==============================================================================
 
@@ -133,6 +137,8 @@ class AboutDialog(wx.Dialog):
                  style=wx.DEFAULT_DIALOG_STYLE,
                  show_name=True,
                  show_notice=True,
+                 show_link=True,
+                 show_link_docs=False,
                  info="..."
                 ):
         wx.Dialog.__init__(self, parent, id, title, pos, size, style)
@@ -163,6 +169,14 @@ class AboutDialog(wx.Dialog):
         if show_notice:
             copyright = wx.StaticText(self, wx.ID_ANY, label=APP_COPYRIGHT)
 
+        # Display hyperlink to the Reflectometry home page and/or doc page.
+        if show_link:
+            hyper1 = HyperLinkCtrl(self, wx.ID_ANY, label=APP_PROJECT_TAG,
+                                                    URL=APP_PROJECT_URL)
+        if show_link_docs:
+            hyper2 = HyperLinkCtrl(self, wx.ID_ANY, label=APP_TUTORIAL_TAG,
+                                                    URL=APP_TUTORIAL_URL)
+
         # Display the body of text for this about dialog box.
         info = wx.StaticText(self, wx.ID_ANY,
                              label=wordwrap(info, 530, wx.ClientDC(self)))
@@ -177,6 +191,10 @@ class AboutDialog(wx.Dialog):
         if show_notice:
             sizer.Add(copyright, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, border=10)
         sizer.Add(info, 0, wx.ALL, border=10)
+        if show_link:
+            sizer.Add(hyper1, 0, wx.ALL, border=10)
+        if show_link_docs:
+            sizer.Add(hyper2, 0, wx.ALL, border=10)
         sizer.Add(ok_button, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, border=10)
 
         # Finalize the sizer and establish the dimensions of the dialog box.

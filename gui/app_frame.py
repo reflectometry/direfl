@@ -32,11 +32,9 @@ import sys
 
 import wx
 
-from wx.lib.wordwrap import wordwrap
-
 from .app_panel import AppPanel
 from .about import (AboutDialog, APP_TITLE, APP_DESCRIPTION, APP_LICENSE,
-                    APP_CREDITS, APP_TUTORIAL, APP_TUTORIAL_URL)
+                    APP_CREDITS, APP_TUTORIAL)
 from .utilities import (get_appdir, choose_fontsize, display_fontsize)
 
 # Resource files.
@@ -193,7 +191,8 @@ class AppFrame(wx.Frame):
         """Shows the About dialog box."""
 
         dlg = AboutDialog(parent=self, title="About", info=APP_DESCRIPTION,
-                          show_name=True, show_notice=True)
+                          show_name=True, show_notice=True, show_link=True,
+                          show_link_docs=True)
         dlg.ShowModal()
         dlg.Destroy()
 
@@ -202,7 +201,8 @@ class AppFrame(wx.Frame):
         """Shows the Credits dialog box."""
 
         dlg = AboutDialog(parent=self, title="Credits", info=APP_CREDITS,
-                          show_name=True, show_notice=True)
+                          show_name=True, show_notice=True, show_link=False,
+                          show_link_docs=False)
         dlg.ShowModal()
         dlg.Destroy()
 
@@ -216,7 +216,8 @@ class AppFrame(wx.Frame):
         """Shows the License dialog box."""
 
         dlg = AboutDialog(parent=self, title="License", info=APP_LICENSE,
-                          show_name=True, show_notice=True)
+                          show_name=True, show_notice=True, show_link=False,
+                          show_link_docs=False)
         dlg.ShowModal()
         dlg.Destroy()
 
@@ -224,13 +225,8 @@ class AppFrame(wx.Frame):
     def OnTutorial(self, event):
         """Shows the Tutorial dialog box."""
 
-
-        dlg =wx.MessageDialog(self,
-                              message = wordwrap(APP_TUTORIAL +
-                                                 NEWLINES_2 +
-                                                 APP_TUTORIAL_URL,
-                                                 500, wx.ClientDC(self)),
-                              caption = 'Tutorial',
-                              style=wx.OK|wx.CENTRE)
+        dlg = AboutDialog(parent=self, title="Tutorial", info=APP_TUTORIAL,
+                          show_name=False, show_notice=False, show_link=False,
+                          show_link_docs=True)
         dlg.ShowModal()
         dlg.Destroy()
