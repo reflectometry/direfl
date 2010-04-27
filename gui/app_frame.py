@@ -21,7 +21,7 @@
 # Author: James Krycka
 
 """
-This module consstructs the GUI for the Direct Inversion Reflectometry
+This module constructs the GUI for the Direct Inversion Reflectometry
 application.
 """
 
@@ -31,13 +31,12 @@ import os
 import sys
 
 import wx
+
 from wx.lib.wordwrap import wordwrap
 
 from .app_panel import AppPanel
-from .about import (APP_NAME, APP_TITLE, APP_VERSION,
-                    APP_COPYRIGHT, APP_DESCRIPTION, APP_LICENSE,
-                    APP_PROJECT_URL, APP_PROJECT_TAG,
-                    APP_TUTORIAL_URL, APP_TUTORIAL_TXT)
+from .about import (AboutDialog, APP_TITLE, APP_DESCRIPTION, APP_LICENSE,
+                    APP_CREDITS, APP_TUTORIAL, APP_TUTORIAL_URL)
 from .utilities import (get_appdir, choose_fontsize, display_fontsize)
 
 # Resource files.
@@ -159,12 +158,14 @@ class AppFrame(wx.Frame):
         # Add a 'Help' menu to the menu bar and define its options.
         help_menu = wx.Menu()
 
+        _item = help_menu.Append(wx.ID_ANY, "&About")
+        self.Bind(wx.EVT_MENU, self.OnAbout, _item)
         _item = help_menu.Append(wx.ID_ANY, "&Tutorial")
         self.Bind(wx.EVT_MENU, self.OnTutorial, _item)
         _item = help_menu.Append(wx.ID_ANY, "&License")
         self.Bind(wx.EVT_MENU, self.OnLicense, _item)
-        _item = help_menu.Append(wx.ID_ANY, "&About")
-        self.Bind(wx.EVT_MENU, self.OnAbout, _item)
+        _item = help_menu.Append(wx.ID_ANY, "&Credits")
+        self.Bind(wx.EVT_MENU, self.OnCredits, _item)
 
         mb.Append(help_menu, "&Help")
 
@@ -191,22 +192,19 @@ class AppFrame(wx.Frame):
     def OnAbout(self, evt):
         """Shows the About dialog box."""
 
-        # Note that use of Website or License information causes wx to default
-        # to the generic About Box implementation instead of the native one.
-        # In addition, the generic form centers each line of the license text
-        # which is undesirable (and there is no way to disable centering).  The
-        # workaround is to use About Box only with parameters that result in
-        # the native mode being used, and to display the other info as separate
-        # menu items (this is the wx recommended approach to handle the
-        # shortcoming).
+        dlg = AboutDialog(parent=self, title="About", info=APP_DESCRIPTION,
+                          show_name=True, show_notice=True)
+        dlg.ShowModal()
+        dlg.Destroy()
 
-        info = wx.AboutDialogInfo()
-        info.Name = APP_NAME
-        info.Version = APP_VERSION + NEWLINE
-        info.Copyright = APP_COPYRIGHT + NEWLINE
-        info.Description = wordwrap(APP_DESCRIPTION, 500, wx.ClientDC(self))
-        #info.WebSite = (APP_PROJECT_URL, APP_PROJECT_TAG)
-        wx.AboutBox(info)
+
+    def OnCredits(self, evt):
+        """Shows the Credits dialog box."""
+
+        dlg = AboutDialog(parent=self, title="Credits", info=APP_CREDITS,
+                          show_name=True, show_notice=True)
+        dlg.ShowModal()
+        dlg.Destroy()
 
 
     def OnExit(self, event):
@@ -217,22 +215,18 @@ class AppFrame(wx.Frame):
     def OnLicense(self, evt):
         """Shows the License dialog box."""
 
-        # See the comments in OnAbout for explanation why this is not part of
-        # the About dialog box as 'info.License' item.
-
-        info = wx.AboutDialogInfo()
-        info.Name = APP_NAME
-        info.Version = APP_VERSION + NEWLINE
-        info.Copyright = APP_COPYRIGHT + NEWLINE
-        info.Description = wordwrap(APP_LICENSE, 500, wx.ClientDC(self))
-        wx.AboutBox(info)
+        dlg = AboutDialog(parent=self, title="License", info=APP_LICENSE,
+                          show_name=True, show_notice=True)
+        dlg.ShowModal()
+        dlg.Destroy()
 
 
     def OnTutorial(self, event):
         """Shows the Tutorial dialog box."""
 
+
         dlg =wx.MessageDialog(self,
-                              message = wordwrap(APP_TUTORIAL_TXT +
+                              message = wordwrap(APP_TUTORIAL +
                                                  NEWLINES_2 +
                                                  APP_TUTORIAL_URL,
                                                  500, wx.ClientDC(self)),
