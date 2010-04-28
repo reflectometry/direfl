@@ -98,6 +98,7 @@ class DiReflApp(wx.App):
         # Determine the position and size of the application frame and likewise
         # for the splash window that will cover it.
         pos, size = self.window_placement()
+        #print "window pos and size =", pos, size
 
         # Create a basic application frame without any child panels.
         frame = AppFrame(parent=None, title=APP_TITLE, pos=pos, size=size)
@@ -126,18 +127,22 @@ class DiReflApp(wx.App):
         Determines the position and size of the application frame such that it
         fits on the user's screen without obstructing (or being obstructed by)
         the Windows task bar.  The maximum initial size in pixels is bounded by
-        DISPLAY_WIDTH x DISPLAY_HEIGHT.
+        DISPLAY_WIDTH x DISPLAY_HEIGHT.  For most monitors, the application
+        be centered on the screen; for very large monitors it will be placed on
+        the left side of the screen.
         """
 
-        # Note that when running Linux and using an Xming (X11) server on a PC
-        # with a dual  monitor configuration, the reported display size of the
-        # PC may be that of both monitors combined with an incorrect display
-        # count of 1.  To avoid displaying this app across both monitors, we
-        # check if screen is 'too big'.  If so, the frame is not centered.
         xpos = ypos = 0
 
-        # x, y = wx.DisplaySize()  # includes task bar area, if any
-        j, k, x, y = wx.Display().GetClientArea() # rectangle less task bar area
+        # Note that when running Linux and using an Xming (X11) server on a PC
+        # with a dual  monitor configuration, the reported display size may be
+        # that of both monitors combined with an incorrect display count of 1.
+        # To avoid displaying this app across both monitors, we check for
+        # screen 'too big'.  If so, we assume a smaller width which means the
+        # application will be placed towards the left hand side of the screen.
+
+        # x, y = wx.DisplaySize()  # includes task bar area, if any, so use ...
+        j, k, x, y = wx.Display().GetClientArea() # rectangle excluding task bar
         if x > 1920: x = 1280  # display on left side, not centered on screen
 
         if x > DISPLAY_WIDTH:  xpos = (x - DISPLAY_WIDTH)/2
@@ -168,7 +173,8 @@ class DiReflApp(wx.App):
         # case the splash screen disappears upon entering the event loop.
         wx.SplashScreen(bitmap=bm,
                         splashStyle=(wx.SPLASH_CENTRE_ON_PARENT|
-                                     wx.SPLASH_TIMEOUT|wx.STAY_ON_TOP),
+                                     wx.SPLASH_TIMEOUT|
+                                     wx.STAY_ON_TOP),
                         milliseconds=4000,
                         parent=parent,
                         id=wx.ID_ANY)
