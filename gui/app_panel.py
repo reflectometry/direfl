@@ -1207,7 +1207,7 @@ class AnalyzeDataPage(wx.Panel):
                          choices=instr_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
-        cb.SetBackgroundColour(PALE_YELLOW)
+        #cb.SetBackgroundColour(PALE_YELLOW)  # this is not a required input
         self.instr_cb = cb
 
         # Create a horizontal box sizer for the combo box and its label.
@@ -1236,7 +1236,8 @@ class AnalyzeDataPage(wx.Panel):
 
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
-        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Resolution Parameters")
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY,
+                             "Resolution Parameters for Information Only")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
         sbox2_sizer.Add(self.pan12, 0,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
@@ -1363,7 +1364,7 @@ class AnalyzeDataPage(wx.Panel):
 
         WHAT_TODO_NEXT = """\
 Edit parameters then press the Compute button to generate a density profile \
-from the data files."""
+from your data files."""
         write_to_statusbar(WHAT_TODO_NEXT, 0)
         write_to_statusbar("", 1)
         write_to_statusbar("", 2)
@@ -1556,7 +1557,7 @@ from the data files."""
 
         if self.instr_param.get_instr_idx() < 0:
             display_warning_message(self, "Select an Instrument",
-                "Please select an instrument from the drop down list.")
+                "Please select an instrument to edit from the drop down list.")
             return
         self.instr_param.edit_metadata()
 
