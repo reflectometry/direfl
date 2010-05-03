@@ -115,6 +115,12 @@ Please edit the instrument data to supply missing
 required parameters needed to compute resolution for
 the simulated datasets."""
 
+INSTR_CALC_RESO_ERRMSG = """\
+Please specify an instrument to be used for the calculating
+resolution for the simulated datasets, or disable this calculation
+by selecting the 'No' button for the 'With Resolution' question
+at the bottom of the page."""
+
 #==============================================================================
 
 class AppPanel(wx.Panel):
@@ -350,8 +356,9 @@ class SimulateDataPage(wx.Panel):
     def init_param_panel(self):
         """Initializes the parameter input panel of the SimulateDataPage."""
 
-        #----------------------------------------------------------------------
-        # Part 1 - Model Parameters
+        #----------------------------
+        # Section 1: Model Parameters
+        #----------------------------
 
         # Create instructions for using the model description input box.
         line1 = wx.StaticText(self.pan1, wx.ID_ANY,
@@ -384,8 +391,9 @@ class SimulateDataPage(wx.Panel):
         sbox1_sizer.Add(self.model, 1,
                         wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
 
-        #----------------------------------------------------------------------
-        # Part 2 - Instrument Parameters
+        #---------------------------------
+        # Section 2: Instrument Parameters
+        #---------------------------------
 
         self.instr_param = InstrumentParameters()
 
@@ -417,17 +425,17 @@ class SimulateDataPage(wx.Panel):
         hbox1_sizer.Fit(self.pan12)
 
         # Create button controls.
-        btn_edit = wx.Button(self.pan1, wx.ID_ANY, "Edit")
-        self.Bind(wx.EVT_BUTTON, self.OnEdit, btn_edit)
-        btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
-        self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
+        self.btn_edit = wx.Button(self.pan1, wx.ID_ANY, "Edit")
+        self.Bind(wx.EVT_BUTTON, self.OnEdit, self.btn_edit)
+        self.btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
+        self.Bind(wx.EVT_BUTTON, self.OnReset, self.btn_reset)
 
         # Create a horizontal box sizer for the buttons.
         hbox2_sizer = wx.BoxSizer(wx.HORIZONTAL)
         hbox2_sizer.Add((10,20), 1)  # stretchable whitespace
-        hbox2_sizer.Add(btn_edit, 0)
+        hbox2_sizer.Add(self.btn_edit, 0)
         hbox2_sizer.Add((10,20), 0)  # non-stretchable whitespace
-        hbox2_sizer.Add(btn_reset, 0)
+        hbox2_sizer.Add(self.btn_reset, 0)
 
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
@@ -437,8 +445,9 @@ class SimulateDataPage(wx.Panel):
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
 
-        #----------------------------------------------------------------------
-        # Part 3 - Inversion and Reconstruction Parameters
+        #---------------------------------------------------
+        # Section 3: Inversion and Reconstruction Parameters
+        #---------------------------------------------------
 
         fields = [
                 ###["SLD of Substrate:", 2.07, "float", 'RE', None],
@@ -472,19 +481,47 @@ class SimulateDataPage(wx.Panel):
         sbox3_sizer.Add(self.inver_param, 1,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
-        #----------------------------------------------------------------------
-        # Finalize the layout of the simulation parameter panel.
+        #---------------------------
+        # Section 4: Control Buttons
+        #---------------------------
 
-        # Create button controls.
+        # Create radio buttons to enable/disable resolution calculation.
+        calc_reso = wx.StaticText(self.pan1, wx.ID_ANY,
+                                  label="With Resolution:  ")
+        calc_reso.SetBackgroundColour(WINDOW_BKGD_COLOUR)
+
+        self.radio1 = wx.RadioButton(self.pan1, wx.ID_ANY, "Yes  ",
+                                style=wx.RB_GROUP)
+        self.radio2 = wx.RadioButton(self.pan1, wx.ID_ANY, "No")
+        self.radio1.SetBackgroundColour(WINDOW_BKGD_COLOUR)
+        self.radio2.SetBackgroundColour(WINDOW_BKGD_COLOUR)
+        self.Bind(wx.EVT_RADIOBUTTON, self.OnCalcResoSelect, self.radio1)
+        self.Bind(wx.EVT_RADIOBUTTON, self.OnCalcResoSelect, self.radio2)
+
+        grid1 = wx.FlexGridSizer(rows=1, cols=2, vgap=0, hgap=0)
+        grid1.Add(self.radio1, 0, wx.ALIGN_CENTER)
+        grid1.Add(self.radio2, 0, wx.ALIGN_CENTER)
+
+        sbox4 = wx.StaticBox(self.pan1, wx.ID_ANY, "")
+        sbox4_sizer = wx.StaticBoxSizer(sbox4, wx.HORIZONTAL)
+        sbox4_sizer.Add(calc_reso, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        sbox4_sizer.Add(grid1, 0, wx.ALIGN_CENTER_VERTICAL)
+
+        # Create the Compute button.
         self.btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
         self.Bind(wx.EVT_BUTTON, self.OnCompute, self.btn_compute)
 
         # Create a horizontal box sizer for the buttons.
         hbox3_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        hbox3_sizer.Add(sbox4_sizer, 0)
         hbox3_sizer.Add((10,20), 1)  # stretchable whitespace
-        hbox3_sizer.Add(self.btn_compute, 0)
+        hbox3_sizer.Add(self.btn_compute, 0, wx.TOP, border=6)
 
-        # Create a vertical box sizer to manage the widgets in the main panel.
+        #----------------------------------------
+        # Manage all of the widgets in the panel.
+        #----------------------------------------
+
+        # Put all section sizers in a vertical box sizer
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(sbox1_sizer, 2, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sizer.Add(sbox2_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
@@ -494,6 +531,10 @@ class SimulateDataPage(wx.Panel):
         # Associate the sizer with its container.
         self.pan1.SetSizer(sizer)
         sizer.Fit(self.pan1)
+
+        # Set flag to indicate that resolution will be calculated for a
+        # simulation operation.
+        self.calc_resolution = True
 
 
     def init_plot_panel(self):
@@ -562,6 +603,26 @@ from your model."""
         write_to_statusbar("", 2)
 
 
+    def OnCalcResoSelect(self, event):
+        """Process the With Resolution radio button select event."""
+
+        radio_selected = event.GetEventObject()
+        if self.radio1 is radio_selected:
+            self.radio1.SetValue(True)
+            self.radio2.SetValue(False)
+            self.pan12.Enable(True)
+            self.btn_edit.Enable(True)
+            self.btn_reset.Enable(True)
+            self.calc_resolution = True
+        else:
+            self.radio2.SetValue(True)
+            self.radio1.SetValue(False)
+            self.pan12.Enable(False)
+            self.btn_edit.Enable(False)
+            self.btn_reset.Enable(False)
+            self.calc_resolution = False
+
+
     def OnComboBoxSelect(self, event):
         """Processes the user's choice of instrument."""
 
@@ -580,7 +641,9 @@ from your model."""
         called when the computation is finished to plot the results.
         """
 
-        # Part 1 - Process model parameters.
+        #---------------------------------
+        # Step 1: Process Model Parameters
+        #---------------------------------
 
         # Validate and convert the model description into a list of layers.
         lines = self.model.GetValue().splitlines()
@@ -610,46 +673,9 @@ from your model."""
                  "Substrate layer for your model."))
             return
 
-        # Part 2 - Process instrument parameters.
-
-        # Check to see if an instrument has been specified.
-        if self.instr_param.get_instr_idx() < 0:
-            display_error_message(self, "Choose an Instrument",
-                "Please specify an instrument to be used for the simulation.")
-            return
-
-        # Get instrument parameters (mainly used for resolution calculation)
-        # based on whether the instrument is monochromatic or polychromatic.
-        # Note that these parameters have already been validated.
-        ip = self.instr_param
-        if ip.get_instr_idx() <= 3:  # monochromatic
-            wavelength = ip.get_wavelength()
-            dLoL = ip.get_dLoL()
-            d_s1 = ip.get_d_s1()
-            d_s2 = ip.get_d_s2()
-            Tlo = ip.get_Tlo()
-            Thi = ip.get_Thi()
-            slit1_at_Tlo = ip.get_slit1_at_Tlo()
-            slit2_at_Tlo = ip.get_slit2_at_Tlo()
-            slit1_below = ip.get_slit1_below()
-            slit2_below = ip.get_slit2_below()
-            slit1_above = ip.get_slit1_above()
-            slit2_above = ip.get_slit2_above()
-            sample_width = ip.get_sample_width()
-            sample_broadening = ip.get_sample_broadening()
-        else:  # polychromatic
-            wavelength_lo = ip.get_wavelength_lo()
-            wavelength_hi = ip.get_wavelength_hi()
-            dLoL = ip.get_dLoL()
-            slit1_size = ip.get_slit1_size()
-            slit2_size = ip.get_slit2_size()
-            d_s1 = ip.get_d_s1()
-            d_s2 = ip.get_d_s2()
-            T = ip.get_T()
-            sample_width = ip.get_sample_width()
-            sample_broadening = ip.get_sample_broadening()
-
-        # Part 3 - Process inversion parameters.
+        #-------------------------------------
+        # Step 2: Process Inversion Parameters
+        #-------------------------------------
 
         # Explicitly validate all inversion parameters before proceeding.  The
         # panel's Validate method will invoke all validators associated with
@@ -673,39 +699,47 @@ from your model."""
             print ">>> Model parameters (all layers):"; print layers
             print ">>> Sample layers excluding Surround:"; print sample
 
-        # Part 4 - Perform the simulation, reconstruction, and inversion.
+        #---------------------------------------------------------------
+        # Step 3: Process Instrument Parameters and Calculate Resolution
+        #---------------------------------------------------------------
 
-        # Hide widgets that can change the active plotting canvas or initiate
-        # another compute operation before we're finished with the current one.
-        self.btn_compute.Enable(False)
-        frame = wx.FindWindowByName("AppFrame")
-        frame.load_demo_dataset_1_item.Enable(False)
-        frame.load_demo_dataset_2_item.Enable(False)
-
-        # Inform the user that we're starting the computation.
-        write_to_statusbar("Generating new plots ...", 1)
-        write_to_statusbar("", 2)
-
-        # Display the progress gauge.
-        self.pan2_gauge.Start()
-        self.pan2_gauge.Show(True)
-        self.pan2.Layout()
-
-        # Keep track of the time it takes to do the computation and plotting.
-        self.t0 = time.time()
-
-        # Set the plotting figure manager for this class as the active one and
-        # erase the current figure.
-        _pylab_helpers.Gcf.set_active(self.fm)
-        pylab.clf()
-        pylab.draw()
-
-        # Obtain the class that defines the selected instrument.
+        # Get the instrument parameter class and obtain the class that defines
+        # the selected instrument.
+        ip = self.instr_param
         classes = ip.get_instr_classes()
         classname = classes[ip.get_instr_idx()]
 
-        if ip.get_instr_idx() <= 3:  # monochromatic
-            # Calculate the resolution of the instrument, specifically compute
+        # If the user has chosen to disable resolution calculation, then we are
+        # done with this step.
+        if not self.calc_resolution:
+            Q = None
+            dQ = None
+
+        # Check to see if an instrument has been specified.
+        elif ip.get_instr_idx() < 0:
+            display_error_message(self, "Choose an Instrument",
+                                        INSTR_CALC_RESO_ERRMSG)
+            return
+
+        # For a monochromatic instrument, get its parameters and calculate
+        # resolution.
+        elif ip.get_instr_idx() <= 3:
+            wavelength = ip.get_wavelength()
+            dLoL = ip.get_dLoL()
+            d_s1 = ip.get_d_s1()
+            d_s2 = ip.get_d_s2()
+            Tlo = ip.get_Tlo()
+            Thi = ip.get_Thi()
+            slit1_at_Tlo = ip.get_slit1_at_Tlo()
+            slit2_at_Tlo = ip.get_slit2_at_Tlo()
+            slit1_below = ip.get_slit1_below()
+            slit2_below = ip.get_slit2_below()
+            slit1_above = ip.get_slit1_above()
+            slit2_above = ip.get_slit2_above()
+            sample_width = ip.get_sample_width()
+            sample_broadening = ip.get_sample_broadening()
+
+            # Calculate the resolution of the instrument.  Specifically compute
             # the resolution vector dQ for given values of a Q vector based on
             # L, dL, T, and dT.  We do not have all of the input data directly
             # (for instance we know L (wavelength) but not dT), however, the
@@ -751,22 +785,24 @@ from your model."""
             # Compute the resolution.
             Q = numpy.linspace(params[2], params[3], params[4])
             res = instrument.resolution(Q=Q)
+            Q = res.Q
+            dQ = res.dQ
 
-            # Apply phase reconstruction and direct inversion techniques on the
-            # experimental reflectivity datasets.
-            try:
-                #perform_simulation(sample, params, dQ=res.dQ)
-                ExecuteInThread(self.OnComputeEnd, perform_simulation,
-                                sample, params, Q=res.Q, dQ=res.dQ)
-            except Exception, e:
-                display_error_message(self, "Operation Failed", str(e))
-                return
-            else:
-                self.pan2_intro.SetLabel(self.pan2_intro_text)
-                self.pan2_intro.Refresh()
+        # For a monochromatic instrument, get its parameters and calculate
+        # resolution.
+        elif ip.get_instr_idx() > 3:
+            wavelength_lo = ip.get_wavelength_lo()
+            wavelength_hi = ip.get_wavelength_hi()
+            dLoL = ip.get_dLoL()
+            slit1_size = ip.get_slit1_size()
+            slit2_size = ip.get_slit2_size()
+            d_s1 = ip.get_d_s1()
+            d_s2 = ip.get_d_s2()
+            T = ip.get_T()
+            sample_width = ip.get_sample_width()
+            sample_broadening = ip.get_sample_broadening()
 
-        else:  # polychromatic
-            # Calculate the resolution of the instrument, specifically compute
+            # Calculate the resolution of the instrument.  Specifically compute
             # the resolution vector dQ for given values of a Q vector.
 
             # First, transform some of the data into the format required by
@@ -808,20 +844,52 @@ from your model."""
             print len(Q), len(res.Q), len(res.dQ), len(L)
             '''
             res = instrument.resolution(L=L, dL=dL)
+            Q = res.Q
+            dQ = res.dQ
+            # FIXME: perform_simulation fails if either Q or dQ is not None
+            Q = None
+            dQ = None
 
-            # Apply phase reconstruction and direct inversion techniques on the
-            # experimental reflectivity datasets.
-            try:
-                # FIXME: perform_simulation fails if either Q or dQ is not None
-                #perform_simulation(sample, params, Q=res.Q, dQ=res.dQ)
-                ExecuteInThread(self.OnComputeEnd, perform_simulation,
-                                sample, params, Q=None, dQ=None)
-            except Exception, e:
-                display_error_message(self, "Operation Failed", str(e))
-                return
-            else:
-                self.pan2_intro.SetLabel(self.pan2_intro_text)
-                self.pan2_intro.Refresh()
+        #--------------------------------------------------------------
+        # Step 4: Perform the Simulation, Reconstruction, and Inversion
+        #--------------------------------------------------------------
+
+        # Hide widgets that can change the active plotting canvas or initiate
+        # another compute operation before we're finished with the current one.
+        self.btn_compute.Enable(False)
+        frame = wx.FindWindowByName("AppFrame")
+        frame.load_demo_dataset_1_item.Enable(False)
+        frame.load_demo_dataset_2_item.Enable(False)
+
+        # Inform the user that we're starting the computation.
+        write_to_statusbar("Generating new plots ...", 1)
+        write_to_statusbar("", 2)
+
+        # Display the progress gauge.
+        self.pan2_gauge.Start()
+        self.pan2_gauge.Show(True)
+        self.pan2.Layout()
+
+        # Keep track of the time it takes to do the computation and plotting.
+        self.t0 = time.time()
+
+        # Set the plotting figure manager for this class as the active one and
+        # erase the current figure.
+        _pylab_helpers.Gcf.set_active(self.fm)
+        pylab.clf()
+        pylab.draw()
+
+        # Apply phase reconstruction and direct inversion techniques on the
+        # experimental reflectivity datasets.
+        try:
+            ExecuteInThread(self.OnComputeEnd, perform_simulation,
+                            sample, params, Q=Q, dQ=dQ)
+        except Exception, e:
+            display_error_message(self, "Operation Failed", str(e))
+            return
+        else:
+            self.pan2_intro.SetLabel(self.pan2_intro_text)
+            self.pan2_intro.Refresh()
 
 
     def OnComputeEnd(self, delayedResult):
@@ -1063,8 +1131,9 @@ class AnalyzeDataPage(wx.Panel):
     def init_param_panel(self):
         """Initializes the parameter input panel of the AnalyzeDataPage."""
 
-        #----------------------------------------------------------------------
-        # Part 1 - Input Data Files
+        #----------------------------
+        # Section 1: Input Data Files
+        #----------------------------
 
         # Create a panel for obtaining input file selections.
         self.pan11 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
@@ -1119,8 +1188,9 @@ class AnalyzeDataPage(wx.Panel):
         sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
         sbox1_sizer.Add(self.pan11, 0, wx.EXPAND|wx.ALL, border=10)
 
-        #----------------------------------------------------------------------
-        # Part 2 - Instrument Parameters
+        #---------------------------------
+        # Section 2: Instrument Parameters
+        #---------------------------------
 
         self.instr_param = InstrumentParameters()
 
@@ -1172,8 +1242,9 @@ class AnalyzeDataPage(wx.Panel):
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
 
-        #----------------------------------------------------------------------
-        # Part 3 - Inversion and Reconstruction Parameters
+        #---------------------------------------------------
+        # Section 3: Inversion and Reconstruction Parameters
+        #---------------------------------------------------
 
         fields = [ ["SLD of Surface for Exp 1:", None, "float", 'RE', None],
                    ["SLD of Surface for Exp 2:", None, "float", 'RE', None],
@@ -1203,10 +1274,11 @@ class AnalyzeDataPage(wx.Panel):
         sbox3_sizer.Add(self.inver_param, 1,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
 
-        #----------------------------------------------------------------------
-        # Finalize the layout of the analysis parameter panel.
+        #---------------------------
+        # Section 4: Control Buttons
+        #---------------------------
 
-        # Create button controls.
+        # Create the Compute button.
         self.btn_compute = wx.Button(self.pan1, wx.ID_ANY, "Compute")
         self.Bind(wx.EVT_BUTTON, self.OnCompute, self.btn_compute)
 
@@ -1215,7 +1287,11 @@ class AnalyzeDataPage(wx.Panel):
         hbox3_sizer.Add((10,20), 1)  # stretchable whitespace
         hbox3_sizer.Add(self.btn_compute, 0)
 
-        # Create a vertical box sizer to manage the widgets in the main panel.
+        #----------------------------------------
+        # Manage all of the widgets in the panel.
+        #----------------------------------------
+
+        # Put all section sizers in a vertical box sizer
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(sbox1_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
         sizer.Add(sbox2_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
@@ -1311,7 +1387,9 @@ from the data files."""
         finished to plot the results.
         """
 
-        # Part 1 - Process reflectometry data files.
+        #-----------------------------------------
+        # Step 1: Process Reflectometry Data Files
+        #-----------------------------------------
 
         # Get the names of the data files.
         # Note that we must get the names from the text control box because the
@@ -1343,11 +1421,33 @@ from the data files."""
                 "Cannot access file "+files[1])
             return
 
-        # Part 2 - Process instrument parameters.
+        #-------------------------------------
+        # Step 2: Process Inversion Parameters
+        #-------------------------------------
 
-        # Get instrument parameters (mainly used for resolution calculation)
-        # based on whether the instrument is monochromatic or polychromatic.
+        # Explicitly validate all inversion parameters before proceeding.  The
+        # panel's Validate method will invoke all validators associated with
+        # its top-level input objects and transfer data from them.  Although
+        # char-by-char validation would have warned the user about any invalid
+        # entries, the user could have pressed the Compute button without
+        # making the corrections, so a full validation pass must be done now.
+        if not self.inver_param.Validate():
+            display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
+            return
+
+        # Get the validated inversion parameters.
+        params = self.inver_param.GetResults()
+        if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+            print ">>> Inversion parameters:"; print params
+
+        #--------------------------------------
+        # Step 3: Process Instrument Parameters
+        #--------------------------------------
+
+        # Get instrument parameters based on whether the instrument is
+        # monochromatic or polychromatic.
         # Note that these parameters have already been validated.
+        '''
         ip = self.instr_param
         if ip.get_instr_idx() <= 3:  # monocromatic
             wavelength = ip.get_wavelength()
@@ -1375,25 +1475,11 @@ from the data files."""
             T = ip.get_T()
             sample_width = ip.get_sample_width()
             sample_broadening = ip.get_sample_broadening()
+            '''
 
-        # Part 3 - Process inversion parameters.
-
-        # Explicitly validate all inversion parameters before proceeding.  The
-        # panel's Validate method will invoke all validators associated with
-        # its top-level input objects and transfer data from them.  Although
-        # char-by-char validation would have warned the user about any invalid
-        # entries, the user could have pressed the Compute button without
-        # making the corrections, so a full validation pass must be done now.
-        if not self.inver_param.Validate():
-            display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
-            return
-
-        # Get the validated inversion parameters.
-        params = self.inver_param.GetResults()
-        if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
-            print ">>> Inversion parameters:"; print params
-
-        # Part 4 - Perform the phase reconstruction and inversion.
+        #-------------------------------------------------------
+        # Step 4: Perform the Phase Reconstruction and Inversion
+        #-------------------------------------------------------
 
         # Hide widgets that can change the active plotting canvas or initiate
         # another compute operation before we're finished with the current one.
