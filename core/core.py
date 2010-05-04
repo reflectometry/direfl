@@ -567,9 +567,9 @@ class Inversion():
             pylab.subplot(223)
             phase.plot_imaginary()
         pylab.subplot(222 if phase else 211)
-        self.plot_input(details=details)
-        pylab.subplot(224 if phase else 212)
         self.plot_profile(details=details)
+        pylab.subplot(224 if phase else 212)
+        self.plot_input(details=details)
 
 
     def plot_input(self, details=False, lowQ_inset=0):
@@ -1180,9 +1180,9 @@ class SurroundVariation():
         name1 = os.path.basename(self.name1)
         name2 = os.path.basename(self.name2)
         chisq1, n1 = plot1(self.Qin, self.R1in, self.dR1in, R1,
-                           self.v1, name1, 'green', hold=False)
+                           self.v1, name1, 'blue', hold=False)
         chisq2, n2 = plot1(self.Qin, self.R2in, self.dR2in, R2,
-                           self.v2, name2, 'blue', hold=True)
+                           self.v2, name2, 'green', hold=True)
         pylab.legend(prop=FontProperties(size='medium'))
         chisq = (chisq1+chisq2)/(n1+n2)
         if chisq != 0:
@@ -1190,9 +1190,9 @@ class SurroundVariation():
                        transform=pylab.gca().transAxes,
                        ha='left', va='bottom')
 
-        pylab.ylabel('R/R_F')
+        pylab.ylabel('R / Fresnel_R')
         pylab.xlabel('Q (inv A)')
-        plottitle('Measured Data')
+        plottitle('Reflectivity')
 
 
     def plot_phase(self):

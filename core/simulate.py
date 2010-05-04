@@ -156,10 +156,10 @@ class Simulation():
 
         pylab.rc('font', size=8)
         self.plot_measurement(221)
-        self.plot_inversion(222)
+        self.plot_profile(222)
         self.plot_real(223)
         #self.plot_imaginary(223)
-        self.plot_profile(224)
+        self.plot_inversion(224)
         pylab.rcdefaults()
 
 
@@ -197,7 +197,7 @@ class Simulation():
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.xlabel('Q (inv A)')
         pylab.ylabel('(100 Q)^2 Real R')
-        plottitle('Phase Reconstruction Real Part')
+        plottitle('Reconstructed Phase Real Part')
 
 
     def plot_imaginary(self, subplot=111):
@@ -212,7 +212,7 @@ class Simulation():
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.xlabel('Q')
         pylab.ylabel('(100 Q)^2 Imag R')
-        plottitle('Phase Reconstruction Imaginary')
+        plottitle('Reconstructed Phase Imaginary Part')
 
 
     def plot_phase_residual(self, subplot=111):
@@ -237,7 +237,7 @@ class Simulation():
         self.invert.plot_profile(hold=True)
         pylab.fill_between(z, numpy.zeros_like(rho), rho,
                            color=h.get_color(), alpha=0.2)
-        legend = ['Original', 'Inverted']
+        legend = ['Model', 'Inverted']
 
         if self.fitz is not None: # plot fitted
             pylab.plot(self.fitz, self.fitrho, hold=True)

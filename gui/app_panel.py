@@ -450,9 +450,9 @@ class SimulateDataPage(wx.Panel):
         #---------------------------------------------------
 
         fields = [
+                   ["SLD of Surface for Run 1:", None, "float", 'RE', None],
+                   ["SLD of Surface for Run 2:", None, "float", 'RE', None],
                 ###["SLD of Substrate:", 2.07, "float", 'RE', None],
-                   ["SLD of Surface for Exp 1:", None, "float", 'RE', None],
-                   ["SLD of Surface for Exp 2:", None, "float", 'RE', None],
                 ###["Sample Thickness:", 1000, "float", 'RE', None],
                    ["Qmin:", 0.0, "float", 'RE', None],
                    ["Qmax:", 0.4, "float", 'RE', None],
@@ -1247,8 +1247,8 @@ class AnalyzeDataPage(wx.Panel):
         # Section 3: Inversion and Reconstruction Parameters
         #---------------------------------------------------
 
-        fields = [ ["SLD of Surface for Exp 1:", None, "float", 'RE', None],
-                   ["SLD of Surface for Exp 2:", None, "float", 'RE', None],
+        fields = [ ["SLD of Surface for Run 1:", None, "float", 'RE', None],
+                   ["SLD of Surface for Run 2:", None, "float", 'RE', None],
                    ["SLD of Substrate:", None, "float", 'RE', None],
                    ["Sample Thickness:", None, "float", 'RE', None],
                    ["Qmin:", 0.0, "float", 'RE', None],
@@ -1866,8 +1866,8 @@ from your data files."""
         name1 = os.path.basename(self.name1)
         name2 = os.path.basename(self.name2)
 
-        plot1(self.Qin, self.R1in, self.dR1in, name1, 'green', hold=False)
-        plot1(self.Qin, self.R2in, self.dR2in, name2, 'blue', hold=True)
+        plot1(self.Qin, self.R1in, self.dR1in, name1, 'blue', hold=False)
+        plot1(self.Qin, self.R2in, self.dR2in, name2, 'green', hold=True)
 
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.ylabel('Reflectivity')
