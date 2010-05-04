@@ -1668,10 +1668,11 @@ from your data files."""
         if sts == wx.ID_CANCEL:
             return  # Do nothing
 
+        # The user could have selected 1 to n files.
         num_files = len(paths)
         if num_files > 2:
             display_error_message(self, "Too Many Files Selected",
-                "You can only select two data files, please try again.")
+                "You can select up to two data files, please try again.")
             return
         elif num_files == 2:
             datafile_1 = paths[1]  # files are returned in reverse order!
@@ -1688,7 +1689,7 @@ from your data files."""
             self.TCfile1.SetValue(datafile_1)
             self.TCfile1.SetInsertionPointEnd()
 
-        # Generate the plots and display them.
+        # Plot one or both files as listed in the text controls.
         file1 = self.TCfile1.GetValue()
         file2 = self.TCfile2.GetValue()
         if len(file1) > 0 and len(file2) > 0:
@@ -1713,14 +1714,13 @@ from your data files."""
         if sts == wx.ID_CANCEL:
             return  # Do nothing
 
-        num_files = len(paths)
-        if num_files == 1:
-            datafile_2 = paths[0]
-            self.TCfile2.SetBackgroundColour("WHITE")
-            self.TCfile2.SetValue(datafile_2)
-            self.TCfile2.SetInsertionPointEnd()
+        # The dialog restricts the user to selecting just one file.
+        datafile_2 = paths[0]
+        self.TCfile2.SetBackgroundColour("WHITE")
+        self.TCfile2.SetValue(datafile_2)
+        self.TCfile2.SetInsertionPointEnd()
 
-        # Generate the plots and display them.
+        # Plot one or both files as listed in the text controls.
         file1 = self.TCfile1.GetValue()
         file2 = self.TCfile2.GetValue()
         if len(file1) > 0 and len(file2) > 0:
@@ -1773,8 +1773,9 @@ from your data files."""
         Loads the data from files or alternatively from tuples of (Q,R) or
         (Q,R,dR), (Q,dQ,R,dR) or (Q,dQ,R,dR,L).
 
-        This code is cloned from SurroundVariation._load().
-        TODO: Replace this loader with a general purpose loader in development.
+        This code is adapted from SurroundVariation._load().
+        TODO: Replace this loader with a general purpose loader that will be
+              able to parse instrument metadata in the file.
         """
 
         # This code assumes the following data file formats:
@@ -1813,7 +1814,7 @@ from your data files."""
             q2, dq2, r2, dr2 = d2[0:4]
         elif ncols >= 5:
             q1, dq1, r1, dr1, lambda1 = d1[0:5]
-            q2, dq2, r2, dr2, lanbda2 = d2[0:5]
+            q2, dq2, r2, dr2, lambda2 = d2[0:5]
 
         if not q1.shape == q2.shape or not all(q1==q2):
             raise ValueError("Q points do not match in data files.")
@@ -1826,7 +1827,7 @@ from your data files."""
 
 
     def generate_plot(self):
-        """Plot Q vs R and uncertainly dR if available."""
+        """Plot Q vs R and dR (uncertainty) if available."""
 
         '''
         # This simpler version of the function does not handle negative nor

@@ -197,7 +197,7 @@ class Inversion():
     If *monitor* is specified, then Poisson noise is used instead, according to
     the following::
 
-        *noise* U[-1,1] (poisson(*monitor* |re r|)/*monitor* - |re r|)
+        *noise* U[-1,1] (poisson(*monitor* |real R|)/*monitor* - |real R|)
 
     That is, a value is pulled from the Poisson distribution of the expected
     counts, and the noise is the difference between this and the actual counts.
@@ -451,8 +451,7 @@ class Inversion():
     def chisq(self):
         """
         Compute normalized sum squared difference between original real R and
-        the real
-        R for the inverted profile.
+        the real R for the inverted profile.
         """
 
         idx = self.dRealR > 1e-15
@@ -580,7 +579,7 @@ class Inversion():
         If *details* is True, then plot the individual stages used
         to calculate the average, otherwise just plot the envelope.
 
-        If *lowQ_inset* > 0, then plot a graph of Q, Real r values
+        If *lowQ_inset* > 0, then plot a graph of Q, real R values
         below lowQ_inset, without scaling by Q**2.
         """
         import pylab
@@ -611,7 +610,7 @@ class Inversion():
                                  axisbg=[0.95, 0.95, 0.65, 0.85])
                 ax.plot(self.Qinput, self.RealRinput, color="blue")
                 ax.plot(self.Qinput, Rinverted)
-                ax.text(0.99, 0.01, "Q, Re R for Q<%g"%lowQ_inset,
+                ax.text(0.99, 0.01, "Q, Real R for Q<%g"%lowQ_inset,
                         transform=ax.transAxes, ha='right', va='bottom')
                 qmax = lowQ_inset
                 ymax = max(max(self.RealRinput[self.Qinput<qmax]),
@@ -663,7 +662,7 @@ class Inversion():
         Q,RealR = self.Qinput, self.RealRinput
         r = self.refl(Q)
         pylab.plot(Q, Q**2*(real(r)-RealR))
-        pylab.ylabel('Residuals [Q^2 * (Re R - input)]')
+        pylab.ylabel('Residuals [Q^2 * (Real R - input)]')
         pylab.xlabel("Q (inv A)")
         plottitle('Phase Residuals')
 
@@ -781,7 +780,7 @@ def plottitle(title):
                ha='center', va='top', backgroundcolor=(0.9, 0.9, 0.6))
 
 
-def plotamp(Q, r, dr=None, scaled=True, ylabel="Re R", **kw):
+def plotamp(Q, r, dr=None, scaled=True, ylabel="Real R", **kw):
     """
     Plot Q, realR data.
     """
@@ -1207,8 +1206,8 @@ class SurroundVariation():
     def plot_imaginary(self):
         import pylab
         plotamp(self.Q, -self.ImagR, dr=self.dImagR)
-        plotamp(self.Q, self.ImagR, dr=self.dImagR, ylabel="Im R")
-        plottitle('Reconstructed Phase (+/- Im R)')
+        plotamp(self.Q, self.ImagR, dr=self.dImagR, ylabel="Imag R")
+        plottitle('Reconstructed Phase (+/- Imag R)')
 
 
     def _load(self, file1, file2):

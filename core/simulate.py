@@ -196,7 +196,7 @@ class Simulation():
 
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.xlabel('Q (inv A)')
-        pylab.ylabel('(100 Q)^2 Re R')
+        pylab.ylabel('(100 Q)^2 Real R')
         plottitle('Phase Reconstruction Real Part')
 
 
@@ -206,12 +206,12 @@ class Simulation():
 
         pylab.subplot(subplot)
         pylab.plot(self.phase.Q, 1e4*self.phase.Q**2*self.phase.ImagR,
-                   hold=True, label="Im R+")
+                   hold=True, label="Imag R+")
         pylab.plot(self.phase.Q, -1e4*self.phase.Q**2*self.phase.ImagR,
-                   hold=True, label="Im R-")
+                   hold=True, label="Imag R-")
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.xlabel('Q')
-        pylab.ylabel('(100 Q)^2 Im R')
+        pylab.ylabel('(100 Q)^2 Imag R')
         plottitle('Phase Reconstruction Imaginary')
 
 
@@ -222,7 +222,7 @@ class Simulation():
         pylab.subplot(subplot)
         pylab.plot(self.q, self.phase_residual())
         pylab.xlabel('Q')
-        pylab.ylabel('(Re R - calc Re R) / |R|')
+        pylab.ylabel('(Real R - calc Real R) / |R|')
         plottitle('Phase Inversion Residual')
 
 
