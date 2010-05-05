@@ -26,10 +26,12 @@ This module contains utility functions and classes for the application.
 
 #==============================================================================
 
-import wx
 import os
 import sys
 import time
+
+import wx
+from wx.lib import delayedresult
 
 # Text string used to compare the string width in pixels for different fonts.
 # This benchmark string has 273 characters, containing 92 distinct characters
@@ -46,7 +48,7 @@ BENCHMARK_TEXT =\
 
 # The width and height in pixels of the test string using MS Windows default
 # font "MS Shell Dlg 2" and a dpi of 96.
-# Note that the MS Windows default font appears to be the same as Tahoma.
+# Note: the MS Windows XP default font has the same width and height as Tahoma.
 BENCHMARK_WIDTH = 1600
 BENCHMARK_HEIGHT = 14
 
@@ -56,7 +58,7 @@ def choose_fontsize(fontname=None):
     """
     Determines the largest font size (in points) to use for a given font such
     that the rendered width of the benchmark string is less than or equal to
-    101% of the rendered width of the string on a Windows machine using the
+    101% of the rendered width of the string on a Windows XP computer using the
     Windows default font at 96 dpi.
 
     The width in pixels of a rendered string is affected by the choice of font,
@@ -91,6 +93,7 @@ def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
     faces at the various point sizes).
     """
 
+    # Create a temporary frame that we will soon destroy.
     frame = wx.Frame(parent=None, id=wx.ID_ANY, title="")
 
     # Set the fontname if one is given, otherwise use the system default font.
@@ -176,9 +179,37 @@ def display_question(parent, caption, message):
 
 #==============================================================================
 
-class WorkingIndicator(wx.Panel):
+class ExecuteInThread():
     """
-    This class implements a rotating 'in progress' gauge.
+    This class executes the specified function in a separate thread and calls a
+    designated callback function when the execution completes.  Control is
+    immediately given back to the caller of ExecuteInThread which can execute
+    in parallel in the main thread.
+    """
+
+    def __init__(self, callback, function, *args, **kwargs):
+        if callback is None: callback = _callback
+        #print "*** ExecuteInThread init:", callback, function, args, kwargs
+        delayedresult.startWorker(consumer=callback, workerFn=function,
+                                  wargs=args, wkwargs=kwargs)
+
+    def _callback(self, delayedResult):
+        '''
+        jobID = delayedResult.getJobID()
+        assert jobID == self.jobID
+        try:
+            result = delayedResult.get()
+        except Exception, e:
+            display_error_message(self, "job %s raised exception: %s"%(jobID, e)
+            return
+        '''
+        return
+
+#==============================================================================
+
+class WorkInProgress(wx.Panel):
+    """
+    This class implements a rotating 'work in progress' gauge.
     """
 
     def __init__(self, parent):
@@ -213,10 +244,10 @@ def log_time(text=None, reset=False):
     log_time maintains a single instance of TimeStamp during program execution.
     Example output from calls to log_time('...'):
 
-    >>>     0.000s   0.000s  Starting DiRefl
-    >>>     0.031s   0.031s  Starting to display the splash screen
-    >>>     1.141s   1.110s  Starting to build the GUI on the frame
-    >>>     1.422s   0.281s  Done initializing - entering the event loop
+    =>>     0.000s   0.000s  Starting DiRefl
+    =>>     0.031s   0.031s  Starting to display the splash screen
+    =>>     1.141s   1.110s  Starting to build the GUI on the frame
+    =>>     1.422s   0.281s  Done initializing - entering the event loop
     """
 
     global log_time_handle
@@ -230,7 +261,7 @@ def log_time(text=None, reset=False):
 class TimeStamp():
     """
     This class provides timestamp, elapsed time, and delta time services for
-    monitoring wall clock time usage in the application.
+    displaying wall clock time usage by the application.
     """
 
     def __init__(self):
@@ -238,12 +269,12 @@ class TimeStamp():
 
 
     def reset(self):
-        # Start new timing interval.
+        # Starts new timing interval.
         self.t0 = self.t1 = time.time()
 
 
     def gettime3(self):
-        # Get current time as timestamp, elasped time, and delta time.
+        # Gets current time in timestamp, elasped time, and delta time format.
         now = time.time()
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now))
         elapsed = now - self.t0
@@ -253,7 +284,7 @@ class TimeStamp():
 
 
     def gettime2(self):
-        # Get current time as elasped time and delta time.
+        # Gets current time in elasped time and delta time format.
         now = time.time()
         elapsed = now - self.t0
         delta = now - self.t1
@@ -261,19 +292,19 @@ class TimeStamp():
         return elapsed, delta
 
 
-    def log_timing_data(self, text=""):
-        # Print timestamp, elapsed time, delta time, and optional comment.
+    def log_time_info(self, text=""):
+        # Prints timestamp, elapsed time, delta time, and optional comment.
         t, e, d = self.gettime3()
-        print ">>> %s %9.3fs%8.3fs  %s" %(t, e, d, text)
+        print "=>> %s %9.3fs%8.3fs  %s" %(t, e, d, text)
 
 
     def log_timestamp(self, text=""):
-        # Print timestamp and optional comment.
+        # Prints timestamp and optional comment.
         t, e, d = self.gettime3()
-        print ">>> %s  %s" %(t, text)
+        print "=>> %s  %s" %(t, text)
 
 
     def log_interval(self, text=""):
-        # Print elapsed time, delta time, and optional comment.
+        # Prints elapsed time, delta time, and optional comment.
         e, d = self.gettime2()
-        print ">>> %9.3fs%8.3fs  %s" %(e, d, text)
+        print "=>> %9.3fs%8.3fs  %s" %(e, d, text)

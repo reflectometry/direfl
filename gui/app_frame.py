@@ -40,10 +40,6 @@ from .utilities import (get_appdir, choose_fontsize, display_fontsize)
 # Resource files.
 PROG_ICON = "direfl.ico"
 
-# Other constants
-NEWLINE = "\n"
-NEWLINES_2 = "\n\n"
-
 #==============================================================================
 
 class AppFrame(wx.Frame):
@@ -122,10 +118,10 @@ class AppFrame(wx.Frame):
 
         # Set the default font for this and all child windows.  The font of the
         # frame's title bar is not affected (which is a good thing).  However,
-        # this setting does not affect the font used in the frame's menu bar or
-        # menu items (which is not such a good thing as the menu text may be
-        # larger or smaller than the normal text used in the widgets used by
-        # the application).  Menu text font cannot be changed by wxPython.
+        # setting the default font does not affect the font used in the frame's
+        # menu bar or menu items (which is not such a good thing because the
+        # menu text size be different than the size used by the application's
+        # other widgets).  The menu font cannot be changed by wxPython.
         self.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL, False,
                              fontname))
 

@@ -32,6 +32,7 @@ import sys
 import time
 
 import wx
+from wx.lib import delayedresult
 
 import matplotlib
 
@@ -63,11 +64,9 @@ import pylab
 import numpy
 from numpy import linspace, inf
 
-from wx.lib import delayedresult
-
 from .utilities import (get_appdir, write_to_statusbar,
                         display_error_message, display_warning_message,
-                        log_time, WorkingIndicator)
+                        ExecuteInThread, WorkInProgress)
 
 from .input_list import InputListDialog, InputListPanel
 from .images import getOpenBitmap
@@ -572,7 +571,7 @@ class SimulateDataPage(wx.Panel):
         self.pan2_intro.SetFont(font)
 
         # Create a progress bar to be displayed during a lengthy computation.
-        self.pan2_gauge = WorkingIndicator(self.pan2)
+        self.pan2_gauge = WorkInProgress(self.pan2)
         self.pan2_gauge.Show(False)
 
         # Create a horizontal box sizer to hold the title and progress bar.
@@ -1339,7 +1338,7 @@ class AnalyzeDataPage(wx.Panel):
         self.pan2_intro.SetFont(font)
 
         # Create a progress bar to be displayed during a lengthy computation.
-        self.pan2_gauge = WorkingIndicator(self.pan2)
+        self.pan2_gauge = WorkInProgress(self.pan2)
         self.pan2_gauge.Show(False)
 
         # Create a horizontal box sizer to hold the title and progress bar.
@@ -2307,34 +2306,6 @@ class InstrumentParameters():
         self.sample_width[1][self.instr_idx] = value
     def set_sample_broadening(self):
         self.sample_broadening[1][self.instr_idx] = value
-
-#==============================================================================
-
-class ExecuteInThread():
-    """
-    This class executes the specified function in a separate thread and calls a
-    designated callback function when the function completes.  Control is
-    immediately given back to the caller of ExecuteInThread which executes in
-    parallel with the thread.
-    """
-
-    def __init__(self, callback, function, *args, **kwargs):
-        if callback is None: callback = _callback
-        #print "*** ExecuteInThread init:", callback, function, args, kwargs
-        delayedresult.startWorker(consumer=callback, workerFn=function,
-                                  wargs=args, wkwargs=kwargs)
-
-    def _callback(self, delayedResult):
-        '''
-        jobID = delayedResult.getJobID()
-        assert jobID == self.jobID
-        try:
-            result = delayedResult.get()
-        except Exception, e:
-            display_error_message(self, "job %s raised exception: %s"%(jobID, e)
-            return
-        '''
-        return
 
 #==============================================================================
 
