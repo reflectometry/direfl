@@ -1,4 +1,4 @@
-# SLDensity  Thickness  Roughness (optional)
+# SLDensity  Thickness  Roughness
 0 100 2      # air surface
 2.634 200 1  # SiO2
 2.07 100 1   # Si substrate

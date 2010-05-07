@@ -362,7 +362,7 @@ class SimulateDataPage(wx.Panel):
         #           label="    as shown below (roughness defaults to 0):")
 
         demo_model_params = \
-            "# SLDensity  Thickness  Roughness (optional)" + \
+            "# SLDensity  Thickness  Roughness" + \
             NEWLINES_2 + NEWLINES_2 + NEWLINES_2 + NEWLINE
 
         # Create an input box to enter and edit the model description and
@@ -408,35 +408,39 @@ class SimulateDataPage(wx.Panel):
 
         # Create a horizontal box sizer for the combo box and its label.
         hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox1_sizer.Add(cb_label, 0,
-            wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.TOP|wx.BOTTOM|wx.LEFT,
-            border=10)
-        hbox1_sizer.Add(cb, 1, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, border=10)
-
-        # Associate the sizer with its container.
-        self.pan12.SetSizer(hbox1_sizer)
-        hbox1_sizer.Fit(self.pan12)
+        hbox1_sizer.Add(cb_label, 0, border=5,
+                        flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT)
+        hbox1_sizer.Add(cb, 1, wx.EXPAND)
 
         # Create button controls.
-        self.btn_edit = wx.Button(self.pan1, wx.ID_ANY, "Edit")
-        self.Bind(wx.EVT_BUTTON, self.OnEdit, self.btn_edit)
-        self.btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
-        self.Bind(wx.EVT_BUTTON, self.OnReset, self.btn_reset)
+        btn_edit = wx.Button(self.pan12, wx.ID_ANY, "Edit")
+        self.Bind(wx.EVT_BUTTON, self.OnEdit, btn_edit)
+        btn_reset = wx.Button(self.pan12, wx.ID_ANY, "Reset")
+        self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
 
         # Create a horizontal box sizer for the buttons.
         hbox2_sizer = wx.BoxSizer(wx.HORIZONTAL)
         hbox2_sizer.Add((10,20), 1)  # stretchable whitespace
-        hbox2_sizer.Add(self.btn_edit, 0)
+        hbox2_sizer.Add(btn_edit, 0)
         hbox2_sizer.Add((10,20), 0)  # non-stretchable whitespace
-        hbox2_sizer.Add(self.btn_reset, 0)
+        hbox2_sizer.Add(btn_reset, 0)
+
+        # Create a vertical box sizer for the input file selectors.
+        vbox2_sizer = wx.BoxSizer(wx.VERTICAL)
+        vbox2_sizer.Add(hbox1_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT,
+                        border=10)
+        vbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
+
+        # Associate the sizer with its container.
+        self.pan12.SetSizer(vbox2_sizer)
+        vbox2_sizer.Fit(self.pan12)
 
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
-        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Resolution Parameters")
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY,
+                             "Resolution Parameters for Information Only")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.pan12, 0,
-                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        sbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
+        sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=10)
 
         #---------------------------------------------------
         # Section 3: Inversion and Reconstruction Parameters
@@ -1111,7 +1115,9 @@ class AnalyzeDataPage(wx.Panel):
         self.init_plot_panel()
 
         # Attach the panels to the splitter.
-        sp.SplitVertically(self.pan1, self.pan2, sashPosition=310)
+        #sp.SplitVertically(self.pan1, self.pan2, sashPosition=310)
+        # Below is workaround to keep width of pan1 in page0 and page1 the same.
+        sp.SplitVertically(self.pan1, self.pan2, sashPosition=305)
         sp.SetSashGravity(0.2)  # on resize grow mostly on right side
 
         # Put the splitter in a sizer attached to the main panel of the page.
@@ -1205,19 +1211,14 @@ class AnalyzeDataPage(wx.Panel):
 
         # Create a horizontal box sizer for the combo box and its label.
         hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox1_sizer.Add(cb_label, 0,
-            wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.TOP|wx.BOTTOM|wx.LEFT,
-            border=10)
-        hbox1_sizer.Add(cb, 1, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, border=10)
-
-        # Associate the sizer with its container.
-        self.pan12.SetSizer(hbox1_sizer)
-        hbox1_sizer.Fit(self.pan12)
+        hbox1_sizer.Add(cb_label, 0, border=5,
+                        flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT)
+        hbox1_sizer.Add(cb, 1, wx.EXPAND)
 
         # Create button controls.
-        btn_edit = wx.Button(self.pan1, wx.ID_ANY, "Edit")
+        btn_edit = wx.Button(self.pan12, wx.ID_ANY, "Edit")
         self.Bind(wx.EVT_BUTTON, self.OnEdit, btn_edit)
-        btn_reset = wx.Button(self.pan1, wx.ID_ANY, "Reset")
+        btn_reset = wx.Button(self.pan12, wx.ID_ANY, "Reset")
         self.Bind(wx.EVT_BUTTON, self.OnReset, btn_reset)
 
         # Create a horizontal box sizer for the buttons.
@@ -1227,14 +1228,22 @@ class AnalyzeDataPage(wx.Panel):
         hbox2_sizer.Add((10,20), 0)  # non-stretchable whitespace
         hbox2_sizer.Add(btn_reset, 0)
 
+        # Create a vertical box sizer for the input file selectors.
+        vbox2_sizer = wx.BoxSizer(wx.VERTICAL)
+        vbox2_sizer.Add(hbox1_sizer, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT,
+                        border=10)
+        vbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
+
+        # Associate the sizer with its container.
+        self.pan12.SetSizer(vbox2_sizer)
+        vbox2_sizer.Fit(self.pan12)
+
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
         sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY,
                              "Resolution Parameters for Information Only")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.pan12, 0,
-                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        sbox2_sizer.Add(hbox2_sizer, 0, wx.EXPAND|wx.ALL, border=10)
+        sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=10)
 
         #---------------------------------------------------
         # Section 3: Inversion and Reconstruction Parameters
