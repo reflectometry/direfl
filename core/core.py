@@ -81,6 +81,9 @@ from matplotlib.font_manager import FontProperties
 
 from .calc import convolve
 
+# Custom colors
+DARK_RED = "#990000"
+
 # Common SLDs
 silicon = Si = 2.07
 sapphire = Al2O3 = 5.0
@@ -594,7 +597,7 @@ class Inversion():
             plotamp(self.Qinput, self.RealRinput, label="Original",
                     color="blue")
             Rinverted = real(self.refl(self.Qinput))
-            plotamp(self.Qinput, Rinverted, label="Inverted")
+            plotamp(self.Qinput, Rinverted, color=DARK_RED, label="Inverted")
             pylab.legend(prop=FontProperties(size='medium'))
             chisq = self.chisq() # Note: cache calculated profile?
             pylab.text(0.01, 0.01, "chisq=%.1f"%chisq,
@@ -638,7 +641,7 @@ class Inversion():
                 hold=True
         else:
             z,rho,drho = self.z, self.rho, self.drho
-            [h] = pylab.plot(z, rho, **kw)
+            [h] = pylab.plot(z, rho, color=DARK_RED, **kw)
             pylab.fill_between(z,rho-drho, rho+drho,
                                color=h.get_color(), alpha=0.2)
             #pylab.plot(z, rho+drho, '--', color=h.get_color())
@@ -1192,7 +1195,7 @@ class SurroundVariation():
 
         pylab.ylabel('R / Fresnel_R')
         pylab.xlabel('Q (inv A)')
-        plottitle('Reflectivity')
+        plottitle('Reflectivity Measurements')
 
 
     def plot_phase(self):
@@ -1205,9 +1208,14 @@ class SurroundVariation():
 
     def plot_imaginary(self):
         import pylab
-        plotamp(self.Q, -self.ImagR, dr=self.dImagR)
-        plotamp(self.Q, self.ImagR, dr=self.dImagR, ylabel="Imag R")
-        plottitle('Reconstructed Phase (+/- Imag R)')
+        plotamp(self.Q, -self.ImagR, dr=self.dImagR,
+                color='blue', label='Imag R+')
+        plotamp(self.Q,  self.ImagR, dr=self.dImagR,
+                color='green', label='Imag R-')
+        pylab.legend(prop=FontProperties(size='medium'))
+        pylab.ylabel("(100 Q)^2 Imag R")
+        pylab.xlabel("Q (inv A)")
+        plottitle('Reconstructed Phase (Imaginary)')
 
 
     def _load(self, file1, file2):

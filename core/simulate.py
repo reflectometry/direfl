@@ -197,7 +197,7 @@ class Simulation():
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.xlabel('Q (inv A)')
         pylab.ylabel('(100 Q)^2 Real R')
-        plottitle('Reconstructed Phase Real Part')
+        plottitle('Reconstructed Phase')
 
 
     def plot_imaginary(self, subplot=111):
@@ -205,14 +205,14 @@ class Simulation():
         import pylab
 
         pylab.subplot(subplot)
-        pylab.plot(self.phase.Q, 1e4*self.phase.Q**2*self.phase.ImagR,
-                   hold=True, label="Imag R+")
         pylab.plot(self.phase.Q, -1e4*self.phase.Q**2*self.phase.ImagR,
-                   hold=True, label="Imag R-")
+                   hold=True, color='blue', label="Imag R+")
+        pylab.plot(self.phase.Q, 1e4*self.phase.Q**2*self.phase.ImagR,
+                   hold=True, color='green', label="Imag R-")
         pylab.legend(prop=FontProperties(size='medium'))
-        pylab.xlabel('Q')
+        pylab.xlabel('Q (inv A)')
         pylab.ylabel('(100 Q)^2 Imag R')
-        plottitle('Reconstructed Phase Imaginary Part')
+        plottitle('Reconstructed Phase (Imaginary)')
 
 
     def plot_phase_residual(self, subplot=111):
@@ -221,7 +221,7 @@ class Simulation():
 
         pylab.subplot(subplot)
         pylab.plot(self.q, self.phase_residual())
-        pylab.xlabel('Q')
+        pylab.xlabel('Q (inv A)')
         pylab.ylabel('(Real R - calc Real R) / |R|')
         plottitle('Phase Inversion Residual')
 
@@ -233,16 +233,16 @@ class Simulation():
         pylab.subplot(subplot)
 
         z, rho = self.sample_profile()
-        [h] = pylab.plot(z, rho, hold=False)
-        self.invert.plot_profile(hold=True)
+        [h] = pylab.plot(z, rho, color='blue', hold=False)
         pylab.fill_between(z, numpy.zeros_like(rho), rho,
                            color=h.get_color(), alpha=0.2)
-        legend = ['Model', 'Inverted']
+        self.invert.plot_profile(hold=True)
 
         if self.fitz is not None: # plot fitted
             pylab.plot(self.fitz, self.fitrho, hold=True)
             legend.append('Fitted')
 
+        legend = ['Model', 'Inverted']
         pylab.legend(legend, prop=FontProperties(size='medium'))
 
 

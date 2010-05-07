@@ -94,10 +94,8 @@ DEMO_REFLDATA2_2 = "surround_d2o_4.refl"
 # Custom colors.
 WINDOW_BKGD_COLOUR = "#ECE9D8"
 PALE_YELLOW = "#FFFFB0"
-PALE_GREEN1 = "#C0FFC0"
-PALE_GREEN2 = "#D0FFD0"
-PALE_BLUE1  = "#E8E8FF"
-PALE_BLUE2  = "#F0F0FF"
+PALE_GREEN = "#C8FFC8"
+PALE_BLUE  = "#E8E8FF"
 
 # Other constants
 NEWLINE = "\n"
@@ -214,8 +212,8 @@ class AppPanel(wx.Panel):
                                          style=wx.NB_TOP|wx.NB_FIXEDWIDTH)
 
         # Create page windows as children of the notebook.
-        self.page0 = SimulateDataPage(nb, colour=PALE_GREEN1, fignum=0)
-        self.page1 = AnalyzeDataPage(nb, colour=PALE_BLUE1, fignum=1)
+        self.page0 = SimulateDataPage(nb, colour=PALE_GREEN, fignum=0)
+        self.page1 = AnalyzeDataPage(nb, colour=PALE_BLUE, fignum=1)
 
         # Add the pages to the notebook with a label to show on the tab.
         nb.AddPage(self.page0, "Simulation")
@@ -223,19 +221,15 @@ class AppPanel(wx.Panel):
 
         # Create test page windows and add them to notebook if requested.
         if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
-            self.page2 = SimulateDataPage(nb, colour=PALE_GREEN2, fignum=2)
-            self.page3 = AnalyzeDataPage(nb, colour=PALE_BLUE2, fignum=3)
-            self.page4 = TestPlotPage(nb, colour="FIREBRICK", fignum=4)
-            self.page5 = TestPlotPage(nb, colour="BLUE", fignum=5)
-            self.page6 = TestPlotPage(nb, colour="GREEN", fignum=6)
-            self.page7 = TestPlotPage(nb, colour="WHITE", fignum=7)
+            self.page10 = TestPlotPage(nb, colour="FIREBRICK", fignum=10)
+            self.page11 = TestPlotPage(nb, colour="BLUE", fignum=11)
+            self.page12 = TestPlotPage(nb, colour="GREEN", fignum=12)
+            self.page13 = TestPlotPage(nb, colour="WHITE", fignum=13)
 
-            nb.AddPage(self.page2, "Simulation Test")
-            nb.AddPage(self.page3, "Analysis Test")
-            nb.AddPage(self.page4, "Test 1")
-            nb.AddPage(self.page5, "Test 2")
-            nb.AddPage(self.page6, "Test 3")
-            nb.AddPage(self.page7, "Test 4")
+            nb.AddPage(self.page10, "Test 1")
+            nb.AddPage(self.page11, "Test 2")
+            nb.AddPage(self.page12, "Test 3")
+            nb.AddPage(self.page13, "Test 4")
 
         # Put the notebook in a sizer attached to the main panel.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -689,14 +683,14 @@ from your model."""
         # Get the validated inversion parameters.
         params = self.inver_param.GetResults()
         if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
-            print ">>> Simulation parameters:"; print params
+            print "*** Simulation parameters:"; print params
 
         sample = layers[1:-1]
         params.append(layers[-1][0])  # add SLD of substrate to list
         params.append(layers[-1][2])  # add roughness of substrate to list
         if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
-            print ">>> Model parameters (all layers):"; print layers
-            print ">>> Sample layers excluding Surround:"; print sample
+            print "*** Model parameters (all layers):"; print layers
+            print "*** Sample layers excluding Surround:"; print sample
 
         #---------------------------------------------------------------
         # Step 3: Process Instrument Parameters and Calculate Resolution
@@ -1438,7 +1432,7 @@ from your data files."""
         # Get the validated inversion parameters.
         params = self.inver_param.GetResults()
         if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
-            print ">>> Inversion parameters:"; print params
+            print "*** Inversion parameters:"; print params
 
         #--------------------------------------
         # Step 3: Process Instrument Parameters
@@ -1930,10 +1924,10 @@ class TestPlotPage(wx.Panel):
 
         # Execute tests associated with the test tabs.
         if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
-            if (self.fignum == 4 and '-test1' in sys.argv[1:]): test1()
-            if (self.fignum == 5 and '-test2' in sys.argv[1:]): test2()
-        if self.fignum == 6: test3()
-        if self.fignum == 7: test4(figure)
+            if (self.fignum == 10 and '-test1' in sys.argv[1:]): test1()
+            if (self.fignum == 11 and '-test2' in sys.argv[1:]): test2()
+        if self.fignum == 12: test3()
+        if self.fignum == 13: test4(figure)
 
 
     def active_page(self):
@@ -2124,7 +2118,7 @@ class InstrumentParameters():
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
             if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
-                print ">>> Instrument (resolution) parameters:"; print results
+                print "*** Instrument (resolution) parameters:"; print results
 
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable
@@ -2193,7 +2187,7 @@ class InstrumentParameters():
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
             if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
-                print ">>> Instrument (resolution) parameters:"; print results
+                print "*** Instrument (resolution) parameters:"; print results
 
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable

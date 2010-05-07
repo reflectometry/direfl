@@ -89,10 +89,10 @@ class DiReflApp(wx.App):
     Reflectometry application.
     """
 
-    # Design note: The basic frame and splash window are created in this module
-    # and the frame is then populated by code in another module.  This is done
-    # so that the splash screen is displayed before the more time consuming,
-    # application specific packages are imported.
+    # Design note: The basic application frame is created, the splash screen is
+    # displayed, and finally the frame is populated.  The frame initialization
+    # is performed in two parts so that the splash screen is visible while the
+    # application specific packages are imported and the application is set up.
 
     def OnInit(self):
         # Determine the position and size of the application frame and likewise
@@ -116,9 +116,10 @@ class DiReflApp(wx.App):
         frame.Show(True)
         self.SetTopWindow(frame)
 
-        # The splash screen can be dismissed by the user (or the splash screen
-        # exits due to its timeout mechanism) as soon as the wxPython event
-        # loop is entered (i.e. when the caller executes app.MainLoop()).
+        # The splash screen can be dismissed by the user via a left mouse click
+        # as soon as the wxPython event loop is entered (i.e. when the caller
+        # executes app.MainLoop()).  Otherwise, the splash screen will stop
+        # itself when its timeout expires.
         return True
 
 
@@ -128,8 +129,8 @@ class DiReflApp(wx.App):
         fits on the user's screen without obstructing (or being obstructed by)
         the Windows task bar.  The maximum initial size in pixels is bounded by
         DISPLAY_WIDTH x DISPLAY_HEIGHT.  For most monitors, the application
-        be centered on the screen; for very large monitors it will be placed on
-        the left side of the screen.
+        will be centered on the screen; for very large monitors it will be
+        placed on the left side of the screen.
         """
 
         xpos = ypos = 0
@@ -141,10 +142,13 @@ class DiReflApp(wx.App):
         # screen 'too big'.  If so, we assume a smaller width which means the
         # application will be placed towards the left hand side of the screen.
 
-        # x, y = wx.DisplaySize()  # includes task bar area, if any, so use ...
-        j, k, x, y = wx.Display().GetClientArea() # rectangle excluding task bar
-        if x > 1920: x = 1280  # display on left side, not centered on screen
+        j, k, x, y = wx.Display().GetClientArea() # size excludes task bar
+        if len(sys.argv) > 1 and '-platform' in sys.argv[1:]:
+            w, h = wx.DisplaySize()  # size includes task bar area
+            print "*** Reported screen size including taskbar is %d x %d"%(w, h)
+            print "*** Reported screen size excluding taskbar is %d x %d"%(x, y)
 
+        if x > 1920: x = 1280  # display on left side, not centered on screen
         if x > DISPLAY_WIDTH:  xpos = (x - DISPLAY_WIDTH)/2
         if y > DISPLAY_HEIGHT: ypos = (y - DISPLAY_HEIGHT)/2
 
