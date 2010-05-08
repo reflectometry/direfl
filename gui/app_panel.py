@@ -358,8 +358,6 @@ class SimulateDataPage(wx.Panel):
                     label="Define the Surface, Sample, and Substrate")
         line2 = wx.StaticText(self.pan1, wx.ID_ANY,
                     label="layers of your model (one layer per line):")
-        #line3 = wx.StaticText(self.pan1, wx.ID_ANY,
-        #           label="    as shown below (roughness defaults to 0):")
 
         demo_model_params = \
             "# SLDensity  Thickness  Roughness" + \
@@ -377,12 +375,11 @@ class SimulateDataPage(wx.Panel):
         # manage them with a static box sizer.
         sbox1 = wx.StaticBox(self.pan1, wx.ID_ANY, "Model Parameters")
         sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
-        sbox1_sizer.Add(line1, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
-        sbox1_sizer.Add(line2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
-        #sbox1_sizer.Add(line3, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
-        sbox1_sizer.Add((10,4), 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        sbox1_sizer.Add(line1, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=5)
+        sbox1_sizer.Add(line2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=5)
+        sbox1_sizer.Add((10,4), 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=5)
         sbox1_sizer.Add(self.model, 1,
-                        wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=10)
+                        wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=5)
 
         #---------------------------------
         # Section 2: Instrument Parameters
@@ -440,7 +437,7 @@ class SimulateDataPage(wx.Panel):
         sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY,
                              "Resolution Parameters for Information Only")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=10)
+        sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=5)
 
         #---------------------------------------------------
         # Section 3: Inversion and Reconstruction Parameters
@@ -476,7 +473,7 @@ class SimulateDataPage(wx.Panel):
         sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
         sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
         sbox3_sizer.Add(self.inver_param, 1,
-                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=5)
 
         #---------------------------
         # Section 4: Control Buttons
@@ -1115,9 +1112,12 @@ class AnalyzeDataPage(wx.Panel):
         self.init_plot_panel()
 
         # Attach the panels to the splitter.
-        #sp.SplitVertically(self.pan1, self.pan2, sashPosition=310)
-        # Below is workaround to keep width of pan1 in page0 and page1 the same.
-        sp.SplitVertically(self.pan1, self.pan2, sashPosition=305)
+        # Below is a workaround to keep width of pan1 in both page0 and page1
+        # the same.  For some reason Windows renders this panel a bit too wide.
+        if wx.Platform == "__WXMSW__":
+            sp.SplitVertically(self.pan1, self.pan2, sashPosition=303)
+        else:
+            sp.SplitVertically(self.pan1, self.pan2, sashPosition=310)
         sp.SetSashGravity(0.2)  # on resize grow mostly on right side
 
         # Put the splitter in a sizer attached to the main panel of the page.
@@ -1185,7 +1185,7 @@ class AnalyzeDataPage(wx.Panel):
         # manage them with a static box sizer.
         sbox1 = wx.StaticBox(self.pan1, wx.ID_ANY, "Reflectometry Data Files")
         sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
-        sbox1_sizer.Add(self.pan11, 0, wx.EXPAND|wx.ALL, border=10)
+        sbox1_sizer.Add(self.pan11, 0, wx.EXPAND|wx.ALL, border=5)
 
         #---------------------------------
         # Section 2: Instrument Parameters
@@ -1243,7 +1243,7 @@ class AnalyzeDataPage(wx.Panel):
         sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY,
                              "Resolution Parameters for Information Only")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=10)
+        sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=5)
 
         #---------------------------------------------------
         # Section 3: Inversion and Reconstruction Parameters
@@ -1275,7 +1275,7 @@ class AnalyzeDataPage(wx.Panel):
         sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
         sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
         sbox3_sizer.Add(self.inver_param, 1,
-                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=10)
+                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=5)
 
         #---------------------------
         # Section 4: Control Buttons
