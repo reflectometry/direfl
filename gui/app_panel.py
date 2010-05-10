@@ -113,10 +113,10 @@ required parameters needed to compute resolution for
 the simulated datasets."""
 
 INSTR_CALC_RESO_ERRMSG = """\
-Please specify an instrument to be used for the calculating
-resolution for the simulated datasets, or disable this calculation
-by selecting the 'No' button for the 'With Resolution' question
-at the bottom of the page."""
+Please specify an instrument to be used for calculating
+resolution for the simulated datasets, or disable this
+calculation by answering 'No' to the 'With Resolution'
+question at the bottom of the page."""
 
 #==============================================================================
 

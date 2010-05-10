@@ -1004,8 +1004,8 @@ class AppTestFrame(wx.Frame):
             ["String (A-Z, a-z, 0-9, _, -):", "A-1_a", "str_id", 'E', None],
                       ]
 
-        # Create the scrolled window with input boxes.  Due to the size of the
-        # frame and the parent panel, both scroll bars should be displayed.
+        # Create the scrolled window with input boxes.  Due to the intentionally
+        # small size of the parent panel, both scroll bars should be displayed.
         self.scrolled = InputListPanel(parent=panel, itemlist=self.fields,
                                        align=False)
 
@@ -1080,6 +1080,7 @@ class AppTestFrame(wx.Frame):
         # Terminate the program.
         self.Close()
 
+#==============================================================================
 
 if __name__ == '__main__':
     # Interactively test both the InputListPanel and the InputListDialog classes.

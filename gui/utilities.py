@@ -185,6 +185,9 @@ class ExecuteInThread():
     designated callback function when the execution completes.  Control is
     immediately given back to the caller of ExecuteInThread which can execute
     in parallel in the main thread.
+
+    Note that wx.lib.delayedresult provides a simple interface to threading
+    that does not include mechanism to stop the thread.
     """
 
     def __init__(self, callback, function, *args, **kwargs):
@@ -260,7 +263,7 @@ def log_time(text=None, reset=False):
 
 class TimeStamp():
     """
-    This class provides timestamp, elapsed time, and delta time services for
+    This class provides timestamp, delta time, and elapsed time services for
     displaying wall clock time usage by the application.
     """
 
@@ -274,37 +277,70 @@ class TimeStamp():
 
 
     def gettime3(self):
-        # Gets current time in timestamp, elasped time, and delta time format.
+        # Gets current time in timestamp, delta time, and elapsed time format.
         now = time.time()
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now))
         elapsed = now - self.t0
         delta = now - self.t1
         self.t1 = now
-        return timestamp, elapsed, delta
+        return timestamp, delta, elapsed
 
 
     def gettime2(self):
-        # Gets current time in elasped time and delta time format.
+        # Gets current time in delta time and elapsed time format.
         now = time.time()
         elapsed = now - self.t0
         delta = now - self.t1
         self.t1 = now
-        return elapsed, delta
+        return delta, elapsed
 
 
     def log_time_info(self, text=""):
-        # Prints timestamp, elapsed time, delta time, and optional comment.
-        t, e, d = self.gettime3()
-        print "=>> %s %9.3fs%8.3fs  %s" %(t, e, d, text)
+        # Prints timestamp, delta time, elapsed time, and optional comment.
+        t, d, e = self.gettime3()
+        print "=>> %s%9.3fs%9.3fs  %s" %(t, d, e, text)
 
 
     def log_timestamp(self, text=""):
         # Prints timestamp and optional comment.
-        t, e, d = self.gettime3()
+        t, d, e = self.gettime3()
         print "=>> %s  %s" %(t, text)
 
 
     def log_interval(self, text=""):
         # Prints elapsed time, delta time, and optional comment.
-        e, d = self.gettime2()
-        print "=>> %9.3fs%8.3fs  %s" %(e, d, text)
+        d, e = self.gettime2()
+        print "=>>%9.3fs%9.3fs  %s" %(d, e, text)
+
+#==============================================================================
+
+if __name__ == '__main__':
+    # Test the TimeStamp class and the convenience function.
+        log_time("Using log_time() function")
+        print "Sleeping for 0.54 seconds ..."
+        time.sleep(0.54)
+        log_time("Using log_time() function")
+        print "Sleeping for 0.83 seconds ..."
+        time.sleep(0.83)
+        log_time("Using log_time() function")
+        print "Creating an instance of TimeStamp (as the second timing class)"
+        ts = TimeStamp()
+        print "Sleeping for 0.66 seconds ..."
+        time.sleep(0.66)
+        ts.log_time_info(text="Using log_time_info() method")
+        ts.log_timestamp(text="Using log_timestamp() method")
+        ts.log_interval(text="Using log_interval() method")
+        print "Sleeping for 0.35 seconds ..."
+        time.sleep(0.35)
+        ts.log_interval(text="Using log_interval() method")
+        print "Sleeping for 0.42 seconds ..."
+        time.sleep(0.42)
+        ts.log_interval(text="Using log_interval() method")
+        print "Resetting the clock ..."
+        ts.reset()
+        ts.log_interval(text="Using log_interval() method")
+        print "Sleeping for 0.33 seconds ..."
+        time.sleep(0.33)
+        ts.log_interval(text="Using log_interval() method")
+        print "Switch back to the first timing class"
+        log_time("Using log_time() function")
