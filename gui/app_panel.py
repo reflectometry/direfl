@@ -1696,6 +1696,8 @@ from your data files."""
         file2 = self.TCfile2.GetValue()
         if len(file1) > 0 and len(file2) > 0:
             self.plot_dataset(file1, file2)
+        elif len(file1) > 0 and len(file2) == 0:
+            self.plot_dataset(file1, None)
 
 
     def OnSelectFile2(self, event):
@@ -1727,12 +1729,24 @@ from your data files."""
         file2 = self.TCfile2.GetValue()
         if len(file1) > 0 and len(file2) > 0:
             self.plot_dataset(file1, file2)
+        elif len(file1) == 0 and len(file2) > 0:
+            self.plot_dataset(None, file2)
 
 
     def plot_dataset(self, file1, file2):
         """
         Plots the Q, R, and dR of the two data files.
         """
+
+        # Allow just one file to be plotted using common code that expects two.
+        if file1 is None and file2 is None: return
+        self.plot_file1 = self.plot_file2 = True
+        if file1 is None:
+            self.plot_file1 = False
+            file1 = file2
+        if file2 is None:
+            self.plot_file2 = False
+            file2 = file1
 
         # Set the plotting figure manager for this class as the active one and
         # erase the current figure.
@@ -1868,8 +1882,10 @@ from your data files."""
         name1 = os.path.basename(self.name1)
         name2 = os.path.basename(self.name2)
 
-        plot1(self.Qin, self.R1in, self.dR1in, name1, 'blue', hold=False)
-        plot1(self.Qin, self.R2in, self.dR2in, name2, 'green', hold=True)
+        if self.plot_file1:
+            plot1(self.Qin, self.R1in, self.dR1in, name1, 'blue', hold=False)
+        if self.plot_file2:
+            plot1(self.Qin, self.R2in, self.dR2in, name2, 'green', hold=True)
 
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.ylabel('Reflectivity')
