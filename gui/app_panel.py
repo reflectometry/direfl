@@ -602,18 +602,14 @@ from your model."""
 
         radio_selected = event.GetEventObject()
         if self.radio1 is radio_selected:
+            self.pan12.Enable(True)
             self.radio1.SetValue(True)
             self.radio2.SetValue(False)
-            self.pan12.Enable(True)
-            self.btn_edit.Enable(True)
-            self.btn_reset.Enable(True)
             self.calc_resolution = True
         else:
-            self.radio2.SetValue(True)
-            self.radio1.SetValue(False)
             self.pan12.Enable(False)
-            self.btn_edit.Enable(False)
-            self.btn_reset.Enable(False)
+            self.radio1.SetValue(False)
+            self.radio2.SetValue(True)
             self.calc_resolution = False
 
 
