@@ -1234,14 +1234,14 @@ class SurroundVariation():
             name1 = file1
         else:
             d1 = file1
-            name1 = "data1"
+            name1 = "SimData1"
 
         if isinstance(file2, basestring):
             d2 = numpy.loadtxt(file2).T
             name2 = file2
         else:
             d2 = file2
-            name2 = "data2"
+            name2 = "SimData2"
 
         ncols = len(d1)
         if ncols <= 1:

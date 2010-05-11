@@ -184,7 +184,7 @@ class Simulation():
         pylab.subplot(subplot)
         q,re,dre = self.phase.Q, self.phase.RealR, self.phase.dRealR
         scale = 1e4*q**2
-        [h] = pylab.plot(q, scale*re, '.', hold=False, label="Measured")
+        [h] = pylab.plot(q, scale*re, '.', hold=False, label="Simulated")
         if dre is not None:
             pylab.fill_between(q, scale*(re-dre), scale*(re+dre),
                                color=h.get_color(), alpha=0.2)
