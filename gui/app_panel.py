@@ -1145,9 +1145,14 @@ class AnalyzeDataPage(wx.Panel):
         self.TCfile1 = wx.TextCtrl(self.pan11, wx.ID_ANY, value="",
                                    style=wx.TE_RIGHT)
         self.TCfile1.SetBackgroundColour(PALE_YELLOW)
+        self.TCfile1.Bind(wx.EVT_SET_FOCUS, self.OnSetFocusFile1)
+        self.TCfile1.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocusFile1)
+
         self.TCfile2 = wx.TextCtrl(self.pan11, wx.ID_ANY, value="",
                                    style=wx.TE_RIGHT)
         self.TCfile2.SetBackgroundColour(PALE_YELLOW)
+        self.TCfile2.Bind(wx.EVT_SET_FOCUS, self.OnSetFocusFile2)
+        self.TCfile2.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocusFile2)
 
         # Create file selector button controls.
         # Match the button height to the text box height. Using y = -1 on
@@ -1564,6 +1569,48 @@ from your data files."""
         self.instr_param.edit_metadata()
 
 
+    def OnSetFocusFile1(self, event):
+        """Saves existing filespec on entry to the file1 text control box."""
+        self.curr_file1 = self.TCfile1.GetValue()
+
+
+    def OnSetFocusFile2(self, event):
+        """Saves existing filespec on entry to the file2 text control box."""
+        self.curr_file2 = self.TCfile2.GetValue()
+
+
+    def OnKillFocusFile1(self, event):
+        """Processes edited filespec on exit from the file1 text control box."""
+
+        file1 = self.TCfile1.GetValue()
+        if self.curr_file1 == file1:
+            return  # there was no change to input field value
+
+        if len(file1) == 0:
+            self.TCfile1.SetBackgroundColour(PALE_YELLOW)
+        else:
+            self.TCfile1.SetBackgroundColour("WHITE")
+
+        # Plot one or both files.
+        self.plot_dataset(file1, self.TCfile2.GetValue())
+
+
+    def OnKillFocusFile2(self, event):
+        """Processes edited filespec on exit from the file2 text control box."""
+
+        file2 = self.TCfile2.GetValue()
+        if self.curr_file2 == file2:
+            return  # there was no change to input field value
+
+        if len(file2) == 0:
+            self.TCfile2.SetBackgroundColour(PALE_YELLOW)
+        else:
+            self.TCfile2.SetBackgroundColour("WHITE")
+
+        # Plot one or both files.
+        self.plot_dataset(self.TCfile1.GetValue(), file2)
+
+
     def OnLoadDemoDataset1(self, event):
         """Loads demo 1 reflectometry data files for measurements 1 and 2."""
 
@@ -1600,7 +1647,7 @@ from your data files."""
                  None, None, None, None, None, None)
         self.inver_param.update_items_in_panel(plist)
 
-        # Generate the plots and display them.
+        # Plot the files.
         self.plot_dataset(datafile_1, datafile_2)
 
 
@@ -1640,7 +1687,7 @@ from your data files."""
                  None, None, None, None, None, None)
         self.inver_param.update_items_in_panel(plist)
 
-        # Generate the plots and display them.
+        # Plot the files.
         self.plot_dataset(datafile_1, datafile_2)
 
 
@@ -1691,13 +1738,8 @@ from your data files."""
             self.TCfile1.SetValue(datafile_1)
             self.TCfile1.SetInsertionPointEnd()
 
-        # Plot one or both files as listed in the text controls.
-        file1 = self.TCfile1.GetValue()
-        file2 = self.TCfile2.GetValue()
-        if len(file1) > 0 and len(file2) > 0:
-            self.plot_dataset(file1, file2)
-        elif len(file1) > 0 and len(file2) == 0:
-            self.plot_dataset(file1, None)
+        # Plot one or both files.
+        self.plot_dataset(self.TCfile1.GetValue(), self.TCfile2.GetValue())
 
 
     def OnSelectFile2(self, event):
@@ -1724,13 +1766,8 @@ from your data files."""
         self.TCfile2.SetValue(datafile_2)
         self.TCfile2.SetInsertionPointEnd()
 
-        # Plot one or both files as listed in the text controls.
-        file1 = self.TCfile1.GetValue()
-        file2 = self.TCfile2.GetValue()
-        if len(file1) > 0 and len(file2) > 0:
-            self.plot_dataset(file1, file2)
-        elif len(file1) == 0 and len(file2) > 0:
-            self.plot_dataset(None, file2)
+        # Plot one or both files.
+        self.plot_dataset(self.TCfile1.GetValue(), self.TCfile2.GetValue())
 
 
     def plot_dataset(self, file1, file2):
@@ -1738,8 +1775,22 @@ from your data files."""
         Plots the Q, R, and dR of the two data files.
         """
 
+        if file1 is not None and len(file1) == 0:
+            file1 = None
+        if file2 is not None and len(file2) == 0:
+            file2 = None
+
+        # Set the plotting figure manager for this class as the active one and
+        # erase the current figure.
+        _pylab_helpers.Gcf.set_active(self.fm)
+        pylab.clf()
+        pylab.draw()
+
         # Allow just one file to be plotted using common code that expects two.
+        # This is inefficient when there is only one file because it will be
+        # loaded twice, but otherwise this causes no problems.
         if file1 is None and file2 is None: return
+
         self.plot_file1 = self.plot_file2 = True
         if file1 is None:
             self.plot_file1 = False
@@ -1748,31 +1799,33 @@ from your data files."""
             self.plot_file2 = False
             file2 = file1
 
-        # Set the plotting figure manager for this class as the active one and
-        # erase the current figure.
-        _pylab_helpers.Gcf.set_active(self.fm)
-        pylab.clf()
-        pylab.draw()
-
         # Make sure the files are accessible so we can display a proper error
-        # message now.  This is a bit of overkill since load_data will also
-        # open the files, but load_data will be replaced in the future.
-        try:
-            fd = open(file1, 'r')
-            fd.close()
-        except:
-            display_error_message(self, "File Access Error",
-                "Cannot access file "+file1)
-            return
+        # message now before load_data tries to read them.
+        if self.plot_file1:
+            try:
+                fd = open(file1, 'r')
+                fd.close()
+            except:
+                self.TCfile1.SetBackgroundColour("PINK")
+                self.TCfile1.SetFocus()
+                self.TCfile1.Refresh()
+                display_error_message(self, "File Access Error",
+                    "Cannot access file "+file1)
+                return
 
-        try:
-            fd = open(file2, 'r')
-            fd.close()
-        except:
-            display_error_message(self, "File Access Error",
-                "Cannot access file "+file2)
-            return
+        if self.plot_file2:
+            try:
+                fd = open(file2, 'r')
+                fd.close()
+            except:
+                self.TCfile2.SetBackgroundColour("PINK")
+                self.TCfile2.SetFocus()
+                self.TCfile2.Refresh()
+                display_error_message(self, "File Access Error",
+                    "Cannot access file "+file2)
+                return
 
+        # Now we can load and plot the dataset.
         try:
             self.load_data(file1, file2)
         except ValueError, e:
