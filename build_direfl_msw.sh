@@ -33,9 +33,9 @@
 #     manifest file named <build-dir>/direfl-x.y.z-manifest.txt is created.
 #
 # Usage:
-#   $ ./build-direfl-msw.sh <version> <build-dir> <ex|co>
+#   $ ./build_direfl_msw.sh <version> <ex|co> <build-dir>
 #   where all parameters are optional:
-#     <version> is a string of the form x.y or x.y.z; default is "0.0.0".
+#     <version> is a string of the form x.y or x.y.z; default is "0.0.0"
 #     <ex|co> determines whether an SVN EXPORT or SVN CHECKOUT operation is
 #       performed; default is "ex"; export produces a smaller source zip file
 #       because no .svn directories are included; see comments in the code
@@ -47,17 +47,17 @@
 # Examples from a Cygwin session on Windows XP:
 #    $ cd e:/work
 #    $ svn export svn://danse.us/reflectometry/trunk/reflectometry/inversion/build_direfl_msw.sh
-#    $ ./build-direfl-msw.sh 0.2.0
-#    $ ####### -> e:/work/direfl-0.2.0/direfl-a.b.c-win32.exe
-#    $ ####### -> e:/work/direfl-0.2.0/direfl-a.b.c-manifest.txt
-#    $ ####### -> e:/work/direfl-0.2.0/direfl-0.2.0-source.zip
+#    $ ./build-direfl-msw.sh 1.0.0
+#    $ ####### -> e:/work/direfl-1.0.0/direfl-a.b.c-win32.exe
+#    $ ####### -> e:/work/direfl-1.0.0/direfl-a.b.c-manifest.txt
+#    $ ####### -> e:/work/direfl-1.0.0/direfl-1.0.0-source.zip
 #    $
-# or $ ./build-direfl-msw.sh 0.2.1 co f:/dev/test
+# or $ ./build-direfl-msw.sh 1.2.3 co f:/dev/test
 #    Enter passphrase for key '/cygdrive/z/.ssh/id_rsa':
 #    Enter passphrase for key '/cygdrive/z/.ssh/id_rsa':
 #    $ ####### -> f:/dev/test/direfl-a.b.c-win32.exe
 #    $ ####### -> f:/dev/test/direfl-a.b.c-manifest.txt
-#    $ ####### -> f:/dev/test/direfl-0.2.1-source.zip
+#    $ ####### -> f:/dev/test/direfl-1.2.3-source.zip
 #    $
 # or $ <some-path>/build-direfl-msw.sh
 #    $ ####### -> e:/work/direfl-0.0.0/direfl-a.b.c-win32.exe
