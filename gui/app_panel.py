@@ -221,10 +221,10 @@ class AppPanel(wx.Panel):
 
         # Create test page windows and add them to notebook if requested.
         if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
-            self.page10 = TestPlotPage(nb, colour="FIREBRICK", fignum=10)
-            self.page11 = TestPlotPage(nb, colour="BLUE", fignum=11)
-            self.page12 = TestPlotPage(nb, colour="GREEN", fignum=12)
-            self.page13 = TestPlotPage(nb, colour="WHITE", fignum=13)
+            self.page10 = AuxiliaryPage(nb, colour="FIREBRICK", fignum=10)
+            self.page11 = AuxiliaryPage(nb, colour="BLUE", fignum=11)
+            self.page12 = AuxiliaryPage(nb, colour="GREEN", fignum=12)
+            self.page13 = AuxiliaryPage(nb, colour="WHITE", fignum=13)
 
             nb.AddPage(self.page10, "Test 1")
             nb.AddPage(self.page11, "Test 2")
@@ -332,6 +332,7 @@ class SimulateDataPage(wx.Panel):
         self.pan2 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
         self.pan2.SetBackgroundColour("WHITE")
 
+        # Initialize the left and right panels.
         self.init_param_panel()
         self.init_plot_panel()
 
@@ -539,7 +540,7 @@ class SimulateDataPage(wx.Panel):
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
 
-        # Initialize the FigureCanvas, mapping the figure object to the plot
+        # Initialize the figure canvas, mapping the figure object to the plot
         # engine backend.
         canvas = FigureCanvas(self.pan2, wx.ID_ANY, figure)
 
@@ -1104,6 +1105,7 @@ class AnalyzeDataPage(wx.Panel):
         self.pan2 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
         self.pan2.SetBackgroundColour("WHITE")
 
+        # Initialize the left and right panels.
         self.init_param_panel()
         self.init_plot_panel()
 
@@ -1315,7 +1317,7 @@ class AnalyzeDataPage(wx.Panel):
         # Instantiate a figure object that will contain our plots.
         figure = Figure()
 
-        # Initialize the FigureCanvas, mapping the figure object to the plot
+        # Initialize the figure canvas, mapping the figure object to the plot
         # engine backend.
         canvas = FigureCanvas(self.pan2, wx.ID_ANY, figure)
 
@@ -1942,7 +1944,7 @@ from your data files."""
 
 #==============================================================================
 
-class TestPlotPage(wx.Panel):
+class AuxiliaryPage(wx.Panel):
     """
     This class adds a page to the notebook for test purposes.
     """
@@ -1952,9 +1954,9 @@ class TestPlotPage(wx.Panel):
         self.fignum=fignum
         self.SetBackgroundColour(colour)
 
+        # Create the display panel and initialize it.
         self.pan1 = wx.Panel(self, wx.ID_ANY, style=wx.SUNKEN_BORDER)
-
-        self.init_testplot_panel()
+        self.init_plot_panel()
 
         # Put the panel in a sizer attached to the main panel of the page.
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -1962,16 +1964,23 @@ class TestPlotPage(wx.Panel):
         self.SetSizer(sizer)
         sizer.Fit(self)
 
+        # Execute tests associated with the test tabs.
+        if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
+            if (self.fignum == 10 and '-test1' in sys.argv[1:]): test1()
+            if (self.fignum == 11 and '-test2' in sys.argv[1:]): test2()
+        if self.fignum == 12: test3()
+        if self.fignum == 13: test4(self.figure)
 
-    def init_testplot_panel(self):
-        """Initializes the main panel of the TestPlotPage."""
+
+    def init_plot_panel(self):
+        """Initializes the main panel of the AuxiliaryPage."""
 
         # Instantiate a figure object that will contain our plots.
-        figure = Figure()
+        self.figure = Figure()
 
-        # Initialize the FigureCanvas, mapping the figure object to the plot
+        # Initialize the figure canvas, mapping the figure object to the plot
         # engine backend.
-        canvas = FigureCanvas(self.pan1, wx.ID_ANY, figure)
+        canvas = FigureCanvas(self.pan1, wx.ID_ANY, self.figure)
 
         # Wx-Pylab magic ...
         # Make our canvas the active figure manager for pylab so that when
@@ -1980,8 +1989,8 @@ class TestPlotPage(wx.Panel):
         # This technique allows this application to execute code that uses
         # pylab stataments to generate plots and embed these plots in our
         # application window(s).
-        fm = FigureManagerBase(canvas, self.fignum)
-        _pylab_helpers.Gcf.set_active(fm)
+        self.fm = FigureManagerBase(canvas, self.fignum)
+        _pylab_helpers.Gcf.set_active(self.fm)
 
         # Instantiate the matplotlib navigation toolbar and explicitly show it.
         mpl_toolbar = Toolbar(canvas)
@@ -1995,13 +2004,6 @@ class TestPlotPage(wx.Panel):
         # Associate the sizer with its container.
         self.pan1.SetSizer(sizer)
         sizer.Fit(self.pan1)
-
-        # Execute tests associated with the test tabs.
-        if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
-            if (self.fignum == 10 and '-test1' in sys.argv[1:]): test1()
-            if (self.fignum == 11 and '-test2' in sys.argv[1:]): test2()
-        if self.fignum == 12: test3()
-        if self.fignum == 13: test4(figure)
 
 
     def active_page(self):
@@ -2401,7 +2403,7 @@ def perform_recon_inver(files, params):
     # depth.
     if params[5] <= params[4]:  # Qmax must be > Qmin
         params[5] = None        # If not, then let algorithm pick Qmax
-    res = Inversion(data=data, **dict(substrate=params[2],
+    inv = Inversion(data=data, **dict(substrate=params[2],
                                       thickness=params[3],
                                       Qmin=params[4],
                                       Qmax=params[5],
@@ -2417,8 +2419,8 @@ def perform_recon_inver(files, params):
                                       monitor=None))
 
     # Generate the plots.
-    res.run(showiters=False)
-    res.plot(phase=phase)
+    inv.run(showiters=False)
+    inv.plot(phase=phase)
 
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right=0.96,
@@ -2507,26 +2509,25 @@ def test1():
     from numpy import linspace
 
     # Roughness parameters (surface, sample, substrate).
-    sv, s, su = 3, 5, 2
+    sv, sa, su = 3, 5, 2
     # Surround parameters.
     u, v1, v2 = 2.07, 0, 4.5
     # Default sample.
-    sample = ([5,100,s], [1,123,s], [3,47,s], [-1,25,s])
-    sample[0][2] = sv
+    sample = ([5,100,sv], [1,123,sa], [3,47,sa], [-1,25,sa])
     bse = 0
 
     # Run the simulation.
-    inv = dict(showiters=False, iters=6, monitor=None, bse=bse,
-               noise=1, stages=10, calcpoints=4, rhopoints=128)
+    sim = Simulation(q=linspace(0, 0.4, 150), sample=sample,
+                     u=u, urough=su, v1=v1, v2=v2, noise=0.08,
+                     invert_args=dict(showiters=False, iters=6, monitor=None,
+                                      bse=bse, noise=1, stages=10,
+                                      calcpoints=4, rhopoints=128),
+                     phase_args=dict(stages=100),
+                     perfect_reconstruction=False)
 
-    t = Simulation(q = linspace(0, 0.4, 150), sample=sample,
-                   u=u, urough=su, v1=v1, v2=v2, noise=0.08,
-                   invert_args=inv, phase_args=dict(stages=100),
-                   perfect_reconstruction=False)
-
-    t.plot()
+    sim.plot()
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
-                          left=0.09, right = 0.96,
+                          left=0.09, right=0.96,
                           top=0.95, bottom=0.08)
 
 
@@ -2553,7 +2554,7 @@ def test2():
         data = phase.Q, phase.RealR, phase.dRealR
 
     #if dz: rhopoints = ceil(1/dz)
-    res = Inversion(data=data, **dict(substrate=2.07,
+    inv = Inversion(data=data, **dict(substrate=2.07,
                                       thickness=1000,
                                       calcpoints=4,
                                       rhopoints=128,
@@ -2568,8 +2569,8 @@ def test2():
                                       showiters=False,
                                       monitor=None))
 
-    res.run(showiters=False)
-    res.plot(phase=phase)
+    inv.run(showiters=False)
+    inv.plot(phase=phase)
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right=0.96,
                           top=0.95, bottom=0.08)
