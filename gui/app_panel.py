@@ -1144,12 +1144,14 @@ class AnalyzeDataPage(wx.Panel):
         self.TCfile1.SetBackgroundColour(PALE_YELLOW)
         self.TCfile1.Bind(wx.EVT_SET_FOCUS, self.OnSetFocusFile1)
         self.TCfile1.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocusFile1)
+        self.save_file1 = ""
 
         self.TCfile2 = wx.TextCtrl(self.pan11, wx.ID_ANY, value="",
                                    style=wx.TE_RIGHT)
         self.TCfile2.SetBackgroundColour(PALE_YELLOW)
         self.TCfile2.Bind(wx.EVT_SET_FOCUS, self.OnSetFocusFile2)
         self.TCfile2.Bind(wx.EVT_KILL_FOCUS, self.OnKillFocusFile2)
+        self.save_file2 = ""
 
         # Create file selector button controls.
         # Match the button height to the text box height. Using y = -1 on
@@ -1568,19 +1570,19 @@ from your data files."""
 
     def OnSetFocusFile1(self, event):
         """Saves existing filespec on entry to the file1 text control box."""
-        self.curr_file1 = self.TCfile1.GetValue()
+        self.save_file1 = self.TCfile1.GetValue()
 
 
     def OnSetFocusFile2(self, event):
         """Saves existing filespec on entry to the file2 text control box."""
-        self.curr_file2 = self.TCfile2.GetValue()
+        self.save_file2 = self.TCfile2.GetValue()
 
 
     def OnKillFocusFile1(self, event):
         """Processes edited filespec on exit from the file1 text control box."""
 
         file1 = self.TCfile1.GetValue()
-        if self.curr_file1 == file1:
+        if self.save_file1 == file1:
             return  # there was no change to input field value
 
         if len(file1) == 0:
@@ -1596,7 +1598,7 @@ from your data files."""
         """Processes edited filespec on exit from the file2 text control box."""
 
         file2 = self.TCfile2.GetValue()
-        if self.curr_file2 == file2:
+        if self.save_file2 == file2:
             return  # there was no change to input field value
 
         if len(file2) == 0:
@@ -1620,9 +1622,12 @@ from your data files."""
         self.TCfile1.SetBackgroundColour("WHITE")
         self.TCfile1.SetValue(datafile_1)
         self.TCfile1.SetInsertionPointEnd()
+        self.save_file1 = datafile_1
+
         self.TCfile2.SetBackgroundColour("WHITE")
         self.TCfile2.SetValue(datafile_2)
         self.TCfile2.SetInsertionPointEnd()
+        self.save_file2 = datafile_2
 
         # Specify the instrument (NG-1) and set missing required parameters
         # that do not have default values.
@@ -1660,9 +1665,12 @@ from your data files."""
         self.TCfile1.SetBackgroundColour("WHITE")
         self.TCfile1.SetValue(datafile_1)
         self.TCfile1.SetInsertionPointEnd()
+        self.save_file1 = datafile_1
+
         self.TCfile2.SetBackgroundColour("WHITE")
         self.TCfile2.SetValue(datafile_2)
         self.TCfile2.SetInsertionPointEnd()
+        self.save_file2 = datafile_2
 
         # Specify the instrument (Liquids) and set missing required parameters
         # that do not have default values.
