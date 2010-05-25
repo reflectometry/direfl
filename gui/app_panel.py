@@ -64,8 +64,8 @@ import pylab
 import numpy
 from numpy import linspace, inf
 
-from .utilities import (get_appdir, write_to_statusbar,
-                        display_error_message, display_warning_message,
+from .utilities import (get_appdir, write_to_statusbar, log_time,
+                        popup_error_message, popup_warning_message,
                         ExecuteInThread, WorkInProgress)
 
 from .input_list import InputListDialog, InputListPanel
@@ -652,14 +652,14 @@ from your model."""
             try:
                 temp = [float(ln[0]), float(ln[1]), float(ln[2])]
             except:
-                display_error_message(self, "Syntax Error",
+                popup_error_message("Syntax Error",
                     "Please correct syntax error in model description.")
                 return
 
             layers.append(temp)
 
         if len(layers) < 3:
-            display_error_message(self, "Less Than 3 Layers Defined",
+            popup_error_message("Less Than 3 Layers Defined",
                 ("You must specify at least one Surface, Sample, and " +
                  "Substrate layer for your model."))
             return
@@ -675,7 +675,7 @@ from your model."""
         # entries, the user could have pressed the Compute button without
         # making the corrections, so a full validation pass must be done now.
         if not self.inver_param.Validate():
-            display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
+            popup_error_message("Data Entry Error", DATA_ENTRY_ERRMSG)
             return
 
         # Get the validated inversion parameters.
@@ -708,8 +708,7 @@ from your model."""
 
         # Check to see if an instrument has been specified.
         elif ip.get_instr_idx() < 0:
-            display_error_message(self, "Choose an Instrument",
-                                        INSTR_CALC_RESO_ERRMSG)
+            popup_error_message("Choose an Instrument", INSTR_CALC_RESO_ERRMSG)
             return
 
         # For a monochromatic instrument, get its parameters and calculate
@@ -756,8 +755,8 @@ from your model."""
                 d_s2 is None or
                 Tlo is None or
                 slits_at_Tlo is None):
-                display_error_message(self, "Need Instrument Parameters",
-                                      INSTR_PARAM_ERRMSG)
+                popup_error_message("Need Instrument Parameters",
+                                    INSTR_PARAM_ERRMSG)
                 return
 
             # Define the reflectometer.
@@ -811,8 +810,8 @@ from your model."""
                 d_s2 is None or
                 T is None or
                 slits is None):
-                display_error_message(self, "Need Instrument Parameters",
-                                      INSTR_PARAM_ERRMSG)
+                popup_error_message("Need Instrument Parameters",
+                                    INSTR_PARAM_ERRMSG)
                 return
 
             # Define the reflectometer.
@@ -876,7 +875,7 @@ from your model."""
             ExecuteInThread(self.OnComputeEnd, perform_simulation,
                             sample, params, Q=Q, dQ=dQ)
         except Exception, e:
-            display_error_message(self, "Operation Failed", str(e))
+            popup_error_message("Operation Failed", str(e))
             return
         else:
             self.pan2_intro.SetLabel(self.pan2_intro_text)
@@ -916,7 +915,7 @@ from your model."""
         """Shows the instrument metadata to the user and allows editing."""
 
         if self.instr_param.get_instr_idx() < 0:
-            display_warning_message(self, "Select an Instrument",
+            popup_warning_message("Select an Instrument",
                 "Please select an instrument from the drop down list.")
             return
         self.instr_param.edit_metadata()
@@ -940,7 +939,7 @@ from your model."""
             demo_model_params = fd.read()
             fd.close()
         except:
-            display_warning_message(self, "Load Model Error",
+            popup_warning_message("Load Model Error",
                 "Error loading demo model from file "+DEMO_MODEL1_DESC)
             return
 
@@ -980,7 +979,7 @@ from your model."""
             demo_model_params = fd.read()
             fd.close()
         except:
-            display_warning_message(self, "Load Model Error",
+            popup_warning_message("Load Model Error",
                 "Error loading demo model from file "+DEMO_MODEL2_DESC)
             return
 
@@ -1034,8 +1033,8 @@ from your model."""
             model_params = fd.read()
             fd.close()
         except:
-            display_error_message(self, "Load Model Error",
-                                  "Error loading model from file "+filename)
+            popup_error_message("Load Model Error",
+                                "Error loading model from file "+filename)
             return
 
         # Replace the contents of the model parameter text control box with
@@ -1073,8 +1072,8 @@ from your model."""
             fd.write(model_params)
             fd.close()
         except:
-            display_error_message(self, "Save Model Error",
-                                  "Error saving model to file "+filename)
+            popup_error_message("Save Model Error",
+                                "Error saving model to file "+filename)
             return
 
 #==============================================================================
@@ -1405,7 +1404,7 @@ from your data files."""
 
         # Verfiy that the user has selected two reflectivity data files.
         if files[0] == "" or files[1] == "":
-            display_warning_message(self, "Specify a Dataset",
+            popup_warning_message("Specify a Dataset",
             "Please specify the names of two reflectometry data files to use.")
             return
 
@@ -1415,16 +1414,16 @@ from your data files."""
             fd = open(files[0], 'r')
             fd.close()
         except:
-            display_error_message(self, "Load Data Error",
-                "Cannot access file "+files[0])
+            popup_error_message("Load Data Error",
+                                "Cannot access file "+files[0])
             return
 
         try:
             fd = open(files[1], 'r')
             fd.close()
         except:
-            display_error_message(self, "Load Data Error",
-                "Cannot access file "+files[1])
+            popup_error_message("Load Data Error",
+                                "Cannot access file "+files[1])
             return
 
         #-------------------------------------
@@ -1438,7 +1437,7 @@ from your data files."""
         # entries, the user could have pressed the Compute button without
         # making the corrections, so a full validation pass must be done now.
         if not self.inver_param.Validate():
-            display_error_message(self, "Data Entry Error", DATA_ENTRY_ERRMSG)
+            popup_error_message("Data Entry Error", DATA_ENTRY_ERRMSG)
             return
 
         # Get the validated inversion parameters.
@@ -1520,7 +1519,7 @@ from your data files."""
             ExecuteInThread(self.OnComputeEnd, perform_recon_inver,
                                                files, params)
         except Exception, e:
-            display_error_message(self, "Operation Failed", str(e))
+            popup_error_message("Operation Failed", str(e))
             return
         else:
             self.pan2_intro.SetLabel(self.pan2_intro_text)
@@ -1561,7 +1560,7 @@ from your data files."""
         """Shows the instrument metadata to the user and allows editing."""
 
         if self.instr_param.get_instr_idx() < 0:
-            display_warning_message(self, "Select an Instrument",
+            popup_warning_message("Select an Instrument",
                 "Please select an instrument to edit from the drop down list.")
             return
         self.instr_param.edit_metadata()
@@ -1718,7 +1717,7 @@ from your data files."""
         # The user could have selected 1 to n files.
         num_files = len(paths)
         if num_files > 2:
-            display_error_message(self, "Too Many Files Selected",
+            popup_error_message("Too Many Files Selected",
                 "You can select up to two data files, please try again.")
             return
         elif num_files == 2:
@@ -1807,8 +1806,8 @@ from your data files."""
                 self.TCfile1.SetBackgroundColour("PINK")
                 self.TCfile1.SetFocus()
                 self.TCfile1.Refresh()
-                display_error_message(self, "File Access Error",
-                    "Cannot access file "+file1)
+                popup_error_message("File Access Error",
+                                    "Cannot access file "+file1)
                 return
 
         if self.plot_file2:
@@ -1819,15 +1818,15 @@ from your data files."""
                 self.TCfile2.SetBackgroundColour("PINK")
                 self.TCfile2.SetFocus()
                 self.TCfile2.Refresh()
-                display_error_message(self, "File Access Error",
-                    "Cannot access file "+file2)
+                popup_error_message("File Access Error",
+                                    "Cannot access file "+file2)
                 return
 
         # Now we can load and plot the dataset.
         try:
             self.load_data(file1, file2)
         except ValueError, e:
-            display_error_message(self, "Data File Error", str(e))
+            popup_error_message("Data File Error", str(e))
             return
         else:
             self.pan2_intro.SetLabel("Dataset Reflectivity Plots:")

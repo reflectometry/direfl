@@ -143,36 +143,35 @@ def write_to_statusbar(text, index):
     frame.statusbar.SetStatusText(text, index)
 
 
-def display_error_message(parent, caption, message):
+def popup_error_message(caption, message):
     """Displays an error message in a pop-up dialog box with an OK button."""
 
-    msg = wx.MessageDialog(parent, message, caption, style=wx.ICON_ERROR|wx.OK)
+    msg = wx.MessageDialog(None, message, caption, style=wx.ICON_ERROR|wx.OK)
     msg.ShowModal()
     msg.Destroy()
 
 
-def display_warning_message(parent, caption, message):
+def popup_warning_message(caption, message):
     """Displays a warning message in a pop-up dialog box with an OK button."""
 
-    msg = wx.MessageDialog(parent, message, caption,
-                           style=wx.ICON_WARNING|wx.OK)
+    msg = wx.MessageDialog(None, message, caption, style=wx.ICON_WARNING|wx.OK)
     msg.ShowModal()
     msg.Destroy()
 
 
-def display_information_message(parent, caption, message):
+def popup_information_message(caption, message):
     """Displays an informational message in a pop-up with an OK button."""
 
-    msg = wx.MessageDialog(parent, message, caption,
+    msg = wx.MessageDialog(None, message, caption,
                            style=wx.ICON_INFORMATION|wx.OK)
     msg.ShowModal()
     msg.Destroy()
 
 
-def display_question(parent, caption, message):
+def popup_question(caption, message):
     """Displays a question in a pop-up dialog box with YES and NO buttons."""
 
-    msg = wx.MessageDialog(parent, message, caption,
+    msg = wx.MessageDialog(None, message, caption,
                            style=wx.ICON_QUESTION|wx.YES_NO)
     msg.ShowModal()
     msg.Destroy()
@@ -203,7 +202,7 @@ class ExecuteInThread():
         try:
             result = delayedResult.get()
         except Exception, e:
-            display_error_message(self, "job %s raised exception: %s"%(jobID, e)
+            popup_error_message(self, "job %s raised exception: %s"%(jobID, e)
             return
         '''
         return
@@ -247,10 +246,10 @@ def log_time(text=None, reset=False):
     log_time maintains a single instance of TimeStamp during program execution.
     Example output from calls to log_time('...'):
 
-    =>>     0.000s   0.000s  Starting DiRefl
-    =>>     0.031s   0.031s  Starting to display the splash screen
-    =>>     1.141s   1.110s  Starting to build the GUI on the frame
-    =>>     1.422s   0.281s  Done initializing - entering the event loop
+    ==>     0.000s   0.000s  Starting DiRefl
+    ==>     0.031s   0.031s  Starting to display the splash screen
+    ==>     1.141s   1.110s  Starting to build the GUI on the frame
+    ==>     1.422s   0.281s  Done initializing - entering the event loop
     """
 
     global log_time_handle
@@ -298,19 +297,19 @@ class TimeStamp():
     def log_time_info(self, text=""):
         # Prints timestamp, delta time, elapsed time, and optional comment.
         t, d, e = self.gettime3()
-        print "=>> %s%9.3fs%9.3fs  %s" %(t, d, e, text)
+        print "==> %s%9.3fs%9.3fs  %s" %(t, d, e, text)
 
 
     def log_timestamp(self, text=""):
         # Prints timestamp and optional comment.
         t, d, e = self.gettime3()
-        print "=>> %s  %s" %(t, text)
+        print "==> %s  %s" %(t, text)
 
 
     def log_interval(self, text=""):
         # Prints elapsed time, delta time, and optional comment.
         d, e = self.gettime2()
-        print "=>>%9.3fs%9.3fs  %s" %(d, e, text)
+        print "==>%9.3fs%9.3fs  %s" %(d, e, text)
 
 #==============================================================================
 
