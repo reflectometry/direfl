@@ -136,13 +136,6 @@ def get_appdir():
     return os.path.dirname(os.path.abspath(path))
 
 
-def write_to_statusbar(text, index):
-    """Writes a message to the status bar in the specified slot."""
-
-    frame = wx.FindWindowByName("AppFrame", parent=None)
-    frame.statusbar.SetStatusText(text, index)
-
-
 def popup_error_message(caption, message):
     """Displays an error message in a pop-up dialog box with an OK button."""
 
@@ -175,6 +168,35 @@ def popup_question(caption, message):
                            style=wx.ICON_QUESTION|wx.YES_NO)
     msg.ShowModal()
     msg.Destroy()
+
+#==============================================================================
+
+class StatusBarInfo():
+    """This class writes, saves, and restores multi-field status bar text."""
+
+    def __init__(self):
+        frame = wx.FindWindowByName("AppFrame", parent=None)
+        self.sb = frame.GetStatusBar()
+        self.cnt = self.sb.GetFieldsCount()
+        self.field = []
+        for index in range(self.cnt):
+            self.field.append("")
+
+
+    def write(self, index=0, text=""):
+        # Write text to the specified slot and save text locally.
+        # Beware that if you use field 0, wxPython will likely overwite it.
+        if index > self.cnt - 1:
+            return
+        self.sb.SetStatusText(text, index)
+        self.field[index] = text
+
+
+    def restore(self):
+        # Restore saved text from fields 1 to n.
+        # Note that wxPython updates field 0 with hints and other messages.
+        for index in range(1, self.cnt):
+            self.sb.SetStatusText(self.field[index], index)
 
 #==============================================================================
 

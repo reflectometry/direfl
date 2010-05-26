@@ -64,9 +64,9 @@ import pylab
 import numpy
 from numpy import linspace, inf
 
-from .utilities import (get_appdir, write_to_statusbar, log_time,
+from .utilities import (get_appdir, log_time,
                         popup_error_message, popup_warning_message,
-                        ExecuteInThread, WorkInProgress)
+                        StatusBarInfo, ExecuteInThread, WorkInProgress)
 
 from .input_list import InputListDialog, InputListPanel
 from .images import getOpenBitmap
@@ -118,6 +118,14 @@ resolution for the simulated datasets, or disable this
 calculation by answering 'No' to the 'With Resolution'
 question at the bottom of the page."""
 
+SIM_HELP1 = """\
+Edit parameters then click Compute to generate a density profile \
+from your model."""
+
+ANA_HELP1 = """\
+Edit parameters then click Compute to generate a density profile \
+from your data."""
+
 #==============================================================================
 
 class AppPanel(wx.Panel):
@@ -144,7 +152,7 @@ class AppPanel(wx.Panel):
         self.modify_toolbar()
 
         # Reconfigure the status bar.
-        self.modify_statusbar([-64, -16, -10, -10])
+        self.modify_statusbar([-34, -50, -16])
 
         # Initialize the notebook bar.
         self.add_notebookbar()
@@ -320,6 +328,8 @@ class SimulateDataPage(wx.Panel):
         self.fignum=fignum
         self.SetBackgroundColour(colour)
         self.app_root_dir = get_appdir()
+        self.sbi = StatusBarInfo()
+        self.sbi.write(1, SIM_HELP1)
 
         # Split the panel to separate the input fields from the plots.
         # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
@@ -589,13 +599,7 @@ class SimulateDataPage(wx.Panel):
 
     def active_page(self):
         """This method is called when user selects (makes current) the page."""
-
-        WHAT_TODO_NEXT = """\
-Edit parameters then press the Compute button to generate a density profile \
-from your model."""
-        write_to_statusbar(WHAT_TODO_NEXT, 0)
-        write_to_statusbar("", 1)
-        write_to_statusbar("", 2)
+        self.sbi.restore()
 
 
     def OnCalcResoSelect(self, event):
@@ -851,10 +855,6 @@ from your model."""
         frame.load_demo_dataset_1_item.Enable(False)
         frame.load_demo_dataset_2_item.Enable(False)
 
-        # Inform the user that we're starting the computation.
-        write_to_statusbar("Generating new plots ...", 1)
-        write_to_statusbar("", 2)
-
         # Display the progress gauge.
         self.pan2_gauge.Start()
         self.pan2_gauge.Show(True)
@@ -869,6 +869,9 @@ from your model."""
         pylab.clf()
         pylab.draw()
 
+        # Inform the user that we're starting the computation.
+        self.sbi.write(2, "Generating new plots ...")
+
         # Apply phase reconstruction and direct inversion techniques on the
         # experimental reflectivity datasets.
         try:
@@ -876,6 +879,7 @@ from your model."""
                             sample, params, Q=Q, dQ=dQ)
         except Exception, e:
             popup_error_message("Operation Failed", str(e))
+            self.sbi.write(2, "")
             return
         else:
             self.pan2_intro.SetLabel(self.pan2_intro_text)
@@ -901,8 +905,7 @@ from your model."""
 
         # Write the total execution and plotting time to the status bar.
         secs = time.time() - self.t0
-        write_to_statusbar("Plots updated", 1)
-        write_to_statusbar("%g secs" %(secs), 2)
+        self.sbi.write(2, "    %g secs" %(secs))
 
         # Show widgets previously hidden at the start of this computation.
         self.btn_compute.Enable(True)
@@ -1088,10 +1091,11 @@ class AnalyzeDataPage(wx.Panel):
     def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
 
-        self.parent=parent
         self.fignum=fignum
         self.SetBackgroundColour(colour)
         self.app_root_dir = get_appdir()
+        self.sbi = StatusBarInfo()
+        self.sbi.write(1, ANA_HELP1)
 
         # Split the panel to separate the input fields from the plots.
         # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
@@ -1367,13 +1371,7 @@ class AnalyzeDataPage(wx.Panel):
 
     def active_page(self):
         """This method is called when user selects (makes current) the page."""
-
-        WHAT_TODO_NEXT = """\
-Edit parameters then press the Compute button to generate a density profile \
-from your data files."""
-        write_to_statusbar(WHAT_TODO_NEXT, 0)
-        write_to_statusbar("", 1)
-        write_to_statusbar("", 2)
+        self.sbi.restore()
 
 
     def OnComboBoxSelect(self, event):
@@ -1496,10 +1494,6 @@ from your data files."""
         frame.load_demo_dataset_1_item.Enable(False)
         frame.load_demo_dataset_2_item.Enable(False)
 
-        # Inform the user that we're starting the computation.
-        write_to_statusbar("Generating new plots ...", 1)
-        write_to_statusbar("", 2)
-
         # Display the progress gauge.
         self.pan2_gauge.Start()
         self.pan2_gauge.Show(True)
@@ -1514,6 +1508,9 @@ from your data files."""
         pylab.clf()
         pylab.draw()
 
+        # Inform the user that we're starting the computation.
+        self.sbi.write(2, "Generating new plots ...")
+
         # Apply phase reconstruction and direct inversion techniques on the
         # experimental reflectivity datasets.
         try:
@@ -1522,6 +1519,7 @@ from your data files."""
                                                files, params)
         except Exception, e:
             popup_error_message("Operation Failed", str(e))
+            self.sbi.write(2, "")
             return
         else:
             self.pan2_intro.SetLabel(self.pan2_intro_text)
@@ -1547,8 +1545,7 @@ from your data files."""
 
         # Write the total execution and plotting time to the status bar.
         secs = time.time() - self.t0
-        write_to_statusbar("Plots updated", 1)
-        write_to_statusbar("%g secs" %(secs), 2)
+        self.sbi.write(2, "    %g secs" %(secs))
 
         # Show widgets previously hidden at the start of this computation.
         self.btn_compute.Enable(True)
@@ -1790,6 +1787,7 @@ from your data files."""
         _pylab_helpers.Gcf.set_active(self.fm)
         pylab.clf()
         pylab.draw()
+        self.sbi.write(2, "")
 
         # Allow just one file to be plotted using common code that expects two.
         # This is inefficient when there is only one file because it will be
@@ -1960,6 +1958,7 @@ class AuxiliaryPage(wx.Panel):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
         self.fignum=fignum
         self.SetBackgroundColour(colour)
+        self.sbi = StatusBarInfo()
 
         # Create the display panel and initialize it.
         self.pan1 = wx.Panel(self, wx.ID_ANY, style=wx.SUNKEN_BORDER)
@@ -2015,10 +2014,7 @@ class AuxiliaryPage(wx.Panel):
 
     def active_page(self):
         """This method is called when user selects (makes current) the page."""
-
-        write_to_statusbar("", 0)
-        write_to_statusbar("", 1)
-        write_to_statusbar("", 2)
+        self.sbi.restore()
 
 #==============================================================================
 
