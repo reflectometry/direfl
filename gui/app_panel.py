@@ -217,7 +217,8 @@ class AppPanel(wx.Panel):
         """Creates a notebook bar and a set of tabs, one for each page."""
 
         nb = self.notebook = wx.Notebook(self, wx.ID_ANY,
-                                         style=wx.NB_TOP|wx.NB_FIXEDWIDTH)
+                             style=wx.NB_TOP|wx.NB_FIXEDWIDTH|wx.NB_NOPAGETHEME)
+        nb.SetTabSize((100,20))  # works on Windows but not on Linux
 
         # Create page windows as children of the notebook.
         self.page0 = SimulateDataPage(nb, colour=PALE_GREEN, fignum=0)
@@ -253,22 +254,29 @@ class AppPanel(wx.Panel):
         nb.InsertPage(1, self.page0, "Replace 0")
         '''
 
-        self.page0.active_page()
-
         self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged)
+
+        # Make sure the first page is the active one.
+        # Note that SetSelection generates a page change event only if the
+        # page changes and ChangeSelection does not generate an event.  Thus
+        # we force a page change event so that the status bar is properly set
+        # on startup.
+        nb.ChangeSelection(0)
+        nb.SendPageChangedEvent(0, 0)
 
 
     def OnPageChanged(self, event):
         """
-        Performs any save, restore, or update operations when the user switches
-        notebook pages (via clicking on the notebook tab).
+        Performs page specific save, restore, or update operations when the
+        user clicks on a notebook tab to change pages or when the program calls
+        SetSelection.  (Note that ChangeSelection does not generate an event.)
         """
 
         ### prev_page = self.notebook.GetPage(event.GetOldSelection())
-        ### print "*** OnPageChanged:", event.GetOldSelection(),
+        ### print "*** OnPageChanged:", event.GetOldSelection(),\
         ###                             event.GetSelection()
         curr_page = self.notebook.GetPage(event.GetSelection())
-        curr_page.active_page()
+        curr_page.OnActivePage()
         event.Skip()
 
 
@@ -597,7 +605,7 @@ class SimulateDataPage(wx.Panel):
         sizer.Fit(self.pan2)
 
 
-    def active_page(self):
+    def OnActivePage(self):
         """This method is called when user selects (makes current) the page."""
         self.sbi.restore()
 
@@ -1369,7 +1377,7 @@ class AnalyzeDataPage(wx.Panel):
         sizer.Fit(self.pan2)
 
 
-    def active_page(self):
+    def OnActivePage(self):
         """This method is called when user selects (makes current) the page."""
         self.sbi.restore()
 
@@ -1565,6 +1573,11 @@ class AnalyzeDataPage(wx.Panel):
         self.instr_param.edit_metadata()
 
 
+    def OnReset(self, event):
+        """Restores default parameters for the currently selected instrument."""
+        self.instr_param.init_metadata()
+
+
     def OnSetFocusFile1(self, event):
         """Saves existing filespec on entry to the file1 text control box."""
         self.save_file1 = self.TCfile1.GetValue()
@@ -1691,11 +1704,6 @@ class AnalyzeDataPage(wx.Panel):
 
         # Plot the files.
         self.plot_dataset(datafile_1, datafile_2)
-
-
-    def OnReset(self, event):
-        """Restores default parameters for the currently selected instrument."""
-        self.instr_param.init_metadata()
 
 
     def OnSelectFile1(self, event):
@@ -2012,7 +2020,7 @@ class AuxiliaryPage(wx.Panel):
         sizer.Fit(self.pan1)
 
 
-    def active_page(self):
+    def OnActivePage(self):
         """This method is called when user selects (makes current) the page."""
         self.sbi.restore()
 
