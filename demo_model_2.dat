@@ -1,7 +1,7 @@
 # SLDensity  Thickness  Roughness
-0 100 2      # air surface
-2.634 200 1  # SiO2
-2.07 100 1   # Si substrate
+0 100 0     # air surface
+3.135 80 1  # CoPd (try roughness > 5)
+2.07 100 2  # Si substrate
 
 
 

@@ -86,6 +86,7 @@ ALL_FILES = "All files (*.*)|*.*"
 # Resource files.
 DEMO_MODEL1_DESC = "demo_model_1.dat"
 DEMO_MODEL2_DESC = "demo_model_2.dat"
+DEMO_MODEL3_DESC = "demo_model_3.dat"
 DEMO_REFLDATA1_1 = "qrd1.refl"
 DEMO_REFLDATA1_2 = "qrd2.refl"
 DEMO_REFLDATA2_1 = "surround_air_4.refl"
@@ -177,9 +178,10 @@ class AppPanel(wx.Panel):
 
         _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 1")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel1, _item)
-
         _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 2")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel2, _item)
+        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 3")
+        frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel3, _item)
 
         demo_menu.AppendSeparator()
 
@@ -221,8 +223,8 @@ class AppPanel(wx.Panel):
         nb.SetTabSize((100,20))  # works on Windows but not on Linux
 
         # Create page windows as children of the notebook.
-        self.page0 = SimulateDataPage(nb, colour=PALE_GREEN, fignum=0)
-        self.page1 = AnalyzeDataPage(nb, colour=PALE_BLUE, fignum=1)
+        self.page0 = SimulationPage(nb, colour=PALE_GREEN, fignum=0)
+        self.page1 = InversionPage(nb, colour=PALE_BLUE, fignum=1)
 
         # Add the pages to the notebook with a label to show on the tab.
         nb.AddPage(self.page0, "Simulation")
@@ -294,6 +296,13 @@ class AppPanel(wx.Panel):
         self.notebook.SetSelection(0)
 
 
+    def OnLoadDemoModel3(self, event):
+        """Loads Demo Model 3 from a resource file."""
+
+        self.page0.OnLoadDemoModel3(event)
+        self.notebook.SetSelection(0)
+
+
     def OnLoadModel(self, event):
         """Loads the Model from a user specified file."""
 
@@ -323,7 +332,7 @@ class AppPanel(wx.Panel):
 
 #==============================================================================
 
-class SimulateDataPage(wx.Panel):
+class SimulationPage(wx.Panel):
     """
     This class implements phase reconstruction and direct inversion analysis
     of two simulated surround variation data sets (generated from a model)
@@ -366,7 +375,7 @@ class SimulateDataPage(wx.Panel):
 
 
     def init_param_panel(self):
-        """Initializes the parameter input panel of the SimulateDataPage."""
+        """Initializes the parameter input panel of the SimulationPage."""
 
         #----------------------------
         # Section 1: Model Parameters
@@ -454,7 +463,7 @@ class SimulateDataPage(wx.Panel):
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
         sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY,
-                             "Resolution Parameters for Information Only")
+                             "Resolution Parameters")
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
         sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=5)
 
@@ -551,7 +560,7 @@ class SimulateDataPage(wx.Panel):
 
 
     def init_plot_panel(self):
-        """Initializes the plotting panel of the SimulateDataPage."""
+        """Initializes the plotting panel of the SimulationPage."""
 
         INTRO_TEXT = "Phase Reconstruction and Inversion of Simulated Data:"
 
@@ -971,7 +980,7 @@ class SimulateDataPage(wx.Panel):
         self.instr_cb.SetBackgroundColour("WHITE")
         self.instr_cb.SetValue(self.instr_param.get_instr_names()[1])
 
-        # Set surface SLD values for experiments 1 and 2 in the inversion and
+        # Set surface SLD values for simulations 1 and 2 in the inversion and
         # reconstruction paramaters panel.
         # Note that datatype of None means do not change.
         plist = (0.0, 4.5,
@@ -999,6 +1008,46 @@ class SimulateDataPage(wx.Panel):
         self.model.Clear()
         self.model.SetValue(demo_model_params)
 
+        # Specify the instrument (NG-1) and set missing required parameters
+        # that do not have default values.
+        self.instr_param.set_instr_idx(1)
+        self.instr_param.set_Tlo(0.5)
+        self.instr_param.set_slit1_at_Tlo(0.2)
+        self.instr_param.set_slit1_below(0.1)
+
+        # Put the instrument name in the combo box.
+        # Note: set background colour before setting the value to update both.
+        self.instr_cb.SetBackgroundColour("WHITE")
+        self.instr_cb.SetValue(self.instr_param.get_instr_names()[1])
+
+        # Set surface SLD values for simulations 1 and 2 in the inversion and
+        # reconstruction paramaters panel.
+        # Note that datatype of None means do not change.
+        plist = (0.0, 6.33,
+                 None, None, None, None, None, None, None, None, None)
+        self.inver_param.update_items_in_panel(plist)
+
+
+    def OnLoadDemoModel3(self, event):
+        """Loads Demo Model 3 from a file."""
+
+        filespec = os.path.join(self.app_root_dir, DEMO_MODEL3_DESC)
+
+        # Read the entire input file into a buffer.
+        try:
+            fd = open(filespec, 'rU')
+            demo_model_params = fd.read()
+            fd.close()
+        except:
+            popup_warning_message("Load Model Error",
+                "Error loading demo model from file "+DEMO_MODEL3_DESC)
+            return
+
+        # Replace the contents of the model parameter text control box with
+        # the data from the file.
+        self.model.Clear()
+        self.model.SetValue(demo_model_params)
+
         # Specify the instrument (Liquids) and set missing required parameters
         # that do not have default values.
         self.instr_param.set_instr_idx(4)
@@ -1011,7 +1060,7 @@ class SimulateDataPage(wx.Panel):
         self.instr_cb.SetBackgroundColour("WHITE")
         self.instr_cb.SetValue(self.instr_param.get_instr_names()[4])
 
-        # Set surface SLD values for experiments 1 and 2 in the inversion and
+        # Set surface SLD values for simulations 1 and 2 in the inversion and
         # reconstruction paramaters panel.
         # Note that datatype of None means do not change.
         plist = (0.0, 6.33,
@@ -1089,7 +1138,7 @@ class SimulateDataPage(wx.Panel):
 
 #==============================================================================
 
-class AnalyzeDataPage(wx.Panel):
+class InversionPage(wx.Panel):
     """
     This class implements phase reconstruction and direct inversion analysis
     of two surround variation data sets (i.e., experimentally collected data)
@@ -1137,7 +1186,7 @@ class AnalyzeDataPage(wx.Panel):
 
 
     def init_param_panel(self):
-        """Initializes the parameter input panel of the AnalyzeDataPage."""
+        """Initializes the parameter input panel of the InversionPage."""
 
         #----------------------------
         # Section 1: Input Data Files
@@ -1323,7 +1372,7 @@ class AnalyzeDataPage(wx.Panel):
 
 
     def init_plot_panel(self):
-        """Initializes the plotting panel of the AnalyzeDataPage."""
+        """Initializes the plotting panel of the InversionPage."""
 
         INTRO_TEXT = "Phase Reconstruction and Inversion of Experimental Data:"
 
