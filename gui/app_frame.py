@@ -21,8 +21,9 @@
 # Author: James Krycka
 
 """
-This module constructs the GUI for the Direct Inversion Reflectometry
-application.
+This module implements the AppFrame class which creates the main frame of the
+GUI for the Direct Inversion Reflectometry application including a basic menu,
+tool bar, and status bar.
 """
 
 #==============================================================================
