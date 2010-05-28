@@ -25,7 +25,6 @@ This module implements the AppPanel class which creates the main panel on top
 of the frame of the GUI for the Direct Inversion Reflectometry application.  It
 updates the menu, tool bar, and status bar, and also builds notebook pages on
 the panel.
-
 """
 
 #==============================================================================
@@ -45,24 +44,6 @@ matplotlib.interactive(False)
 # Specify the backend to use for plotting and import backend dependent classes.
 # Note that this must be done before importing pyplot to have an effect.
 matplotlib.use('WXAgg')
-'''
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as Toolbar
-
-# The Figure object is used to create backend-independent plot representations.
-from matplotlib.figure import Figure
-from matplotlib.font_manager import FontProperties
-
-# For use in the matplotlib toolbar.
-from matplotlib.widgets import Slider, Button, RadioButtons
-
-# Wx-Pylab magic for displaying plots within an application's window.
-from matplotlib import _pylab_helpers
-from matplotlib.backend_bases import FigureManagerBase
-
-#from matplotlib import pyplot as plt
-import pylab
-'''
 
 from .images import getOpenBitmap
 from .simulation_page import SimulationPage

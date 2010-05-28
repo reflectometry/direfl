@@ -30,7 +30,7 @@
 ; installed to support the use of #define statements.
 #define MyAppName "DiRefl"
 #define MyAppNameLowercase "direfl"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.4"
 #define MyGroupFolderName "DANSE"
 #define MyAppPublisher "University of Maryland"
 #define MyAppURL "http://www.reflectometry.org/danse/"
