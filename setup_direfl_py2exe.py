@@ -58,6 +58,7 @@ data_files.append(mplData)
 # Add data files that need to reside in the same directory as the image.
 data_files.append( ('.', [os.path.join('.','demo_model_1.dat')]) )
 data_files.append( ('.', [os.path.join('.','demo_model_2.dat')]) )
+data_files.append( ('.', [os.path.join('.','demo_model_3.dat')]) )
 data_files.append( ('.', [os.path.join('.','direfl.ico')]) )
 data_files.append( ('.', [os.path.join('.','LICENSE-direfl.txt')]) )
 data_files.append( ('.', [os.path.join('.','qrd1.refl')]) )
