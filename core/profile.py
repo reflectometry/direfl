@@ -14,6 +14,9 @@ class Microslabs:
     potentials are probe dependent we store an array of potentials for each
     probe value.
 
+    Some slab models use non-uniform layers, and so need the additional
+    parameter of dz for the step size within the layer.
+
     The space for the slabs is saved even after reset, in preparation for a
     new set of slabs from different fitting parameters.
 
@@ -25,22 +28,42 @@ class Microslabs:
 
         slabs.clear()
         for layer in model:
-            w,sigma,rho,mu,rho_M,theta_M = layer.render()
-            slabs.extend(w=w, sigma=sigma, rho=rho, mu=mu,
+            w,sigma,rho,irho,rho_M,theta_M = layer.render()
+            slabs.extend(w=w, sigma=sigma, rho=rho, irho=irho,
                          rho_M=rho_M, theta_M=theta_M)
         w,sigma = slabs.w,slabs.sigma
-        rho,mu = slabs.rho,slabs.mu
+        rho,irho = slabs.rho,slabs.irho
         rho_M,theta_M = slabs.rho_M,slabs.theta_M
-        R = refl(kz,w,rho=rho,mu=mu,sigma=sigma, rho_M=rho_M, theta_M=theta_M)
+        R = refl(kz,w,rho=rho,irho=irho,sigma=sigma, rho_M=rho_M, theta_M=theta_M)
         figure(2)
         plot(kz,R,label='reflectivity')
     """
-    def __init__(self, nprobe):
+    def __init__(self, nprobe, dz=None):
         self._num_slabs = 0
         # _slabs contains the 1D objects w, sigma, rho_M, theta_M of len n
-        # _slabsQ contains the 2D objects rho, mu
-        self._slabs = numpy.empty(shape=(0,4))
+        # _slabsQ contains the 2D objects rho, irho
+        self._slabs = numpy.empty(shape=(0,2))
         self._slabsQ = numpy.empty(shape=(0,nprobe,2))
+        self._slabsM = []
+        self.dz = dz
+
+    def microslabs(self, thickness=0):
+        """
+        Return a set of microslabs of widths w and centers z which slice
+        a layer of the given *thickness* with the minimum step size.
+        
+        The desired step size slabs.dz was defined when the Microslabs 
+        object was created.
+        
+        This is a convenience function.  Layer definitions can choose
+        their own slices so long as the step size is approximately
+        slabs.dz in the varying region.
+        """
+        edges = numpy.arange(0,thickness+self.dz,self.dz)
+        edges[-1] = thickness
+        centers = (edges[1:] + edges[:-1])/2
+        widths = edges[1:] - edges[:-1]
+        return widths, centers
 
     def clear(self):
         """
@@ -55,7 +78,7 @@ class Microslabs:
         Extend the model so that there are *count* versions of the slabs
         from *start* to the final slab.
 
-        For a list L, this would be L.extend(L[start:]*(count-1))
+        This is equivalent to L.extend(L[start:]*(count-1)) for list L.
         """
         # For now use the dumb implementation; a better implementation
         # would remember the repeats and pre-calculate the matrix product
@@ -71,6 +94,9 @@ class Microslabs:
         self._slabs[toidx] = numpy.tile(self._slabs[fromidx],[repeats,1])
         self._slabsQ[toidx] = numpy.tile(self._slabsQ[fromidx],[repeats,1,1])
         self._num_slabs += repeats*length
+        
+        # if any magnetic sections are within the repeat, they need to be
+        # repeated as well
 
     def _reserve(self, nadd):
         """
@@ -82,7 +108,7 @@ class Microslabs:
             self._slabs.resize((new_ns, 4))
             self._slabsQ.resize((new_ns, nl, 2))
 
-    def extend(self, w=0, sigma=0, rho=0, mu=0, rho_M=0, theta_M=0):
+    def extend(self, w=0, sigma=0, rho=0, irho=0):
         """
         Extend the micro slab model with the given layers.
         """
@@ -92,10 +118,19 @@ class Microslabs:
         self._num_slabs += nadd
         self._slabs[idx,0] = w
         self._slabs[idx,1] = sigma
-        self._slabs[idx,2] = rho_M
-        self._slabs[idx,3] = theta_M
-        self._slabsQ[idx,:,0] = rho
-        self._slabsQ[idx,:,1] = mu
+        #self._slabs[idx,2] = rhoM
+        #self._slabs[idx,3] = thetaM
+        self._slabsQ[idx,:,0] = numpy.asarray(rho).T
+        self._slabsQ[idx,:,1] = numpy.asarray(irho).T
+
+    def magnetic(self, anchor, w, rhoM=0, thetaM=0):
+        self._slabsM.append(anchor,w,rhoM,thetaM)
+    
+    def thickness(self):
+        """
+        Total thickness of the profile.
+        """
+        return numpy.sum(self._slabs[:self._num_slabs,0])
 
     def interface(self, I):
         """
@@ -112,18 +147,28 @@ class Microslabs:
         return self._slabs[:self._num_slabs-1,1]
     def _rho(self):
         return self._slabsQ[:self._num_slabs,:,0].T
-    def _mu(self):
+    def _irho(self):
         return self._slabsQ[:self._num_slabs,:,1].T
-    def _rho_M(self):
-        return self._slabs[:self._num_slabs,2].T
-    def _theta_M(self):
-        return self._slabs[:self._num_slabs,3].T
+    def _rhoM(self):
+        raise NotImplementedError
+        #return self._slabs[:self._num_slabs,2].T
+    def _thetaM(self):
+        raise NotImplementedError
+        #return self._slabs[:self._num_slabs,3].T
     w = property(_w, doc="Thickness (A)")
     sigma = property(_sigma, doc="1-sigma Gaussian roughness (A)")
     rho = property(_rho, doc="Scattering length density (10^-6 number density)")
-    mu = property(_mu, doc="Absorption (10^-6 number density)")
-    rho_M = property(_rho_M, doc="Magnetic scattering")
-    theta_M = property(_theta_M, doc="Magnetic scattering angle")
+    irho = property(_irho, doc="Absorption (10^-6 number density)")
+    rhoM = property(_rhoM, doc="Magnetic scattering")
+    thetaM = property(_thetaM, doc="Magnetic scattering angle")
+
+    def freeze(self, step=False):
+        """
+        Generate a consistent set of slabs, expanding interfaces where
+        necessary and reconciling differences between the nuclear and
+        the magnetic steps.
+        """
+        raise NotImplementedError
 
     def limited_sigma(self, limit=0):
         """
@@ -167,11 +212,14 @@ class Microslabs:
         Nevot-Croce roughness is not represented.
         """
         rho = numpy.vstack([self.rho[0,:]]*2).T.flatten()
-        mu = numpy.vstack([self.mu[0,:]]*2).T.flatten()
-        ws = numpy.cumsum(self.w[1:-1])
-        z = numpy.vstack([numpy.hstack([-10,0,ws]),
-                          numpy.hstack([0,ws,ws[-1]+10])]).T.flatten()
-        return z,rho,mu
+        irho = numpy.vstack([self.irho[0,:]]*2).T.flatten()
+        if len(self.w) > 2:
+            ws = numpy.cumsum(self.w[1:-1])
+            z = numpy.vstack([numpy.hstack([-10,0,ws]),
+                              numpy.hstack([0,ws,ws[-1]+10])]).T.flatten()
+        else:
+            z = numpy.array([-10,0,0,10])
+        return z,rho,irho
 
     def smooth_profile(self, dz=1, roughness_limit=0):
         """
@@ -192,8 +240,8 @@ class Microslabs:
         z = numpy.arange(left,right,dz)
         roughness = self.limited_sigma(limit=roughness_limit)
         rho = build_profile(z, self.w, roughness, self.rho[0])
-        mu = build_profile(z, self.w, roughness, self.mu[0])
-        return z,rho,mu
+        irho = build_profile(z, self.w, roughness, self.irho[0])
+        return z,rho,irho
 
 
 def build_profile(z, thickness, roughness, value):

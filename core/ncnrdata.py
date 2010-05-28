@@ -56,6 +56,9 @@ from numpy import inf, pi
 
 from .resolution import Monochromatic
 from . import util
+
+# Comment out the following line from the pak2010 version of the file since
+# this pulls in files not needed by the inverson package.
 #from probe import PolarizedNeutronProbe
 
 def load(filename, instrument=None, **kw):
@@ -71,9 +74,10 @@ def load(filename, instrument=None, **kw):
     Q,R,dR = data
     resolution = instrument.resolution(Q, **header)
     probe = resolution.probe(data=(R,dR))
-    probe.title = header['title']
-    probe.date = header['date']
-    probe.instrument = header['instrument']
+    probe.title = header['title'] if 'title' in header else filename
+    probe.date = header['date'] if 'date' in header else "unknown"
+    probe.instrument = (header['instrument'] if 'instrument' in header
+                        else instrument.instrument)
     probe.filename = filename
     return probe
 
@@ -174,13 +178,13 @@ def parse_file(filename):
 
     return header, data
 
-class NCNRLoader:
+class NCNRLoader(Monochromatic):
     def load(self, filename, **kw):
         return load(filename, instrument=self)
     def load_magnetic(self, filename, **kw):
         return load_magnetic(filename, instrument=self)
 
-class ANDR(Monochromatic, NCNRLoader):
+class ANDR(NCNRLoader):
     """
     Instrument definition for NCNR AND/R diffractometer/reflectometer.
     """
@@ -191,7 +195,7 @@ class ANDR(Monochromatic, NCNRLoader):
     d_s1 = 230.0 + 1856.0
     d_s2 = 230.0
 
-class NG1(Monochromatic, NCNRLoader):
+class NG1(NCNRLoader):
     """
     Instrument definition for NCNR NG-1 reflectometer.
     """
@@ -204,7 +208,7 @@ class NG1(Monochromatic, NCNRLoader):
     d_s3 = 9*25.4
     d_s4 = 42*25.4
 
-class NG7(Monochromatic, NCNRLoader):
+class NG7(NCNRLoader):
     """
     Instrument definition for NCNR NG-7 reflectometer.
     """
@@ -216,7 +220,7 @@ class NG7(Monochromatic, NCNRLoader):
     d_s2 = None
     d_detector = 2000
 
-class XRay(Monochromatic, NCNRLoader):
+class XRay(NCNRLoader):
     """
     Instrument definition for NCNR X-ray reflectometer.
 

@@ -36,6 +36,8 @@ from numpy import inf
 from inversion.core.ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
 from inversion.core.snsdata import Liquids, Magnetic, SNSLoader
 
+from .input_list import InputListDialog
+
 #==============================================================================
 
 class InstrumentParameters():
