@@ -145,7 +145,7 @@ class AppFrame(wx.Frame):
         # Add a 'File' menu to the menu bar and define its options.
         file_menu = wx.Menu()
 
-        _item = file_menu.Append(wx.ID_ANY, "&Exit")
+        _item = file_menu.Append(wx.ID_ANY, "&Exit", "Exit the application")
         self.Bind(wx.EVT_MENU, self.OnExit, _item)
 
         mb.Append(file_menu, "&File")
@@ -153,13 +153,17 @@ class AppFrame(wx.Frame):
         # Add a 'Help' menu to the menu bar and define its options.
         help_menu = wx.Menu()
 
-        _item = help_menu.Append(wx.ID_ANY, "&About")
+        _item = help_menu.Append(wx.ID_ANY, "&About",
+                                            "Get description of application")
         self.Bind(wx.EVT_MENU, self.OnAbout, _item)
-        _item = help_menu.Append(wx.ID_ANY, "&Tutorial")
+        _item = help_menu.Append(wx.ID_ANY, "&Tutorial",
+                                            "Locate tutorial and documentation")
         self.Bind(wx.EVT_MENU, self.OnTutorial, _item)
-        _item = help_menu.Append(wx.ID_ANY, "&License")
+        _item = help_menu.Append(wx.ID_ANY, "&License",
+                                            "Read license and copyright notice")
         self.Bind(wx.EVT_MENU, self.OnLicense, _item)
-        _item = help_menu.Append(wx.ID_ANY, "&Credits")
+        _item = help_menu.Append(wx.ID_ANY, "&Credits",
+                                            "Get list of authors and sponsors")
         self.Bind(wx.EVT_MENU, self.OnCredits, _item)
 
         mb.Append(help_menu, "&Help")

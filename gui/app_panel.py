@@ -95,27 +95,34 @@ class AppPanel(wx.Panel):
         # Add items to the "File" menu (prepending them in reverse order).
         file_menu = mb.GetMenu(0)
         file_menu.PrependSeparator()
-        _item = file_menu.Prepend(wx.ID_ANY, "&Save Model ...")
+        _item = file_menu.Prepend(wx.ID_ANY, "&Save Model ...",
+                                             "Save model parameters to a file")
         frame.Bind(wx.EVT_MENU, self.OnSaveModel, _item)
-        _item = file_menu.Prepend(wx.ID_ANY, "&Load Model ...")
+        _item = file_menu.Prepend(wx.ID_ANY, "&Load Model ...",
+                                             "Load model parameters from a file")
         frame.Bind(wx.EVT_MENU, self.OnLoadModel, _item)
 
         # Add a 'Demo' menu to the menu bar and define its options.
         demo_menu = wx.Menu()
 
-        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 1")
+        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 1",
+                                            "Load description of sample model 1")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel1, _item)
-        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 2")
+        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 2",
+                                            "Load description of sample model 2")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel2, _item)
-        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 3")
+        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 3",
+                                            "Load description of sample model 3")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel3, _item)
 
         demo_menu.AppendSeparator()
 
-        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Dataset 1")
+        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Dataset 1",
+                                            "Load reflectivity data files for example 1")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoDataset1, _item)
         frame.load_demo_dataset_1_item = _item  # handle for hide/show
-        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Dataset 2")
+        _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Dataset 2",
+                                            "Load reflectivity data files for example 2")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoDataset2, _item)
         frame.load_demo_dataset_2_item = _item  # handle for hide/show
 
@@ -124,12 +131,18 @@ class AppPanel(wx.Panel):
 
     def modify_toolbar(self):
         """Populates the tool bar."""
-
         tb = self.frame.GetToolBar()
 
-        #tb.AddSimpleTool(wx.ID_OPEN, getOpenBitmap(),
-        #                 wx.GetTranslation("Open Data Files"),
-        #                 wx.GetTranslation("Open reflectometry data files"))
+        '''
+        tb.AddSimpleTool(wx.ID_OPEN, getOpenBitmap(),
+                         "Open Data Files", "Open reflectivity data files")
+        icon_size = (16,16)
+        icon_bitmap = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR,
+                                               icon_size)
+        tb.AddSimpleTool(wx.ID_OPEN, icon_bitmap,
+                         "Open Data Files", "Open reflectivity data files")
+        '''
+
         tb.Realize()
         self.frame.SetToolBar(tb)
 
