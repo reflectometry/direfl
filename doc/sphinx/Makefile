@@ -71,6 +71,14 @@ latex:
 	@echo "Run \`make all-pdf' or \`make all-ps' in that directory to" \
 	      "run these through (pdf)latex."
 
+pdf: latex _build/html/Inversion.pdf
+	$(MAKE) -C _build/latex all-pdf
+
+_build/html/Inversion.pdf:
+	-mkdir _build/html
+	ln -s $$PWD/_build/latex/Inversion.pdf _build/html/Inversion.pdf
+
+
 changes:
 	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) _build/changes
 	@echo

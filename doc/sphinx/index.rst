@@ -15,7 +15,7 @@ of the sample material.
    :Release: |version|
    :Date:    |today|
 
-   Download pdf version `here <DirectInversion.pdf>`_
+   Download pdf version `here <Inversion.pdf>`_
 
 .. toctree::
    :maxdepth: 2
