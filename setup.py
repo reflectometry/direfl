@@ -20,9 +20,9 @@ def configuration(parent_package='', top_path=None):
     config.add_data_dir('tests')
 
     config.add_data_files('direfl.ico')
-    config.add_data_files('direfl.iss')
     config.add_data_files('splash.png')
     config.add_data_files('*.dat')
+    config.add_data_files('*.iss')
     config.add_data_files('*.refl')
     config.add_data_files('*.txt')
 
