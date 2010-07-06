@@ -53,6 +53,7 @@ def checkout():
     # Create a zip file to archive the source code.
     print "\nPart 2 - Creating a zip archive of the inversion repository ...\n"
 
+    top_dir = os.getcwd()
     os.chdir("inversion")
     curr_dir = os.getcwd()
     for file in os.listdir(curr_dir):
@@ -60,8 +61,8 @@ def checkout():
         if extension == ".zip":
             os.remove(shortname+extension)
     arch_dir = dir_archive(".", "True")
-    a = zipfile.ZipFile("direfl-"+str(version)+"-source.zip", 'w',
-                        zipfile.ZIP_DEFLATED)
+    zfile = os.path.join(top_dir, "direfl-"+str(version)+"-source.zip")
+    a = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
     for f in arch_dir:
         a.write(f)
     a.close()
@@ -69,7 +70,7 @@ def checkout():
     # Install the inversion package in a private directory tree named
     # <build>/inversion/build-install.
     # If the build-install folder already exists, warn the user.
-    print "\nPart 3 - Installing the inversion package in a private directory ...\n"
+    print "\nPart 3 - Installing the inversion package in subdirectory build-install ...\n"
 
     if os.path.isdir("build-install"):
         print "\n WARNING!\n"
@@ -89,7 +90,7 @@ def checkout():
 
     # Use py2exe to create a Win32 executable along with auxiliary files in the
     # <build-dir>/inversion/dist directory tree.
-    print "\nPart 4 - Using py2exe to create a Win32 executable ...\n"
+    print "\nPart 4 - Using py2exe to create a Win32 executable in subdirectory dist ...\n"
 
     os.system("%s setup_direfl_py2exe.py" % PYTHON)
 
@@ -103,7 +104,10 @@ def checkout():
     f.close()
 
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller.
-    sts = os.system("%s /Q direfl.iss" % INNO)
+    # Override the output specification in direfl.iss to put the executable and
+    # the manifest file in the top-level directory.
+    dst_param = "/O" + top_dir
+    sts = os.system("%s /Q %s direfl.iss" % (INNO, dst_param))
     if sts == 0:
         print "Inno Setup was successful"
     else:
@@ -189,7 +193,7 @@ def dir_archive(dir_name, subdir):
         dirfile = os.path.join(dir_name, file)
         if os.path.isfile(dirfile):
             file_list.append(dirfile)
-        # recursively access file names in subdirectories
+        # Recursively access file names in subdirectories.
         elif os.path.isdir(dirfile) and subdir:
             # exclude svn directories
             if dirfile.count('svn') >0:
