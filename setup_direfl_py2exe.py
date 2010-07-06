@@ -1,5 +1,27 @@
 #!/usr/bin/env python
 
+# Copyright (C) 2006-2010, University of Maryland
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/ or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# Author: James Krycka
+
 """
 Create direfl.exe using py2exe in the inversion\dist directory tree.  This
 executable contains the python runtime environment, required python packages,
@@ -13,14 +35,20 @@ import glob
 from distutils.core import setup
 
 import matplotlib
-import py2exe
+import py2exe  # add py2exe command to setup.py
 
 if len(sys.argv) == 1:
     sys.argv.append('py2exe')
 
-# Retrieve version information.
 local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-sys.path.insert(0, local_path)
+private_install = os.path.join(local_path, 'build-install')
+if os.path.isdir(private_install):
+    sys.path.insert(0, private_install)
+    #print "*** Python path is:"
+    #for i, p in enumerate(sys.path):
+        #print "%5d  %s" %(i, p)
+
+# Retrieve version information.
 from version import version as version
 
 class Target:
@@ -46,13 +74,17 @@ mplData = ('mpl-data', glob.glob(os.path.join(matplotlibdatadir,'*.*')))
 data_files.append(mplData)
 mplData = ('mpl-data', [os.path.join(matplotlibdatadir,'matplotlibrc')])
 data_files.append(mplData)
-mplData = (r'mpl-data\images',glob.glob(os.path.join(matplotlibdatadir,r'images\*.*')))
+mplData = (r'mpl-data\images',
+           glob.glob(os.path.join(matplotlibdatadir,r'images\*.*')))
 data_files.append(mplData)
-mplData = (r'mpl-data\fonts\afm',glob.glob(os.path.join(matplotlibdatadir,r'fonts\afm\*.*')))
+mplData = (r'mpl-data\fonts\afm',
+           glob.glob(os.path.join(matplotlibdatadir,r'fonts\afm\*.*')))
 data_files.append(mplData)
-mplData = (r'mpl-data\fonts\pdfcorefonts',glob.glob(os.path.join(matplotlibdatadir,r'fonts\pdfcorefonts\*.*')))
+mplData = (r'mpl-data\fonts\pdfcorefonts',
+           glob.glob(os.path.join(matplotlibdatadir,r'fonts\pdfcorefonts\*.*')))
 data_files.append(mplData)
-mplData = (r'mpl-data\fonts\ttf',glob.glob(os.path.join(matplotlibdatadir,r'fonts\ttf\*.*')))
+mplData = (r'mpl-data\fonts\ttf',
+           glob.glob(os.path.join(matplotlibdatadir,r'fonts\ttf\*.*')))
 data_files.append(mplData)
 
 # Add data files that need to reside in the same directory as the image.
