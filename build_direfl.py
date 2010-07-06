@@ -44,7 +44,7 @@ def checkout():
     # <build>/inversion.
     print "\nPart 1 - Checking out code from the inversion repository ...\n"
 
-    os.system("%s checkout -q %s" % (SVN, INVERSION_URL))
+    os.system("%s checkout %s" % (SVN, INVERSION_URL))
 
     # Get the version string for DiRefl.
     # This has to be done after we have checked out the repository.
@@ -96,6 +96,11 @@ def checkout():
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller for
     # DiRefl.
     print "\nPart 5 - Running Inno Setup Compiler to create a Win32 installer/uninstaller ...\n"
+
+    # First append Direfl's version information to the Inno Setup include file.
+    f = open("direfl_include.iss", "a")
+    f.write('#define MyAppVersion "%s"\n' % version)
+    f.close()
 
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller.
     sts = os.system("%s /Q direfl.iss" % INNO)

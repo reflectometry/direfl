@@ -26,11 +26,11 @@
 ; - It will delete any desktop or quickstart icons for DiRefl that were
 ;   created on installation
 
-; NOTE: The Quick Start package add-on for the Inno Setup Compiler needs to be
-; installed to support the use of #define statements.
+; NOTE: The Quick Start Pack for the Inno Setup Compiler needs to be installed
+; with the Preprocessor add-on selected to support use of #define statements.
 #define MyAppName "DiRefl"
 #define MyAppNameLowercase "direfl"
-#define MyAppVersion "1.0.4"
+#define MyAppVersion "0.0.0"
 #define MyGroupFolderName "DANSE"
 #define MyAppPublisher "University of Maryland"
 #define MyAppURL "http://www.reflectometry.org/danse/"
