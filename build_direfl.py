@@ -26,6 +26,7 @@ import os
 import sys
 import zipfile
 import shutil
+import subprocess
 
 # Windows commands to run utilities
 SVN    = "svn"
@@ -44,7 +45,7 @@ def checkout():
     # <build>/inversion.
     print "\nPart 1 - Checking out code from the inversion repository ...\n"
 
-    os.system("%s checkout %s" % (SVN, INVERSION_URL))
+    subprocess.call("%s checkout %s" % (SVN, INVERSION_URL))
 
     # Get the version string for DiRefl.
     # This has to be done after we have checked out the repository.
@@ -62,10 +63,15 @@ def checkout():
             os.remove(shortname+extension)
     arch_dir = dir_archive(".", "True")
     zfile = os.path.join(top_dir, "direfl-"+str(version)+"-source.zip")
-    a = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
-    for f in arch_dir:
-        a.write(f)
-    a.close()
+    try:
+        a = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
+        for f in arch_dir:
+            a.write(f)
+        a.close()
+    except:
+        print "*** Failed to create zip file ***"
+    else:
+        print "Zip file created ***"
 
     # Install the inversion package in a private directory tree named
     # <build>/inversion/build-install.
@@ -86,13 +92,13 @@ def checkout():
             pass
         else:
             sys.exit()
-    os.system("%s setup.py -q install --install-lib=build-install" % PYTHON)
+    subprocess.call("%s setup.py -q install --install-lib=build-install" % PYTHON)
 
     # Use py2exe to create a Win32 executable along with auxiliary files in the
     # <build-dir>/inversion/dist directory tree.
     print "\nPart 4 - Using py2exe to create a Win32 executable in subdirectory dist ...\n"
 
-    os.system("%s setup_direfl_py2exe.py" % PYTHON)
+    subprocess.call("%s setup_direfl_py2exe.py" % PYTHON)
 
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller for
     # DiRefl.
@@ -100,56 +106,67 @@ def checkout():
 
     # First append Direfl's version information to the Inno Setup include file.
     f = open("direfl_include.iss", "a")
-    f.write('#define MyAppVersion "%s"\n' % version)
+    f.write('#define MyAppVersion "%s"\n' % version)  # version must be quoted
     f.close()
 
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller.
     # Override the output specification in direfl.iss to put the executable and
     # the manifest file in the top-level directory.
-    dst_param = "/O" + top_dir
-    sts = os.system("%s /Q %s direfl.iss" % (INNO, dst_param))
-    if sts == 0:
-        print "Inno Setup was successful"
+    try:
+        subprocess.call("%s /Q /O%s direfl.iss" % (INNO, top_dir))
+    except:
+        print "*** Failed to create installer executable ***"
     else:
-        print "*** Inno Setup failed ***"
+        print "Installer executable created"
 
     # Run the Sphinx utility to build DiRefl documentation.
     print "\nPart 6 - Running the Sphinx utility to build DiRefl documentation ...\n"
 
     os.chdir("doc\sphinx")
-    os.system("make html")
-    os.system("make pdf")
+    # Delete any left over files from a previous build.
+    subprocess.call("make clean")
+    # Create documentation in HTML format.
+    subprocess.call("make html")
+    # Create documentation in PDF format.
+    subprocess.call("make pdf")
+    # Copy PDF file to the top-level directory.
+    os.chdir("_build\latex")
+    if os.path.isfile("DirectInversion.pdf"):
+        shutil.copy("DirectInversion.pdf", top_dir)
+
 
 def check_packages():
     """
     Checks that the system has the necessary modules.
     """
-    temp = "_temp.txt"
 
+    # Python appears to write directly to the console, not to stdout, so the
+    # following code does not work as expected:
+    # p = subprocess.Popen("%s -V" % PYTHON, stdout=subprocess.PIPE)
+    # print "Using ", p.stdout.read().strip()
     print "Using ",
-    os.system("%s -V > %s" % (PYTHON, temp))
-    print ""
+    subprocess.call("%s -V" % PYTHON)  # displays python name and version string
 
     try:
         import matplotlib
         if not matplotlib.__version__ == "0.99.0":
             req_pack["matplotlib"]= ("0.99.0", matplotlib.__version__)
     except:
-        print "matplotlib missing"
+        print "matplotlib not found"
 
     try:
         import numpy
         if not numpy.__version__ == "1.2.1":
             req_pack["numpy"]= ("1.2.1", numpy.__version__)
     except:
-        print "numpy missing"
+        print "numpy not found"
 
     try:
         import scipy
         if not scipy.__version__ == "0.7.0":
             req_pack["scipy"]= ("0.7.0", scipy.__version__)
     except:
-        print "scipy missing"
+        print "scipy not found"
 
     req_pack = {}
     try:
@@ -157,18 +174,15 @@ def check_packages():
         if not wx.__version__ == "2.8.11.0":
             req_pack["wx"]= ("2.8.11.0", wx.__version__)
     except:
-        print "wxpython missing"
+        print "wxpython not found"
 
     try:
-        os.system("gcc -dumpversion > %s" % temp)
-        f = open(temp, "r")
-        gcc_version = f.readline().strip()
-        f.close()
-        os.remove(temp)
+        p = subprocess.Popen("gcc -dumpversion", stdout=subprocess.PIPE)
+        gcc_version = p.stdout.read().strip()
         if not gcc_version == "3.4.5":
             req_pack["gcc"]= ("3.4.5", gcc_version)
     except:
-        print "gcc compiler missing"
+        print "gcc compiler not found"
 
     if not req_pack == {}:
         print "\n WARNING!\n"
