@@ -41,8 +41,8 @@ def checkout():
     # Check the system for all required dependent packages.
     check_packages()
 
-    # Checkout the code from the repository into a directory tree named
-    # <build>/inversion.
+    # Checkout the code from the repository into a directory tree under the
+    # current directory, i.e., <build>/inversion.
     print "\nPart 1 - Checking out code from the inversion repository ...\n"
 
     subprocess.call("%s checkout %s" % (SVN, INVERSION_URL))
@@ -71,7 +71,7 @@ def checkout():
     except:
         print "*** Failed to create zip file ***"
     else:
-        print "Zip file created ***"
+        print "Zip file created"
 
     # Install the inversion package in a private directory tree named
     # <build>/inversion/build-install.
@@ -92,10 +92,15 @@ def checkout():
             pass
         else:
             sys.exit()
+
+    # Perform the install to a private directory tree and create the
+    # PYTHONPATH environment variable to pass this info to the py2exe build
+    # script later on.
     subprocess.call("%s setup.py -q install --install-lib=build-install" % PYTHON)
+    os.environ["PYTHONPATH"] = os.path.join(curr_dir, "build-install")
 
     # Use py2exe to create a Win32 executable along with auxiliary files in the
-    # <build-dir>/inversion/dist directory tree.
+    # <build>/inversion/dist directory tree.
     print "\nPart 4 - Using py2exe to create a Win32 executable in subdirectory dist ...\n"
 
     subprocess.call("%s setup_direfl_py2exe.py" % PYTHON)

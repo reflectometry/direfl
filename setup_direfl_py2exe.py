@@ -40,13 +40,11 @@ import py2exe  # add py2exe command to setup.py
 if len(sys.argv) == 1:
     sys.argv.append('py2exe')
 
-local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-private_install = os.path.join(local_path, 'build-install')
-if os.path.isdir(private_install):
-    sys.path.insert(0, private_install)
-    #print "*** Python path is:"
-    #for i, p in enumerate(sys.path):
-        #print "%5d  %s" %(i, p)
+'''
+print "*** Python path is:"
+for i, p in enumerate(sys.path):
+    print "%5d  %s" %(i, p)
+'''
 
 # Retrieve version information.
 from version import version as version
