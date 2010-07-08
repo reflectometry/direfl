@@ -21,7 +21,7 @@ class Microslabs:
     new set of slabs from different fitting parameters.
 
     Example
-    =======
+
 
     The following example shows how to fill a slab model from layers and
     use it to compute reflectivity::
@@ -51,10 +51,10 @@ class Microslabs:
         """
         Return a set of microslabs of widths w and centers z which slice
         a layer of the given *thickness* with the minimum step size.
-        
-        The desired step size slabs.dz was defined when the Microslabs 
+
+        The desired step size slabs.dz was defined when the Microslabs
         object was created.
-        
+
         This is a convenience function.  Layer definitions can choose
         their own slices so long as the step size is approximately
         slabs.dz in the varying region.
@@ -94,7 +94,7 @@ class Microslabs:
         self._slabs[toidx] = numpy.tile(self._slabs[fromidx],[repeats,1])
         self._slabsQ[toidx] = numpy.tile(self._slabsQ[fromidx],[repeats,1,1])
         self._num_slabs += repeats*length
-        
+
         # if any magnetic sections are within the repeat, they need to be
         # repeated as well
 
@@ -125,7 +125,7 @@ class Microslabs:
 
     def magnetic(self, anchor, w, rhoM=0, thetaM=0):
         self._slabsM.append(anchor,w,rhoM,thetaM)
-    
+
     def thickness(self):
         """
         Total thickness of the profile.

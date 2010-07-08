@@ -19,28 +19,49 @@
 # Note: save this file as invert to run as a stand-alone program.
 
 """
-Phase reconstruction and inversion for reflectometry data.
+Core classes and functions:
 
-Command line phase reconstruction + phase inversion::
+* :class:`Interpolator`
+   Class that performs data interpolation.
+
+* :class:`Inversion`
+   Class that implements the inversion calculator.
+
+* :class:`SurroundVariation`
+   Class that performs the surround variation calculation.
+
+* :func:`refl`
+   Reflectometry as a function of Qz and wavelength.
+
+* :func:`reconstruct`
+   Phase reconstruction by surround variation magic.
+
+* :func:`valid_f`
+   Calculate vector function using only the finite elements of the array.
+
+
+Command line phase reconstruction phase inversion::
 
     invert -u 2.07 -v 6.33 0 --Qmin 0.014 --thickness 1000 qrd1.refl qrd2.refl
 
 
-Command line phase inversion only::
+Command line phase + inversion only::
 
     invert --thickness=150 --Qmax 0.35 wsh02_re.dat
 
 
-Scripts can use :func:`reconstruct` and :func:`invert`.  For example::
+Scripts can use :func:`reconstruct` and :func:`invert`.  For example:
 
-    from reflectometry import
-    import invert
-    substrate = 2.07
-    f1, f2 = 0, -0.53
-    phase = reflectometry.reconstruct("file1", "file2", substrate, f1, f2)
-    inversion = invert.invert(data=(phase.Q, phase.RealR), thickness=200)
-    inversion.plot()
-    inversion.save("profile.dat")
+.. doctest::
+
+    >>> from reflectometry import
+    >>> import invert
+    >>> substrate = 2.07
+    >>> f1, f2 = 0, -0.53
+    >>> phase = reflectometry.reconstruct("file1", "file2", substrate, f1, f2)
+    >>> inversion = invert.invert(data=(phase.Q, phase.RealR), thickness=200)
+    >>> inversion.plot()
+    >>> inversion.save("profile.dat")
 
 The resulting profile has attributes for the input (*Q*, *RealR*) and the
 output (*z*, *rho*, *drho*).  There are methods for plotting  (*plot*,
@@ -49,7 +70,7 @@ different attributes (*run(key=val,...)*).
 
 See :func:`reconstruct` and :class:`Inversion` for details.
 
-The phase reconstruction algorithm is described in [Majkrzak2003].  The
+The phase reconstruction algorithm is described in [Majkrzak2003]_.  The
 phase inversion algorithm is described in [Berk2009]_ and references therein.
 It is based on the partial differential equation solver described
 in [Sacks1993]_.
@@ -58,12 +79,12 @@ References
 ==========
 
 .. [Majkrzak2003] C. F. Majkrzak, N. F. Berk and U. A. Perez-Salas,
-"Phase-Sensitive Neutron Reflectometry", *Langmuir* 19, 7796-7810 (2003).
+   "Phase-Sensitive Neutron Reflectometry", *Langmuir* 19, 7796-7810 (2003).
 
-.. [Berk2009] N. F. Berk and C. F. Majkrzak, "Statistical analysis of
-phase-inversion neutron specular reflectivity", *Langmuir* 25, 4132-4144 (2009)
+.. [Berk2009]     N. F. Berk and C. F. Majkrzak, "Statistical analysis of
+   phase-inversion neutron specular reflectivity", *Langmuir* 25, 4132-4144 (2009).
 
-.. [Sacks1993] P. E. Sacks, *Wave Motion* 18, 21-30 (1993)
+.. [Sacks1993]    P.E. Sacks, *Wave Motion* 18, 21-30 (1993).
 """
 
 from __future__ import division
@@ -75,7 +96,11 @@ from numpy import ceil, floor, real, imag, sign, isinf, isnan, isfinite
 from numpy import (interp, diff, sum, mean, std,
                    linspace, array, asarray, arange, hstack, zeros, diag)
 from numpy.fft import fft
-from numpy.random import uniform, poisson, normal
+
+# The following line is temporarily commented out because it breaks the sphinx
+# documentation build.
+# TODO: investigate the correct the problem
+#from numpy.random import uniform, poisson, normal
 
 from matplotlib.font_manager import FontProperties
 
@@ -97,7 +122,6 @@ def invert(**kw):
     Invert data returning an :class:`Inversion` object.
 
     If outfile is specified, save z,rho,drho to the named file.
-
     If plot=True, show a plot before returning
     """
     doplot = kw.pop('plot', True)
@@ -123,195 +147,180 @@ class Inversion():
     Inversion converts a real reflectivity amplitude as computed by
     :func:`reconstruct` into a step profile of scattering length density
     as a function of depth.  This process will only work for real-valued
-    scattering potentials --- with non-negligible absorption the results
-    will be incorrect.  With X-rays, the absorption is too high for this
-    technique to be used successfully.  For details on the underlying
-    theory, see _[Berk2009].
+    scattering potentials - with non-negligible absorption the results
+    will be incorrect. With X-rays, the absorption is too high for this
+    technique to be used successfully. For details on the underlying
+    theory, see [Berk2009]_.
 
-    The following attributes and methods are of most interest::
+    The following attributes and methods are of most interest:
 
-        *data*, *thickness*, *substrate*, *Qmin*, *Qmax*
-                                         (`Inputs`__)
-        *stages*, *monitor*, *noise*     (`Uncertainty controls`__)
-        *rhopoints*, *calcpoints*        (`Inversion controls`__)
-        *z*, *rho*, *drho*               (`Computed profile`__)
-        *plot*, *save*                   (`Output methods`__)
+    Inputs:
 
-    Inputs
-    ======
+      =================   =========================================================
+      Input Parameters    Description
+      =================   =========================================================
+      *data*              The name of an input file or a pair of vectors (Q,RealR)
+                          where RealR is the real portion of the complex
+                          reflectivity amplitude.input filename or Q,RealR data
+                          (required).
+      *thickness* (400)   Defines the total thickness of the film of interest. If
+                          the value chosen is too small, the inverted profile will
+                          not be able to match the input reflection signal.  If
+                          the thickness is too large, the film of interest should
+                          be properly reconstructed, but will be extended into a
+                          reconstructed substrate below the film.film thickness.
+      *substrate* (0)     It is the scattering length density of the substrate. The
+                          inversion calculation determines the scattering length
+                          densities (SLDs) within the profile relative to the SLD
+                          of the substrate. Entering the correct value of
+                          substrate will shift the profile back to the correct
+                          values.
+      *bse* (0)           It is the bound state energy correction factor.  Films
+                          with large negative potentials at their base sometimes
+                          produce an incorrect inversion, as indicated by an
+                          incorrect value for the substrate portion of a film. A
+                          value of substrate SLD - bound state SLD seems to correct
+                          the reconstruction.
+      *Qmin* (0)          Minimum Q to use from data. Reduce *Qmax* to avoid
+                          contamination from noise at high Q and improve precision.
+                          However, doing this will reduce the size of the features
+                          that you are sensitive to in your profile.
+      *Qmax* (None)       Maximum Q to use from data. Increase *Qmin* to avoid
+                          values at low Q which will not have the correct phase
+                          reconstruction when Q is less than Qc^2 for both surround
+                          variation measurements used in the phase reconstruction
+                          calculation. Use this technique sparingly --- the overall
+                          shape of the profile is sensitive to data at low Q.
+      *backrefl* (True)   Reflection measured through the substrate. It is True if
+                          the film is measured with an incident beam through the
+                          substrate rather than the surface.
+      =================   =========================================================
 
-        *data*               input filename or Q,RealR data  (required)
-        *thickness* (400)    film thickness
-        *substrate* (0)      substrate SLD
-        *bse* (0)            bound state energy
-        *Qmin* (0)           minimum Q to use from data
-        *Qmax* (None)        maximum Q to use from data
-        *backrefl* (True)    reflection measured through the substrate
+    Uncertainty controls:
 
-    *data* is the name of an input file or a pair of vectors (Q,RealR), where
-    RealR is the real portion of the complex reflectivity amplitude.
+      Uncertainty is handled by averaging over *stages* inversions with noise
+      added to the input data for each inversion.  Usually the measurement
+      uncertainty is estimated during data reduction and phase reconstruction,
+      and Gaussian noise is added to the data. This is scaled by a factor of
+      *noise* so the effects of noisier or quieter input are easy to estimate.
+      If the uncertainty estimate is not available, 5% relative noise per point
+      is assumed.
 
-    *thickness* defines the total thickness of the film of interest.  If the
-    value chosen is too small, the inverted profile will not be able to match
-    the input reflection signal.  If the thickness is too large, the film of
-    interest should be properly reconstructed, but will be extended into a
-    reconstructed substrate below the film.
+      If *monitor* is specified, then Poisson noise is used instead, according to
+      the following::
 
-    *substrate* is the scattering length density of the substrate. The
-    inversion calculation determines the scattering length densities (SLDs)
-    within the profile relative to the SLD of the substrate.  Entering the
-    correct value of substrate will shift the profile back to the correct
-    values.
+      *noise* U[-1,1] (poisson(*monitor* |real R|)/*monitor* - |real R|)
 
-    *bse* is the bound state energy correction factor.  Films with large
-    negative potentials at their base sometimes produce an incorrect inversion,
-    as indicated by an incorrect value for the substrate portion of a film.  A
-    value of substrate SLD - bound state SLD seems to correct the
-    reconstruction.
+      That is, a value is pulled from the Poisson distribution of the expected
+      counts, and the noise is the difference between this and the actual counts.
+      This is further scaled by a fudge factor of *noise* and a further random
+      uniform in [-1,1].
 
-    *Qmin*, *Qmax* is the range of input data to use for the calculation.
-    Reduce *Qmax* to avoid contamination from noise at high Q and improve
-    precision.  However, doing this will reduce the size of the features that
-    you are sensitive to in your profile.  Increase *Qmin* to avoid values at
-    low Q which will not have the correct phase reconstruction when Q is less
-    than Qc^2 for both surround variation measurements used in the phase
-    reconstruction calculation. Use this technique sparingly --- the overall
-    shape of the profile is sensitive to data at low Q.  *Qmax* and *Qmin*
-    default to the limits of the input data.
+      ====================  =======================================================
+      Uncertainty controls  Description
+      ====================  =======================================================
+      *stages* (4)          number of inversions to average over
+      *noise* (1)           noise scale factor
+      *monitor* (None)      incident beam intensity (poisson noise source)
+      ====================  =======================================================
 
-    *backrefl* is True if the film is measured with an incident beam through
-    the substrate rather than the surface.
+    Inversion controls:
 
-    Uncertainty controls
-    ====================
+      ===================  ========================================================
+      Inversions controls  Description
+      ===================  ========================================================
+      *rhopoints* (128)    number of steps in the returned profile. If this value
+                           is too low, the profile will be coarse.  If it is too
+                           high, the computation will take a long time. The
+                           additional smoothness generated by a high value of
+                           *rhopoints* is illusory --- the information content of
+                           the profile is limited by the number of Q points which
+                           have been measured. Set *rhopoints* to (1/*dz*) for a
+                           step size near *dz* in the profile.
+      *calcpoints* (4)     number of internal steps per profile step. It is used
+                           internally to improve the accuracy of the calculation.
+                           For larger values of *rhopoints*, smaller values of
+                           *calcpoints* are feasible.
+      *iters* (6)          number of iterations to use for inversion. A value of 6
+                           seems to work well. You can observe this by setting
+                           *showiters* to True and looking at the convergence of
+                           each stage of the averaging calculation.
+      *showiters* (False)  set to true to show inversion converging. Click the
+                           graph to move to the next stage.
+      *ctf_window* (0)     cosine transform smoothing. In practice, it is set to 0
+                           for no smoothing.
+      ===================  ========================================================
 
-        *stages* (4)      number of inversions to average over
-        *noise* (1)       noise scale factor
-        *monitor* (None)  incident beam intensity (poisson noise source)
+    Computed profile:
+      The reflectivity computed from *z*, *rho* will not match the input data
+      because the effect of the substrate has been removed in the process of
+      reconstructing the phase.  Instead, you will need to compute reflectivity
+      from *rho*-*substrate* on the reversed profile. This is done in
+      :meth:`refl` when no surround material is selected, and can be used to show
+      the difference between measured and inverted reflectivity.  You may need to
+      increase *calcpoints* or modify *thickness* to get a close match.
 
-    Uncertainty is handled by averaging over *stages* inversions with noise
-    added to the input data for each inversion.  Usually the measurement
-    uncertainty is estimated during data reduction and phase reconstruction,
-    and Gaussian noise is added to the data. This is scaled by a factor of
-    *noise* so the effects of noisier or quieter input are easy to estimate.
-    If the uncertainty estimate is not available, 5% relative noise per point
-    is assumed.
+      ======================  ===========================================================
+      Computed profile        Description
+      ======================  ===========================================================
+      *Qinput*, *RealRinput*  input data. The input data *Qinput*, *RealRinput* need to
+                              be placed on an even grid going from 0 to *Qmax* using
+                              linear interpolation.  Values below *Qmin* are set to
+                              zero, and the number of points between *Qmin* and *Qmax*
+                              is preserved. This resampling works best when the input
+                              data are equally spaced, starting at k*dQ for some k.
+      *Q*, *RealR*, *dRealR*  output data. The returned *Q*, *RealR*, *dRealR* are the
+                              values averaged over multiple stages with added noise.
+                              The plots show this as the range of input variation used
+                              in approximating the profile variation.
+      *z*                     represents the depth into the profile. *z* equals
+                              *thickness* at the substrate. If the thickness is correct,
+                              then *z* will be zero at the top of the film, but in
+                              practice the *thickness* value provided will be larger
+                              than the actual film thickness, and a portion of the vacuum
+                              will be included at the beginning of the profile.
+      *rho*                   It is the SLD at depth *z* in units of 10^-6 inv A^2. It
+                              is calculated from the average of the inverted profiles
+                              from the noisy data sets, and includes the correction for
+                              the substrate SLD defined by *substrate*. The inverted
+                              *rho* will contain artifacts from the abrupt cutoff in the
+                              signal at *Qmin* and *Qmax*.
+      *drho*                  It is the uncertainty in the SLD profile at depth *z*. It
+                              is calculated from the standard deviation of the inverted
+                              profiles from the noisy data sets. The uncertainty *drho*
+                              does not take into account the possible variation in the
+                              signal above *Qmax*.
+      *signals*               It is a list of the noisy (Q,RealR) input signals generated
+                              by the uncertainty controls.
+      *profiles*              It is a list of the corresponding (z,rho) profiles. The
+                              first stage is computed without noise, so *signals[0]*
+                              contains the meshed input and *profiles[0]* contains the
+                              output of the inversion process without additional noise.
+      ======================  ===========================================================
 
-    If *monitor* is specified, then Poisson noise is used instead, according to
-    the following::
+    Output methods:
+      The primary output methods are
 
-        *noise* U[-1,1] (poisson(*monitor* |real R|)/*monitor* - |real R|)
+      ==============  ===========================================================
+      Output methods  Description
+      ==============  ===========================================================
+      *save*          save the profile to a file.
+      *show*          show the profile on the screen.
+      *plot*          plot data and profile.
+      *refl*          compute reflectivity from profile.
+      *run*           run or rerun the inversion with new settings.
+      ==============  ===========================================================
 
-    That is, a value is pulled from the Poisson distribution of the expected
-    counts, and the noise is the difference between this and the actual counts.
-    This is further scaled by a fudge factor of *noise* and a further random
-    uniform in [-1,1].
+    Additional methods for finer control of plots:
 
-    Inversion controls
-    ==================
+      ===============  ===========================================================
+      Output methods   Description
+      ===============  ===========================================================
+      *plot_data*      plot just the data.
+      *plot_profile*   plot just the profile.
+      *plot_residual*  plot data minus theory.
+      ===============  ===========================================================
 
-        *rhopoints* (128)   number of steps in the returned profile
-        *calcpoints* (4)    number of internal steps per profile step
-        *iters* (6)         number of iterations to use for inversion
-        *showiters* (False) set to true to show inversion converging
-        *ctf_window* (0)    cosine transform smoothing
-
-    *rhopoints* is the number of steps in the profile.  If this value is too
-    low, the profile will be coarse.  If it is too high, the computation will
-    take a long time.  The additional smoothness generated by a high value of
-    *rhopoints* is illusory --- the information content of the profile is
-    limited by the number of Q points which have been measured. Set *rhopoints*
-    to (1/*dz*) for a step size near *dz* in the profile.
-
-    *calcpoints* is used internally to improve the accuracy of the calculation.
-    For larger values of *rhopoints*, smaller values of *calcpoints* are
-    feasible.
-
-    You may need to scale the computed Q values by a small factor (e.g., 1.02)
-    for the computed reflectivity to match the data. For unclear reasons a
-    q-contraction sets in, probably due to binning in the inversion.  You can
-    also try scaling z by a small factor.  This problem is reduced by having a
-    larger number of profile steps, which we do by setting the default value of
-    *calcpoints* to 4.
-
-    *iters* is the number of steps to use in the differential equation solver
-    that is at the heart of the inversion process.  A value of 6 seems to work
-    well.  You can observe this by setting *showiters* to True and looking at
-    the convergence of each stage of the averaging calculation.
-
-    *showiters* shows the convergence of the inversion calculation. Click the
-    graph to move to the next stage.
-
-    *ctf_window* smoothes the cosine transform at the heart of the computation.
-    In practice, it is set to 0 for no smoothing.
-
-    Computed profile
-    ================
-
-        *Qinput*, *RealRinput*    input data
-        *Q*,*RealR*,*dRealR*      output data
-        *z*,*rho*,*drho*          output profile
-        *signals*,*profiles*      individual inversion stages
-
-    The input data *Qinput*, *RealRinput* need to be placed on an even grid
-    going from 0 to *Qmax* using linear interpolation.  Values below *Qmin*
-    are set to zero, and the number of points between *Qmin* and *Qmax* is
-    preserved.  This resampling works best when the input data are equally
-    spaced, starting at k*dQ for some k.
-
-    The returned *Q*, *RealR*, *dRealR* are the values averaged over multiple
-    stages with added noise.  The plots show this as the range of input
-    variation used in approximating the profile variation.
-
-    *z*, *rho*, *drho* define the output profile.
-
-    *z* represents the depth into the profile.  *z* equals *thickness* at the
-    substrate.  If the thickness is correct, then *z* will be zero at the top
-    of the film, but in practice the *thickness* value provided will be larger
-    than the actual film thickness, and a portion of the vacuum will be
-    included at the beginning of the profile.
-
-    *rho* is the SLD at depth *z* in units of 10^-6 inv A^2.  It is calculated
-    from the average of the inverted profiles from the noisy data sets, and
-    includes the correction for the substrate SLD defined by *substrate*.  The
-    inverted *rho* will contain artifacts from the abrupt cutoff in the signal
-    at *Qmin* and *Qmax*.
-
-    *drho* is the uncertainty in the SLD profile at depth *z*.  It is
-    calculated from the standard deviation of the inverted profiles from the
-    noisy data sets.  The uncertainty *drho* does not take into account the
-    possible variation in the signal above *Qmax*.
-
-    The reflectivity computed from *z*, *rho* will not match the input data
-    because the effect of the substrate has been removed in the process of
-    reconstructing the phase.  Instead, you will need to compute reflectivity
-    from *rho*-*substrate* on the reversed profile. This is done in
-    :meth:`refl` when no surround material is selected, and can be used to show
-    the difference between measured and inverted reflectivity.  You may need to
-    increase *calcpoints* or modify *thickness* to get a close match.
-
-    *signals* is a list of the noisy (Q,RealR) input signals generated by the
-    uncertainty controls, and *profiles* is a list of the corresponding (z,rho)
-    profiles.  The first stage is computed without noise, so *signals[0]*
-    contains the meshed input and *profiles[0]* contains the output of the
-    inversion process without additional noise.
-
-    Output methods
-    ==============
-
-    The primary output methods are::
-
-        *save*         save the profile to a file
-        *show*         show the profile on the screen
-        *plot*         plot data and profile
-        *refl*         compute reflectivity from profile
-        *run*          run or rerun the inversion with new settings
-
-    Additional methods for finer control of plots::
-
-        *plot_data*      plot just the data
-        *plot_profile*   plot just the profile
-        *plot_residual*  plot data minus theory
     """
 
     # Global parameters for the class and their default values
@@ -406,7 +415,6 @@ class Inversion():
 
         All control keywords from the constructor can be used, except
         *data* and *outfile*.
-
         Sets *signals* to the list of noisy (Q, RealR) signals and sets
         *profiles* to the list of generated (z,rho) profiles.
         """
@@ -801,8 +809,6 @@ def plotamp(Q, r, dr=None, scaled=True, ylabel="Real R", **kw):
 
 class Interpolator():
     """
-    Class that performs data interpolation.
-
     Construct an interpolation function from pairs (xi,yi).
     """
     def __init__(self, xi, yi, porder=1):
@@ -938,21 +944,19 @@ def _refl_calc(kz, wavelength, depth, rho, mu, sigma):
 
 def reconstruct(file1, file2, u, v1, v2, stages=100):
     """
-    Phase reconstruction by surround variation magic.
-
     Two reflectivity measurements of a film with different surrounding media
     |r_1|^2 and |r_2|^2 can be combined to compute the expected complex
     reflection amplitude r_reversed of the free standing film measured from the
-    opposite side.  The calculation can be done by varying the fronting media
-    or by varying the backing media.  For this code we only support
-    measurements through a uniform substrate *u*, on two varying surrounding
-    materials *v1*, *v2*.
+    opposite side. The calculation can be done by varying the fronting media
+    or by varying the backing media. For this code we only support measurements
+    through a uniform substrate *u*, on two varying surrounding materials
+    *v1*, *v2*.
 
-    We have to be careful about terminology.  We will use the term substrate to
+    We have to be careful about terminology. We will use the term substrate to
     mean the base on which we deposit our film of interest, and surface to be
-    the material we put on the other side.  The fronting or incident medium is
-    the material through which the beam enters the sample.  The backing
-    material is the material on the other side.  In back reflectivity, the
+    the material we put on the other side. The fronting or incident medium is
+    the material through which the beam enters the sample. The backing
+    material is the material on the other side. In back reflectivity, the
     fronting material is the substrate and the backing material is the surface.
     We are using u for the uniform substrate and v for the varying surface
     material.
@@ -963,14 +967,13 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
     as water (H2O).  At approximately 100 um, the resevoir depth is much
     thicker than the effective coherence length of the neutron in the z
     direction, and so can be treated as a semi-infinite substrate, even when it
-    is empty.  [Note that you cannot simulate a semi-infinite substrate using a
-    large but finitely thick material using the reflectometry calculation; at
-    best the resulting reflection will be a high frequency signal which smooths
-    after applying the resolution correction to a magnitude that is twice the
-    reflection from a semi-infinite substrate.]
+    is empty.
 
-    .. figure:: backrefl_setup.png
-       :alt: experimental setup for back reflectivity
+    .. Note:: You cannot simulate a semi-infinite substrate using a large but
+       finitely thick material using the reflectometry calculation; at
+       best the resulting reflection will be a high frequency signal which
+       smooths after applying the resolution correction to a magnitude
+       that is twice the reflection from a semi-infinite substrate.
 
        The incident beam is measured through the substrate, and thus subject to
        the same absorption as the reflected beam. Refraction on entering and
@@ -997,26 +1000,33 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
     If the input file records uncertainty in the measurement, we perform a
     Monte Carlo uncertainty estimate of the reconstructed complex amplitude.
 
-    Inputs::
+    Inputs:
 
-        *file1*, *file2*  reflectivity measurements at identical Q values
-        *v1*, *v2*  SLD of varying surrounds in *file1* and *file2*
-        *u*         SLD of the uniform substrate
-        *stages*    number of trials in Monte Carlo uncertainty estimate
+    ================  =============================================================
+    Input parameters  Description
+    ================  =============================================================
+    *file1*, *file2*  reflectivity measurements at identical Q values. *file1*
+                      and *file2* can be pairs of vectors (q1,r1), (q2,r2) or files
+                      containing at least two columns (q,r), with the remaining
+                      columns such as dr, dq, and lambda ignored. If a third
+                      vector, dr, is present in both datasets, then an uncertainty
+                      estimate will be calculated for the reconstructed phase.
+    *v1*, *v2*        SLD of varying surrounds in *file1* and *file2*
+    *u*               SLD of the uniform substrate
+    *stages*          number of trials in Monte Carlo uncertainty estimate
+    ================  =============================================================
 
-    Returns a :class:`SurroundVariation` object with the following attributes::
+    Returns a :class:`SurroundVariation` object with the following attributes:
 
-        *RealR*, *ImagR*     real and imaginary reflectivity
-        *dRealR*, *dImagR*   Monte Carlo uncertainty estimate
-        *name1*, *name2*     names of the input files
-        *save(file)*         save Q, RealR, ImagR to a file
-        *show()*, *plot()*   display the results
-
-    *file1* and *file2* can be pairs of vectors (q1,r1), (q2,r2) or files
-    containing at least two columns (q,r), with the remaining columns such as
-    dr, dq, and lambda ignored.  If a third vector, dr, is present in both
-    datasets, then an uncertainty estimate will be calculated for the
-    reconstructed phase.
+    ==================  =========================================
+    Attributes          Description
+    ==================  =========================================
+    *RealR*, *ImagR*    real and imaginary reflectivity
+    *dRealR*, *dImagR*  Monte Carlo uncertainty estimate
+    *name1*, *name2*    names of the input files
+    *save(file)*        save Q, RealR, ImagR to a file
+    *show()*, *plot()*  display the results
+    ==================  =========================================
     """
 
     return SurroundVariation(file1, file2, u, v1 ,v2, stages=stages)
@@ -1024,19 +1034,21 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
 
 class SurroundVariation():
     """
-    Class that performs the surround variation calculation.
+    See :func:`reconstruct` for details.
 
-    See :func:`reconstruction` for details.
+    Attributes:
 
-    Attributes::
-
-        *Q*, *RealR*, *ImagR*  real and imaginary reflectivity
-        *dRealR*, *dImagR*     Monte Carlo uncertainty estimate or None
-        *Qin*, *R1*, *R2*      input data
-        *dR1*, *dR2*           input uncertainty or None
-        *name1*, *name2*       input file names
-        *save(file)*           save output
-        *show()*, *plot()*     show Q, RealR, ImagR
+    =====================  ========================================
+    Attributes             Description
+    =====================  ========================================
+    *Q*, *RealR*, *ImagR*  real and imaginary reflectivity
+    *dRealR*, *dImagR*     Monte Carlo uncertainty estimate or None
+    *Qin*, *R1*, *R2*      input data
+    *dR1*, *dR2*           input uncertainty or None
+    *name1*, *name2*       input file names
+    *save(file)*           save output
+    *show()*, *plot()*     show Q, RealR, ImagR
+    =====================  ========================================
     """
 
     backrefl = True
@@ -1053,7 +1065,6 @@ class SurroundVariation():
     def optimize(self, z, rho_initial):
         """
         Run a quasi-Newton optimizer on a discretized profile.
-
         The profile steps *z* are not changed.  The initial profile
         *rho_initial* should come from direct inversion.  Returns the
         final profile rho which minimizes chisq.
@@ -1073,9 +1084,7 @@ class SurroundVariation():
         """
         Return the reflectivities R1 and R2 for the film *z*,*rho* in the
         context of the substrate and surround variation.
-
         If the resolution is known, then return the convolved theory function.
-
         If *resid* is True, then return the weighted residuals vector.
         """
         w = numpy.hstack((0, numpy.diff(z), 0))
@@ -1141,7 +1150,7 @@ class SurroundVariation():
 
 
     def show(self):
-        """Print Q,RealR, ImagR to the screen."""
+        """Print Q, RealR, ImagR to the screen."""
         print "# %9s %11s %11s"%("Q","RealR", "ImagR")
         for point in zip(self.Q, self.RealR, self.ImagR):
             print "%11.4g %11.4g %11.4g"%point
@@ -1302,7 +1311,6 @@ class SurroundVariation():
 def valid_f(f, A,axis=0):
     """
     Calculate vector function f using only the finite elements of the array *A*.
-
     *axis* is the axis over which the calculation should be performed, or None
     if the calculation should summarize the entire array.
     """

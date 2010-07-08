@@ -1,8 +1,6 @@
 # This program is in the public domain
 # Author: Paul Kienzle
 """
-Reflectometry resolution calculator.
-
 Given Q = 4 pi sin(theta)/lambda, the resolution in Q is determined by
 the dispersion angle theta and wavelength lambda.  For monochromatic
 sources, the wavelength resolution is fixed and the angular resolution
@@ -42,15 +40,16 @@ fixed relative resolution dL/L for each bin.
 
 Usage
 =====
-
-:module:`resolution` (this module) defines two instrument types:
+**resolution** module defines two instrument types:
 :class:`Monochromatic` and :class:`Polychromatic`.  These represent
 generic scanning and time of flight instruments, respectively.  In
 addition, instruments at SNS and NCNR have many of their parameters
-predefined in :module:`snsdata` and :module:`ncnrdata`.
+predefined in :mod:`snsdata` and :mod:`ncnrdata`.
 
 To perform a simulation or load a data set, an actual instrument must
-be created.  For example::
+be created.  For example:
+
+.. doctest::
 
     >>> from resolution import Monochromatic
     >>> instrument = Monochromatic(
@@ -80,7 +79,9 @@ probe for use in modeling::
 
 Since creating the reflectometry probe is the usual case, a couple of
 driver functions are provided.  For example, the following complete
-example loads and plots two data files::
+example loads and plots two data files:
+
+.. doctest::
 
     >>> import pylab
     >>> from ncnrdata import ANDR
@@ -92,7 +93,9 @@ example loads and plots two data files::
     >>> probe2.plot()
     >>> pylab.show()
 
-Generating a simulation probe is similarly convenient::
+Generating a simulation probe is similarly convenient:
+
+.. doctest::
 
     >>> from ncnrdata import ANDR
     >>> instrument = ANDR(Tlo=0.5, slits_at_Tlo=0.2, slits_below=0.1)
@@ -119,69 +122,58 @@ Properties of the instrument can be displayed::
 Details
 =======
 
-Polychromatic measurements have the following attributes::
+Polychromatic measurements have the following attributes:
 
-    *instrument*
-        name of the instrument
-    *radiation* (xray or neutron)
-        source radiation type
-    *T* (degrees)
-        sample angle
-    *slits* (mm or mm,mm)
-        slit 1 and slit 2 openings
-    *d_s1*, *d_s2* (mm)
-        distance from sample to pre-sample slits 1 and 2; post-sample
-        slits are ignored
-    *wavelength* (Angstrom,Angstrom)
-        wavelength range for the measurement
-    *dLoL*
-        constant relative wavelength dispersion; wavelength range and
-        dispersion together determine the bins
-    *sample_width* (mm)
-        width of sample; at low angle with tiny samples, stray neutrons
-        miss the sample and are not reflected onto the detector, so the
-        sample itself acts as a slit, therefore the width of the sample
-        may be needed to compute the resolution correctly
-    *sample_broadening* (degrees FWHM)
-        amount of angular divergence (+) or focusing (-) introduced by
-        the sample; this is caused by sample warp, and may be read off
-        of the rocking curve by subtracting (s1+s2)/2/(d_s1-d_s2) from
-        the FWHM width of the rocking curve
+    ====================================  ===============================================================
+    Attributes                            Description
+    ====================================  ===============================================================
+    *instrument*                          name of the instrument
+    *radiation* (xray or neutron)         source radiation type
+    *T* (degrees)                         sample angle
+    *slits* (mm or mm,mm)                 slit 1 and slit 2 openings
+    *d_s1*, *d_s2* (mm)                   distance from sample to pre-sample slits 1 and 2; post-sample
+                                          slits are ignored.
+    *wavelength* (Angstrom,Angstrom)      wavelength range for the measurement.
+    *dLoL*                                constant relative wavelength dispersion; wavelength range and
+                                          dispersion together determine the bins.
+    *sample_width* (mm)                   width of sample; at low angle with tiny samples, stray neutrons
+                                          miss the sample and are not reflected onto the detector, so the
+                                          sample itself acts as a slit, therefore the width of the sample
+                                          may be needed to compute the resolution correctly.
+    *sample_broadening* (degrees FWHM)    amount of angular divergence (+) or focusing (-) introduced by
+                                          the sample; this is caused by sample warp, and may be read off
+                                          of the rocking curve by subtracting (s1+s2)/2/(d_s1-d_s2) from
+                                          the FWHM width of the rocking curve.
+    ====================================  ===============================================================
 
-Monochromatic measurements have these additional or modified attributes::
+Monochromatic measurements have these additional or modified attributes:
 
-    *instrument*
-        name of the instrument
-    *radiation* (xray or neutron)
-        source radiation type
-    *d_s1*, *d_s2* (mm)
-        distance from sample to pre-sample slits 1 and 2; post-sample
-        slits are ignored
-    *wavelength* (Angstrom)
-        wavelength of the instrument
-    *dLoL*
-        constant relative wavelength dispersion; wavelength range and
-        dispersion together determine the bins
-    *slits_at_Tlo* (mm)
-        slit 1 and slit 2 openings at Tlo; this can be a scalar if both
-        slits are open by the same amount, otherwise it is a pair (s1,s2).
-    *slits_below*, *slits_above*
-        slit 1 and slit 2 openings below Tlo and above Thi; again, these
-        can be scalar if slit 1 and slit 2 are the same, otherwise they
-        are each a pair (s1,s2).  Below and above default to the values of
-        the slits at Tlo and Thi respectively.
-    *Tlo*, *Thi* (degrees)
-        range of opening slits, or inf if slits are fixed.
-    *sample_width* (mm)
-        width of sample; at low angle with tiny samples, stray neutrons
-        miss the sample and are not reflected onto the detector, so the
-        sample itself acts as a slit, therefore the width of the sample
-        may be needed to compute the resolution correctly
-    *sample_broadening* (degrees FWHM)
-        amount of angular divergence (+) or focusing (-) introduced by
-        the sample; this is caused by sample warp, and may be read off
-        of the rocking curve by subtracting (s1+s2)/2/(d_s1-d_s2) from
-        the FWHM width of the rocking curve
+    ==================================  ==================================================================
+    Attributes                          Description
+    ==================================  ==================================================================
+    *instrument*                        name of the instrument
+    *radiation* (xray or neutron)       source radiation type
+    *d_s1*, *d_s2* (mm)                 distance from sample to pre-sample slits 1 and 2; post-sample
+                                        slits are ignored.
+    *wavelength* (Angstrom)             wavelength of the instrument
+    *dLoL*                              constant relative wavelength dispersion; wavelength range and
+                                        dispersion together determine the bins.
+    *slits_at_Tlo* (mm)                 slit 1 and slit 2 openings at Tlo; this can be a scalar if both
+                                        slits are open by the same amount, otherwise it is a pair (s1,s2).
+    *slits_below*, *slits_above*        slit 1 and slit 2 openings below Tlo and above Thi; again, these
+                                        can be scalar if slit 1 and slit 2 are the same, otherwise they
+                                        are each a pair (s1,s2). Below and above default to the values of
+                                        the slits at Tlo and Thi respectively.
+    *Tlo*, *Thi* (degrees)              range of opening slits, or inf if slits are fixed.
+    *sample_width* (mm)                 width of sample; at low angle with tiny samples, stray neutrons
+                                        miss the sample and are not reflected onto the detector, so the
+                                        sample itself acts as a slit, therefore the width of the sample
+                                        may be needed to compute the resolution correctly
+    *sample_broadening* (degrees FWHM)  amount of angular divergence (+) or focusing (-) introduced by
+                                        the sample; this is caused by sample warp, and may be read off
+                                        of the rocking curve by subtracting (s1+s2)/2/(d_s1-d_s2) from
+                                        the FWHM width of the rocking curve.
+    ==================================  ==================================================================
 
 These parameters should be available in the reduced data file, or they
 can be found in the raw NeXus file.
@@ -215,7 +207,7 @@ Calculations
 Resolution in Q is computed from uncertainty in wavelength L and angle T
 using propogation of errors::
 
-    dQ**2 = (df/dL)**2 dL**2 + (df/dT)**2 dT**2
+    >>> dQ**2 = (df/dL)**2 dL**2 + (df/dT)**2 dT**2
 
 where::
 
@@ -225,12 +217,12 @@ where::
 
 yielding the traditional form::
 
-    (dQ/Q)**2 = (dL/L)**2 + (dT/tan(T))**2
+    >>> (dQ/Q)**2 = (dL/L)**2 + (dT/tan(T))**2
 
 Computationally, 1/tan(T) is infinity at T=0, so it is better to use the
 direct calculation::
 
-    dQ = (4 pi / L) sqrt( sin(T)**2 (dL/L)**2 + cos(T)**2 dT**2 )
+    >>> dQ = (4 pi / L) sqrt( sin(T)**2 (dL/L)**2 + cos(T)**2 dT**2 )
 
 
 Wavelength dispersion dL/L is usually constant (e.g., for AND/R it is 2%
@@ -257,7 +249,7 @@ For opening slits, dT/T is held constant, so if you know s and To at the
 start of the opening slits region you can compute dT/To, and later scale
 that to your particular T::
 
-    dT(Q) = dT/To * T(Q)
+    >>> dT(Q) = dT/To * T(Q)
 
 Because d is fixed, that means s1(T) = s1(To) * T/To and s2(T) = s2(To) * T/To
 
@@ -368,7 +360,7 @@ class Monochromatic:
         """
         if (Q is None) == (T is None):
             raise ValueError("requires either Q or angle T")
-        if Q is None: 
+        if Q is None:
             # Compute Q from angle T and wavelength L
             L = kw.get('wavelength',self.wavelength)
             Q = TL2Q(T,L)
@@ -384,7 +376,7 @@ class Monochromatic:
 
         Guide field angle *Tguide* can be specified, as well as keyword
         arguments for the geometry of the probe cross sections such as
-        *slits_at_Tlo*, *Tlo*, *Thi*, *slits_below*, and *slits_above* 
+        *slits_at_Tlo*, *Tlo*, *Thi*, *slits_below*, and *slits_above*
         to define the angular divergence.
         """
         from .probe import PolarizedNeutronProbe
@@ -402,12 +394,16 @@ class Monochromatic:
         otherwise use an opening range [Tlo,Thi] and the value of the
         slits at the start of the opening to define the slits.  Slits
         below Tlo and above Thi can be specified separately.
-        
-        *Tlo*,*Thi*      angle range over which slits are opening
-        *slits_at_Tlo*   openings at the start of the range, or fixed opening
-        *slits_below*, *slits_above*   openings below and above the range
-        
-        Use fixed_slits is available, otherwise use opening slits.
+
+        ============================  ====================================================
+        Parameters                    Description
+        ============================  ====================================================
+        *Tlo*, *Thi*                  angle range over which slits are opening
+        *slits_at_Tlo*                openings at the start of the range, or fixed opening
+        *slits_below*, *slits_above*  openings below and above the range
+        ============================  ====================================================
+
+        Use fixed_slits if available, otherwise use opening slits.
         """
         Tlo = kw.get('Tlo',self.Tlo)
         Thi = kw.get('Thi',self.Thi)
@@ -415,7 +411,7 @@ class Monochromatic:
         slits_below = kw.get('slits_below',self.slits_below)
         slits_above = kw.get('slits_above',self.slits_above)
 
-        # Otherwise we are using opening slits            
+        # Otherwise we are using opening slits
         if Tlo is None or slits_at_Tlo is None:
             raise TypeError("Resolution calculation requires Tlo and slits_at_Tlo")
         slits = opening_slits(T=T, slits_at_Tlo=slits_at_Tlo,
@@ -434,7 +430,7 @@ class Monochromatic:
         """
         d_s1 = kw.get('d_s1',self.d_s1)
         d_s2 = kw.get('d_s2',self.d_s2)
-        if d_s1 is None or d_s2 is None: 
+        if d_s1 is None or d_s2 is None:
             raise TypeError("Need slit distances d_s1, d_s2 to compute resolution")
         sample_width = kw.get('sample_width',self.sample_width)
         sample_broadening = kw.get('sample_broadening',self.sample_broadening)
@@ -452,11 +448,11 @@ class Monochromatic:
         """
         L = kw.get('L',kw.get('wavelength',self.wavelength))
         dLoL = kw.get('dLoL',self.dLoL)
-        if L is None: 
+        if L is None:
             raise TypeError("Need wavelength L to compute resolution")
-        if dLoL is None: 
+        if dLoL is None:
             raise TypeError("Need wavelength dispersion dLoL to compute resolution")
-        
+
         T = QL2T(Q=asarray(Q),L=L)
         slits = self.calc_slits(T, **kw)
         dT = self.calc_dT(T, slits, **kw)
@@ -546,7 +542,7 @@ class Polychromatic:
         uncertainties, but not any data.
 
         You can override instrument parameters using key=value.
-        In particular, slit settings *slits* and *T* define 
+        In particular, slit settings *slits* and *T* define
         the angular divergence and *dLoL* defines the wavelength
         resolution.
         """
@@ -566,7 +562,7 @@ class Polychromatic:
 
         Guide field angle *Tguide* can be specified, as well as keyword
         arguments for the geometry of the probe cross sections such as
-        slit settings *slits* and *T* to define the angular divergence 
+        slit settings *slits* and *T* to define the angular divergence
         and *dLoL* to define the wavelength resolution.
         """
         from .probe import PolarizedNeutronProbe
@@ -707,8 +703,8 @@ def divergence(T=None, slits=None, distance=None,
 
         sample_broadening = W - (s1+s2) / 2(d1-d2)
 
-    Note: default sample width is large but not infinite so that at T=0,
-    sin(0)*sample_width returns 0 rather than NaN.
+    .. Note:: default sample width is large but not infinite so that at T=0,
+       sin(0)*sample_width returns 0 rather than NaN.
     """
     # TODO: check that the formula is correct for T=0 => dT = s1 / 2 d1
     # TODO: add sample_offset and compute full footprint

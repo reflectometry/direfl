@@ -1,11 +1,17 @@
 # This program is public domain
 # Author Paul Kienzle
 """
-Phase reconstruction and direct inversion simulation code.
-
 This code is intended to be used during your experimental proposal phase to
 check that you will be able to see the features of interest in your sample
 if you measure it by direct inversion.
+
+Simulate classes and functions:
+
+* :class:`Simulation`
+   Simulate phase-reconstruction and inversion.
+
+* :func:`wait`
+   Wait for the user to acknowledge the plot.
 """
 #TODO: allow sample to be a full reflectivity model
 #TODO: include resolution in the simulation
@@ -25,23 +31,22 @@ from . import profile
 
 class Simulation():
     """
-    Simulate phase-reconstruction and inversion.
-
-    Parameters::
-
-        *sample*        structure [(rho1,d1), ..., (rhon, dn)]
-        *q*, *dq*       measurement points
-        *u*, *v1*, *v2* uniform and varying SLDs for surround variation
-        *noise*         percentage noise in the measurement
-        *seed*          random number generator seed
-        *perfect_reconstruction*
-                        use real(r) from free film rather than simulated
-                        reflectivity
-        *phase_args*    keyword arguments for reconstruction calculation
-        *invert_args*   keyword arguments for inversion calculation
+    ========================  =================================================
+    Parameters                Description
+    ========================  =================================================
+    *sample*                  structure [(rho1,d1), ..., (rhon, dn)]
+    *q*, *dq*                 measurement points
+    *u*, *v1*, *v2*           uniform and varying SLDs for surround variation
+    *noise*                   percentage noise in the measurement
+    *seed*                    random number generator seed
+    *perfect_reconstruction*  use real(r) from free film rather than simulated
+                              reflectivity
+    *phase_args*              keyword arguments for reconstruction calculation
+    *invert_args*             keyword arguments for inversion calculation
+    ========================  =================================================
 
     The default values for the surround are set to u=Si (2.07), v1=Air (0),
-    and v2=D2O (6.33).  Noise and roughness are set to 0.
+    and v2=D2O (6.33). Noise and roughness are set to 0.
 
     TODO: Resolution and roughness are not yet supported.
     """
