@@ -127,7 +127,7 @@ def checkout():
     # Run the Sphinx utility to build DiRefl documentation.
     print "\nPart 6 - Running the Sphinx utility to build DiRefl documentation ...\n"
 
-    os.chdir("doc\sphinx")
+    os.chdir("build-install\inversion\doc\sphinx")
     # Delete any left over files from a previous build.
     subprocess.call("make clean")
     # Create documentation in HTML format.
