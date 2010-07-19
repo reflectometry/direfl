@@ -100,7 +100,7 @@ from numpy.fft import fft
 # The following line is temporarily commented out because it breaks the sphinx
 # documentation build.
 # TODO: investigate the correct the problem
-#from numpy.random import uniform, poisson, normal
+from numpy.random import uniform, poisson, normal
 
 from matplotlib.font_manager import FontProperties
 

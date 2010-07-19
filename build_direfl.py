@@ -139,7 +139,6 @@ def checkout():
     if os.path.isfile("DirectInversion.pdf"):
         shutil.copy("DirectInversion.pdf", top_dir)
 
-
 def check_packages():
     """
     Checks that the system has the necessary modules.
@@ -152,34 +151,38 @@ def check_packages():
     print "Using ",
     subprocess.call("%s -V" % PYTHON)  # displays python name and version string
 
+    req_pack = {}
+
     try:
         import matplotlib
-        if not matplotlib.__version__ == "0.99.0":
-            req_pack["matplotlib"]= ("0.99.0", matplotlib.__version__)
     except:
         print "matplotlib not found"
 
+    if not matplotlib.__version__ == "0.99.0":
+        req_pack["matplotlib"]= ("0.99.0", matplotlib.__version__)
     try:
         import numpy
-        if not numpy.__version__ == "1.2.1":
-            req_pack["numpy"]= ("1.2.1", numpy.__version__)
     except:
         print "numpy not found"
 
+    if not numpy.__version__ == "1.2.1":
+        req_pack["numpy"]= ("1.2.1", numpy.__version__)
+
     try:
         import scipy
-        if not scipy.__version__ == "0.7.0":
-            req_pack["scipy"]= ("0.7.0", scipy.__version__)
     except:
         print "scipy not found"
 
-    req_pack = {}
+    if not scipy.__version__ == "0.7.0":
+        req_pack["scipy"]= ("0.7.0", scipy.__version__)
+
     try:
         import wx
-        if not wx.__version__ == "2.8.11.0":
-            req_pack["wx"]= ("2.8.11.0", wx.__version__)
     except:
-        print "wxpython not found"
+        print "wx not found"
+
+    if not wx.__version__ == "2.8.11.0":
+        req_pack["wx"]= ("2.8.11.0", wx.__version__)
 
     try:
         p = subprocess.Popen("gcc -dumpversion", stdout=subprocess.PIPE)
@@ -192,7 +195,7 @@ def check_packages():
     if not req_pack == {}:
         print "\n WARNING!\n"
         for key, values in req_pack.items():
-            print key, ("required version is %s actual version is %s"
+            print key, ("required version is %s and your system version is %s"
                         % (req_pack[key][0], req_pack[key][1]))
         ans = raw_input("\nDo you want to continue [Y|N]? (N): ")
         if ans.upper() != "Y":
@@ -250,3 +253,4 @@ if __name__ == "__main__":
             elif sys.argv[1]=="-i":
                 print("Building from reflectometry/trunk")
                 checkout()
+
