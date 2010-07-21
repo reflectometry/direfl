@@ -22,6 +22,11 @@
 
 # Authors: Nikunj Patel and James Krycka
 
+"""
+This script builds the DiRefl application and documentation from source and runs
+unit tests and doc tests.
+"""
+
 import os
 import sys
 import zipfile
@@ -31,38 +36,43 @@ import subprocess
 # Windows commands to run utilities
 SVN    = "svn"
 PYTHON = "python"
-INNO   = r'"c:\Program Files\Inno Setup 5\ISCC"'
+INNO   = r'"C:\Program Files\Inno Setup 5\ISCC"'  # command line Inno compiler
 
-# URL for SVN repository
+# URL for the Subversion repository of the source code and its package name
 INVERSION_URL = "svn://svn@danse.us/reflectometry/trunk/reflectometry/inversion"
+INVERSION_PKG = "inversion"
+
+# Full directory paths of the top-level, source, and installation directories
+TOP_DIR = os.getcwd()
+SRC_DIR = os.path.join(TOP_DIR, INVERSION_PKG)
+INS_DIR = os.path.join(SRC_DIR, "build-install")
 
 
 def checkout():
     # Check the system for all required dependent packages.
     check_packages()
 
-    # Checkout the code from the repository into a directory tree under the
-    # current directory, i.e., <build>/inversion.
-    print "\nPart 1 - Checking out code from the inversion repository ...\n"
+    # Checkout the application code from the repository into a directory tree
+    # under the top level directory.
+    print "\nStep 1 - Checking out application code from the repository ...\n"
 
-    subprocess.call("%s checkout %s" % (SVN, INVERSION_URL))
+    subprocess.call("%s checkout %s %s" % (SVN, INVERSION_URL, INVERSION_PKG))
 
-    # Get the version string for DiRefl.
+    # Get the version string for the application.
     # This has to be done after we have checked out the repository.
     from inversion.version import version as version
 
     # Create a zip file to archive the source code.
-    print "\nPart 2 - Creating a zip archive of the inversion repository ...\n"
+    print "\nStep 2 - Creating a zip archive of the inversion repository ...\n"
 
-    top_dir = os.getcwd()
-    os.chdir("inversion")
+    os.chdir(SRC_DIR)
     curr_dir = os.getcwd()
     for file in os.listdir(curr_dir):
         (shortname, extension) = os.path.splitext(file)
         if extension == ".zip":
             os.remove(shortname+extension)
     arch_dir = dir_archive(".", "True")
-    zfile = os.path.join(top_dir, "direfl-"+str(version)+"-source.zip")
+    zfile = os.path.join(TOP_DIR, "direfl-"+str(version)+"-source.zip")
     try:
         a = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
         for f in arch_dir:
@@ -73,12 +83,11 @@ def checkout():
     else:
         print "Zip file created"
 
-    # Install the inversion package in a private directory tree named
-    # <build>/inversion/build-install.
+    # Install the inversion package in a private directory tree.
     # If the build-install folder already exists, warn the user.
-    print "\nPart 3 - Installing the inversion package in subdirectory build-install ...\n"
+    print "\nStep 3 - Installing the inversion package in subdirectory build-install ...\n"
 
-    if os.path.isdir("build-install"):
+    if os.path.isdir(INS_DIR):
         print "\n WARNING!\n"
         print "In order to build a clean version of Direfl, the local"
         print "build-install directory needs to be deleted."
@@ -87,7 +96,7 @@ def checkout():
         print "            or exit the build script [E]"
         answer = raw_input("Please choose either [Y|N|E]? (E): ")
         if answer.upper() == "Y":
-            shutil.rmtree("build-install")
+            shutil.rmtree(INS_DIR)
         elif answer.upper() == "N":
             pass
         else:
@@ -97,17 +106,17 @@ def checkout():
     # PYTHONPATH environment variable to pass this info to the py2exe build
     # script later on.
     subprocess.call("%s setup.py -q install --install-lib=build-install" % PYTHON)
-    os.environ["PYTHONPATH"] = os.path.join(curr_dir, "build-install")
+    os.environ["PYTHONPATH"] = INS_DIR
 
     # Use py2exe to create a Win32 executable along with auxiliary files in the
     # <build>/inversion/dist directory tree.
-    print "\nPart 4 - Using py2exe to create a Win32 executable in subdirectory dist ...\n"
+    print "\nStep 4 - Using py2exe to create a Win32 executable in subdirectory dist ...\n"
 
     subprocess.call("%s setup_direfl_py2exe.py" % PYTHON)
 
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller for
     # DiRefl.
-    print "\nPart 5 - Running Inno Setup Compiler to create a Win32 installer/uninstaller ...\n"
+    print "\nStep 5 - Running Inno Setup Compiler to create a Win32 installer/uninstaller ...\n"
 
     # First append Direfl's version information to the Inno Setup include file.
     f = open("direfl_include.iss", "a")
@@ -118,16 +127,16 @@ def checkout():
     # Override the output specification in direfl.iss to put the executable and
     # the manifest file in the top-level directory.
     try:
-        subprocess.call("%s /Q /O%s direfl.iss" % (INNO, top_dir))
+        subprocess.call("%s /Q /O%s direfl.iss" % (INNO, TOP_DIR))
     except:
         print "*** Failed to create installer executable ***"
     else:
         print "Installer executable created"
 
     # Run the Sphinx utility to build DiRefl documentation.
-    print "\nPart 6 - Running the Sphinx utility to build DiRefl documentation ...\n"
+    print "\nStep 6 - Running the Sphinx utility to build DiRefl documentation ...\n"
 
-    os.chdir("build-install\inversion\doc\sphinx")
+    os.chdir(os.path.join(INS_DIR, "inversion", "doc", "sphinx"))
     # Delete any left over files from a previous build.
     subprocess.call("make clean")
     # Create documentation in HTML format.
@@ -135,9 +144,16 @@ def checkout():
     # Create documentation in PDF format.
     subprocess.call("make pdf")
     # Copy PDF file to the top-level directory.
-    os.chdir("_build\latex")
+    os.chdir("_build")
+    os.chdir("latex")
     if os.path.isfile("DirectInversion.pdf"):
-        shutil.copy("DirectInversion.pdf", top_dir)
+        shutil.copy("DirectInversion.pdf", TOP_DIR)
+
+    # Run Nose unittests and doctests.
+    print "\nStep 7 - Running Nose unittests and doctests ...\n"
+
+    os.chdir(INS_DIR)
+    subprocess.call("nosetests -v inversion")
 
 def check_packages():
     """
@@ -242,7 +258,7 @@ if __name__ == "__main__":
             print "Usage:"
             print "    python build_direfl.py [command]\n"
             print "[command] can be any of the following:"
-            print "    -h: lists the command line options"
+            print "    -h: Lists the command line options"
             print "    -t: Builds DiRefl from the trunk"
 
         else:

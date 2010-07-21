@@ -8,7 +8,7 @@ Phase reconstruction and inversion for reflectometry data.
 :mod:`core.core`
 ==============================================================================
 
-.. automodule:: core.core
+.. automodule:: core.core2
    :members:
    :undoc-members:
    :inherited-members:
