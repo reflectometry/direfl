@@ -42,11 +42,31 @@ INNO   = r'"C:\Program Files\Inno Setup 5\ISCC"'  # command line Inno compiler
 INVERSION_URL = "svn://svn@danse.us/reflectometry/trunk/reflectometry/inversion"
 INVERSION_PKG = "inversion"
 
-# Full directory paths of the top-level, source, and installation directories
-TOP_DIR = os.getcwd()
+# Normally this script is downloaded into a top-level directory.  When run it
+# downloads the application as a subdirectory (or subdirectories).  For example:
+#   E:/work/test1/this-script.py
+#   E:/work/test1/inversion/...
+# However, the repository can be downloaded by the user and this script run
+# from the application's main directory (where it resides in the repository):
+#   E:/work/test1/inversion/this-script.py
+# In this case, the top-level directory is defined as one-level-up and the
+# repository is not downloaded (as it is assumed it is already fully present).
+#
+# Determine the full directory paths of the top-level, source, and installation
+# directories.
+RUN_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
+head, tail = os.path.split(RUN_DIR)
+if tail == INVERSION_PKG:
+    TOP_DIR = head
+else:
+    TOP_DIR = RUN_DIR
 SRC_DIR = os.path.join(TOP_DIR, INVERSION_PKG)
 INS_DIR = os.path.join(SRC_DIR, "build-install")
-
+print "RUN_DIR =", RUN_DIR
+print "TOP_DIR =", TOP_DIR
+print "SRC_DIR =", SRC_DIR
+print "INS_DIR =", INS_DIR
+os.chdir(TOP_DIR)
 
 def checkout():
     # Check the system for all required dependent packages.
@@ -56,11 +76,18 @@ def checkout():
     # under the top level directory.
     print "\nStep 1 - Checking out application code from the repository ...\n"
 
-    subprocess.call("%s checkout %s %s" % (SVN, INVERSION_URL, INVERSION_PKG))
+    if RUN_DIR == TOP_DIR:
+        subprocess.call("%s checkout %s %s" % (SVN, INVERSION_URL, INVERSION_PKG))
+    else:
+        print "*** Skipping checkout of repository because the executing script"
+        print "*** is within the repository, not in the top-level directory."
 
     # Get the version string for the application.
     # This has to be done after we have checked out the repository.
-    from inversion.version import version as version
+    if RUN_DIR == TOP_DIR:
+        from inversion.version import version as version
+    else:
+        from version import version as version
 
     # Create a zip file to archive the source code.
     print "\nStep 2 - Creating a zip archive of the inversion repository ...\n"
@@ -91,10 +118,10 @@ def checkout():
         print "\n WARNING!\n"
         print "In order to build a clean version of Direfl, the local"
         print "build-install directory needs to be deleted."
-        print "Do you want to delete this directory and continue [Y]"
-        print "            or continue with a dirty installation [N]"
-        print "            or exit the build script [E]"
-        answer = raw_input("Please choose either [Y|N|E]? (E): ")
+        print "Do you want to delete this directory and continue (Y)"
+        print "            or continue with a dirty installation (N)"
+        print "            or exit the build script (E)"
+        answer = raw_input("Please choose either (Y|N|E)? [E]: ")
         if answer.upper() == "Y":
             shutil.rmtree(INS_DIR)
         elif answer.upper() == "N":
@@ -213,7 +240,7 @@ def check_packages():
         for key, values in req_pack.items():
             print key, ("required version is %s and your system version is %s"
                         % (req_pack[key][0], req_pack[key][1]))
-        ans = raw_input("\nDo you want to continue [Y|N]? (N): ")
+        ans = raw_input("\nDo you want to continue (Y|N)? [N]: ")
         if ans.upper() != "Y":
             sys.exit()
 
