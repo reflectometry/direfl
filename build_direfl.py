@@ -38,49 +38,67 @@ SVN    = "svn"
 PYTHON = "python"
 INNO   = r'"C:\Program Files\Inno Setup 5\ISCC"'  # command line Inno compiler
 
-# URL for the Subversion repository of the source code and its package name
-INVERSION_URL = "svn://svn@danse.us/reflectometry/trunk/reflectometry/inversion"
-INVERSION_PKG = "inversion"
+# URL of the Subversion repository where the source code lives
+SVN_REPO_URL = "svn://svn@danse.us/reflectometry/trunk/reflectometry/inversion"
+# Name of the package
+PKG_NAME = "inversion"
+# Local installation root directory (in place of C:\PythonNN\Lib\site-packages
+LOCAL_INSTALL = "local-site-packages"
+# Name of the application we're building
+APP_NAME = "direfl"
 
 # Normally this script is downloaded into a top-level directory.  When run it
-# downloads the application as a subdirectory (or subdirectories).  For example:
+# downloads the files from the application repository into a subdirectory.  For
+# example if test1 is the top-level directory, we might have:
 #   E:/work/test1/this-script.py
-#   E:/work/test1/inversion/...
-# However, the repository can be downloaded by the user and this script run
-# from the application's main directory (where it resides in the repository):
+#                /inversion/this-script.py
+#                /inversion/...
+#
+# Alternatively, the repository can be downloaded by the user and this script
+# can be run from the application subdirectory:
 #   E:/work/test1/inversion/this-script.py
+#                /inversion/...
+#
 # In this case, the top-level directory is defined as one-level-up and the
-# repository is not downloaded (as it is assumed it is already fully present).
+# repository is not downloaded (as it is assumed to be fully present).
 #
 # Determine the full directory paths of the top-level, source, and installation
-# directories.
+# directories based on the directory where the script is running.
 RUN_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 head, tail = os.path.split(RUN_DIR)
-if tail == INVERSION_PKG:
+if tail == PKG_NAME:
     TOP_DIR = head
 else:
     TOP_DIR = RUN_DIR
-SRC_DIR = os.path.join(TOP_DIR, INVERSION_PKG)
-INS_DIR = os.path.join(SRC_DIR, "build-install")
+SRC_DIR = os.path.join(TOP_DIR, PKG_NAME)
+INS_DIR = os.path.join(TOP_DIR, LOCAL_INSTALL)
 print "RUN_DIR =", RUN_DIR
 print "TOP_DIR =", TOP_DIR
 print "SRC_DIR =", SRC_DIR
 print "INS_DIR =", INS_DIR
-os.chdir(TOP_DIR)
 
 def checkout():
     # Check the system for all required dependent packages.
     check_packages()
 
+    #--------------------------------------------------------------------------
+
     # Checkout the application code from the repository into a directory tree
     # under the top level directory.
     print "\nStep 1 - Checking out application code from the repository ...\n"
+    os.chdir(TOP_DIR)
 
     if RUN_DIR == TOP_DIR:
-        subprocess.call("%s checkout %s %s" % (SVN, INVERSION_URL, INVERSION_PKG))
+        subprocess.call("%s checkout %s %s" % (SVN, SVN_REPO_URL, PKG_NAME))
     else:
         print "*** Skipping checkout of repository because the executing script"
         print "*** is within the repository, not in the top-level directory."
+
+    #--------------------------------------------------------------------------
+
+    # Create a zip file to archive the source code.
+    print "\nStep 2 - Creating a zip archive of the application repository ...\n"
+    os.chdir(SRC_DIR)
 
     # Get the version string for the application.
     # This has to be done after we have checked out the repository.
@@ -88,18 +106,12 @@ def checkout():
         from inversion.version import version as version
     else:
         from version import version as version
+    # Delete the .pyc files created as a result of the import.
+    os.remove(os.path.join(SRC_DIR, "__init__.pyc"))
+    os.remove(os.path.join(SRC_DIR, "version.pyc"))
 
-    # Create a zip file to archive the source code.
-    print "\nStep 2 - Creating a zip archive of the inversion repository ...\n"
-
-    os.chdir(SRC_DIR)
-    curr_dir = os.getcwd()
-    for file in os.listdir(curr_dir):
-        (shortname, extension) = os.path.splitext(file)
-        if extension == ".zip":
-            os.remove(shortname+extension)
     arch_dir = dir_archive(".", "True")
-    zfile = os.path.join(TOP_DIR, "direfl-"+str(version)+"-source.zip")
+    zfile = os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source.zip")
     try:
         a = zipfile.ZipFile(zfile, 'w', zipfile.ZIP_DEFLATED)
         for f in arch_dir:
@@ -110,14 +122,18 @@ def checkout():
     else:
         print "Zip file created"
 
-    # Install the inversion package in a private directory tree.
-    # If the build-install folder already exists, warn the user.
-    print "\nStep 3 - Installing the inversion package in subdirectory build-install ...\n"
+    #--------------------------------------------------------------------------
+
+    # Install the application package in a private directory tree.
+    # If the INS_DIR directory already exists, warn the user.
+    # Intermediate work files are stored in the <SRC_DIR>/build directory tree.
+    print "\nStep 3 - Installing the %s package in %s...\n" %(PKG_NAME, INS_DIR)
+    os.chdir(SRC_DIR)
 
     if os.path.isdir(INS_DIR):
         print "\n WARNING!\n"
-        print "In order to build a clean version of Direfl, the local"
-        print "build-install directory needs to be deleted."
+        print "In order to build "+APP_NAME+" cleanly, the local build directory"
+        print INS_DIR+" needs to be deleted."
         print "Do you want to delete this directory and continue (Y)"
         print "            or continue with a dirty installation (N)"
         print "            or exit the build script (E)"
@@ -129,41 +145,55 @@ def checkout():
         else:
             sys.exit()
 
-    # Perform the install to a private directory tree and create the
+    # Perform the installation to a private directory tree and create the
     # PYTHONPATH environment variable to pass this info to the py2exe build
     # script later on.
-    subprocess.call("%s setup.py -q install --install-lib=build-install" % PYTHON)
+    subprocess.call("%s setup.py -q install --install-lib=%s" %(PYTHON, INS_DIR))
     os.environ["PYTHONPATH"] = INS_DIR
 
-    # Use py2exe to create a Win32 executable along with auxiliary files in the
-    # <build>/inversion/dist directory tree.
-    print "\nStep 4 - Using py2exe to create a Win32 executable in subdirectory dist ...\n"
+    #--------------------------------------------------------------------------
 
-    subprocess.call("%s setup_direfl_py2exe.py" % PYTHON)
+    # Use py2exe to create a Win32 executable along with auxiliary files in the
+    # <SRC_DIR>/dist directory tree.
+    print "\nStep 4 - Using py2exe to create a Win32 executable ...\n"
+    os.chdir(SRC_DIR)
+
+    subprocess.call("%s setup_%s_py2exe.py" %(PYTHON, APP_NAME))
+
+    #--------------------------------------------------------------------------
 
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller for
-    # DiRefl.
-    print "\nStep 5 - Running Inno Setup Compiler to create a Win32 installer/uninstaller ...\n"
+    # the application.
+    print "\nStep 5 - Running the Inno Setup Compiler to create a Win32 "\
+          "installer/uninstaller ...\n"
+    os.chdir(SRC_DIR)
 
-    # First append Direfl's version information to the Inno Setup include file.
-    f = open("direfl_include.iss", "a")
+    # First append the app's version information to the Inno Setup include file
+    # while saving and restoring the original file.  Since we're editing a file
+    # from the repository, it is useful to restore it so that 'svn status' does
+    # not show a change if this directory is being used for development.
+    iss1 = "%s_include.iss" % APP_NAME
+    iss2 = "%s_include2.iss" % APP_NAME
+    shutil.copy2(iss1, iss2)
+
+    f = open(iss1, "a")
     f.write('#define MyAppVersion "%s"\n' % version)  # version must be quoted
     f.close()
 
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller.
-    # Override the output specification in direfl.iss to put the executable and
-    # the manifest file in the top-level directory.
-    try:
-        subprocess.call("%s /Q /O%s direfl.iss" % (INNO, TOP_DIR))
-    except:
-        print "*** Failed to create installer executable ***"
-    else:
-        print "Installer executable created"
+    # Override the output specification in <APP_NAME>.iss to put the executable
+    # and the manifest file in the top-level directory.
+    subprocess.call("%s /Q /O%s %s.iss" % (INNO, TOP_DIR, APP_NAME))
 
-    # Run the Sphinx utility to build DiRefl documentation.
-    print "\nStep 6 - Running the Sphinx utility to build DiRefl documentation ...\n"
+    os.remove(iss1)
+    os.rename(iss2, iss1)
 
-    os.chdir(os.path.join(INS_DIR, "inversion", "doc", "sphinx"))
+    #--------------------------------------------------------------------------
+
+    # Run the Sphinx utility to build the application's documentation.
+    print "\nStep 6 - Running the Sphinx utility to build documentation ...\n"
+    os.chdir(os.path.join(INS_DIR, PKG_NAME, "doc", "sphinx"))
+
     # Delete any left over files from a previous build.
     subprocess.call("make clean")
     # Create documentation in HTML format.
@@ -176,15 +206,17 @@ def checkout():
     if os.path.isfile("DirectInversion.pdf"):
         shutil.copy("DirectInversion.pdf", TOP_DIR)
 
+    #--------------------------------------------------------------------------
+
     # Run Nose unittests and doctests.
     print "\nStep 7 - Running Nose unittests and doctests ...\n"
-
     os.chdir(INS_DIR)
-    subprocess.call("nosetests -v inversion")
+
+    subprocess.call("nosetests -v %s" % PKG_NAME)
 
 def check_packages():
     """
-    Checks that the system has the necessary modules.
+    Checks that the system has the necessary Python packages installed.
     """
 
     # Python appears to write directly to the console, not to stdout, so the
@@ -250,31 +282,31 @@ def dir_archive(dir_name, subdir):
     If 'subdir' is True, recursively access subdirectories under 'dir_name'.
     Example usage: file_list = dir_archive(r'H:\TEMP', True)
     All files and all the files in subdirectories under H:\TEMP will be added
-    to the list.
+    to the list except for a small list of subdirectories that are excluded.
     """
 
     file_list = []
     for file in os.listdir(dir_name):
-        dirfile = os.path.join(dir_name, file)
-        if os.path.isfile(dirfile):
-            file_list.append(dirfile)
+        dir_file = os.path.join(dir_name, file)
+        if os.path.isfile(dir_file):
+            file_list.append(dir_file)
         # Recursively access file names in subdirectories.
-        elif os.path.isdir(dirfile) and subdir:
-            # exclude svn directories
-            if dirfile.count('svn') >0:
+        elif os.path.isdir(dir_file) and subdir:
+            # Exclude certain directories.
+            if dir_file.count('svn') > 0:
                 pass
-            elif dirfile.count('build')>0:
+            elif dir_file.count('build') > 0:
                 pass
-            elif dirfile.count('build-install') >0:
+            elif dir_file.count('build-install') > 0:
                 pass
-            elif dirfile.count('dist') >0:
+            elif dir_file.count('dist') > 0:
                 pass
             else:
-                file_list.extend(dir_archive(dirfile, subdir))
+                file_list.extend(dir_archive(dir_file, subdir))
     return file_list
 
 if __name__ == "__main__":
-    print "Build script for DiRefl"
+    print "Build script for "+APP_NAME
     if len(sys.argv)==1:
         # If there is no argument, build the installer
         sys.argv.append("-i")
@@ -283,10 +315,10 @@ if __name__ == "__main__":
         # Help
         if sys.argv[1]=="-h":
             print "Usage:"
-            print "    python build_direfl.py [command]\n"
+            print "    python build_%s.py [command]\n" % APP_NAME
             print "[command] can be any of the following:"
             print "    -h: Lists the command line options"
-            print "    -t: Builds DiRefl from the trunk"
+            print "    -t: Builds application from the trunk"
 
         else:
             # Check the command line argument
