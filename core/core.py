@@ -97,10 +97,16 @@ from numpy import (interp, diff, sum, mean, std,
                    linspace, array, asarray, arange, hstack, zeros, diag)
 from numpy.fft import fft
 
-# The following line is temporarily commented out because it breaks the sphinx
-# documentation build.
-# TODO: investigate the correct the problem
-from numpy.random import uniform, poisson, normal
+# The following line is temporarily commented out because Sphinx on Windows
+# tries to document the three modules as part of inversion.core.core when it
+# should be skipping over them.  The problem may be caused by numpy shipping
+# these modules in a dll (mtrand.pyd) instead of in .pyc or .pyo files.
+# Furthermore, Sphinx 1.0 generates non-fatal error messages when processing
+# these imports and Sphinx 0.6.7 generates fatal errors and will not create the
+# documentation.  Sphinx on Linux does not exhibit these problems.  The
+# workaround is to use implicit imports in the functions or methods that use
+# these functions.
+#from numpy.random import uniform, poisson, normal
 
 from matplotlib.font_manager import FontProperties
 
@@ -418,6 +424,7 @@ class Inversion():
         Sets *signals* to the list of noisy (Q, RealR) signals and sets
         *profiles* to the list of generated (z,rho) profiles.
         """
+        from numpy.random import uniform, poisson, normal
 
         self._set(**kw)
         q, rer, drer = self._remesh()
@@ -465,6 +472,7 @@ class Inversion():
         the real R for the inverted profile.
         """
 
+        from numpy.random import normal
         idx = self.dRealR > 1e-15
         #print "min dR", min(self.dRealR[self.dRealR>1e-15])
         q, rer, drer = self.Q[idx], self.RealR[idx], self.dRealR[idx]
@@ -1294,6 +1302,7 @@ class SurroundVariation():
     def _calc_err(self, stages):
         if self.dR1in is None: return
 
+        from numpy.random import normal
         runs = []
         for i in range(stages):
             R1 = normal(self.R1in,self.dR1in)
