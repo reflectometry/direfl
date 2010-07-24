@@ -94,3 +94,7 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) _build/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in _build/doctest/output.txt."
+
+upload:
+	scp -r _build/html/* reflectometry.org:web/danse/docs/inversion
+	scp _build/latex/Inversion.pdf reflectometry.org:web/danse/download

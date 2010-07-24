@@ -107,8 +107,10 @@ def checkout():
     else:
         from version import version as version
     # Delete the .pyc files created as a result of the import.
-    os.remove(os.path.join(SRC_DIR, "__init__.pyc"))
-    os.remove(os.path.join(SRC_DIR, "version.pyc"))
+    if os.path.isfile("__init__.pyc"):
+        os.remove(os.path.join(SRC_DIR, "__init__.pyc"))
+    if os.path.isfile("version.pyc"):
+        os.remove(os.path.join(SRC_DIR, "version.pyc"))
 
     arch_dir = dir_archive(".", "True")
     zfile = os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source.zip")
@@ -139,7 +141,9 @@ def checkout():
         print "            or exit the build script (E)"
         answer = raw_input("Please choose either (Y|N|E)? [E]: ")
         if answer.upper() == "Y":
-            shutil.rmtree(INS_DIR)
+            # Workaround: symbolic link to Inversion.pdf may be set to read-only.
+            #shutil.rmtree(INS_DIR)
+            shutil.rmtree(INS_DIR, ignore_errors=True)
         elif answer.upper() == "N":
             pass
         else:
@@ -201,8 +205,7 @@ def checkout():
     # Create documentation in PDF format.
     subprocess.call("make pdf")
     # Copy PDF file to the top-level directory.
-    os.chdir("_build")
-    os.chdir("latex")
+    os.chdir(os.path.join("_build", "latex"))
     if os.path.isfile("DirectInversion.pdf"):
         shutil.copy("DirectInversion.pdf", TOP_DIR)
 
