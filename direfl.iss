@@ -39,10 +39,11 @@
 #define MyReadmeFileName "README-direfl.txt"
 #define MyLicenseFileName "LICENSE-direfl.txt"
 #define Space " "
-; Use updated version string if present in the include file.  Note that the
-; include file must be present but it can be a null file.  It is expected that
-; the Direfl build script will update the include file with the current version.
-#include "direfl_include.iss"
+; Use updated version string if present in the include file.  It is expected that the
+; Direfl build script will create this file using the version string from version.py.
+#ifexist "direfl.iss-include"
+    #include "direfl.iss-include"
+#endif
 
 [Setup]
 ; Make the AppName string unique so that other versions of the program can be installed simultaniously.
