@@ -23,22 +23,25 @@
 # Author: James Krycka
 
 """
-Create direfl.exe using py2exe in the inversion\dist directory tree.  This
+Create direfl.exe in the inversion\dist directory tree using py2exe.  This
 executable contains the python runtime environment, required python packages,
 and the DiRefl application.  Additional resource files needed to run DiRefl are
-placed in the \dist directory tree.
+placed in the dist directory tree.  On completion, the contents of the dist
+directory tree can be used by the Inno Setup Compiler to build a Windows
+installer/uninstaller for the DiRefl application.
 """
 
 import os
 import sys
 import glob
-from distutils.core import setup
 
-import matplotlib
-import py2exe  # add py2exe command to setup.py
+from distutils.core import setup
+import py2exe  # augment setup interface with the py2exe command
 
 if len(sys.argv) == 1:
     sys.argv.append('py2exe')
+
+import matplotlib
 
 '''
 print "*** Python path is:"
@@ -49,16 +52,50 @@ for i, p in enumerate(sys.path):
 # Retrieve version information.
 from version import version as version
 
-class Target:
+# Create a manifest for use with Python 2.5 on Windows XP.  This manifest is
+# required to be included in a py2exe image (or accessible as a file in the
+# image directory) when wxPython is included so that the Windows XP theme is
+# used when rendering wx widgets.  The manifest below is adapted from the
+# Python manifest file (C:\Python25\pythonw.exe.manifest).
+
+manifest = """
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+<assemblyIdentity
+    version="0.64.1.0"
+    processorArchitecture="x86"
+    name="Controls"
+    type="win32"
+/>
+<description>DiRefl</description>
+<dependency>
+    <dependentAssembly>
+        <assemblyIdentity
+            type="win32"
+            name="Microsoft.Windows.Common-Controls"
+            version="6.0.0.0"
+            processorArchitecture="X86"
+            publicKeyToken="6595b64144ccf1df"
+            language="*"
+        />
+    </dependentAssembly>
+</dependency>
+</assembly>
+"""
+
+class Target():
     def __init__(self, **kw):
+        # Metadata about the distribution
         self.__dict__.update(kw)
-        # for the version info resources
         self.version = version
         self.company_name = "University of Maryland"
         self.copyright = "BSD style copyright"
-        self.name = "DIREFL"
+        self.name = "DiRefl"
 
+# Create a list of all files to include with the executable being built in the
+# dist directory tree.
 data_files = []
+
 # Add matplotlib data files from the mpl-data folder and its subfolders.
 # The compiled program will look for these files in the \mpl-data ...
 # Note that the location of these data files varies dependnig on the version of
@@ -98,10 +135,10 @@ data_files.append( ('.', [os.path.join('.','surround_d2o_4.refl')]) )
 data_files.append( ('.', [os.path.join('.','README-direfl.txt')]) )
 data_files.append( ('.', [os.path.join('.','splash.png')]) )
 
-# Add required packages.
+# Specify required packages.
 packages = ['numpy', 'scipy', 'matplotlib', 'pytz']
 
-# Specify include and exclude files.
+# Specify files to include and exclude.
 includes = []
 
 excludes = ['Tkinter', 'PyQt4']
@@ -117,25 +154,27 @@ dll_excludes = ['MSVCR71.dll',
                 'QtGui4.dll',
                 'QtCore4.dll']
 
-# This will create a console window on starup in which the DiRefl application
-# is run that will create a separate GUI application window.
-target_console_direfl = Target(
-      description = 'DiRefl: Direct Inversion and Phase Reconstruction',
-      script = './direfl.py',
-      dest_base = "direfl"
-      )
+# This will create a console window when the DiRefl application is run.  The
+# application will then create a separate GUI application window.
+target_console_client = Target(
+    description = 'DiRefl: Direct Inversion and Phase Reconstruction',
+    script = './direfl.py',
+    dest_base = "direfl",
+    other_resources = [(24, 1, manifest)])
 
 # Now do the work to create a standalone distribution using py2exe.
-setup(console=[target_console_direfl],
+setup(windows=[],
+      console=[target_console_client],
       options={'py2exe': {
-                    'dll_excludes': dll_excludes,
-                    'packages': packages,
-                    'includes': includes,
-                    'excludes': excludes,
-                    'compressed': 1,
-                    'optimize': 0,
-                    'bundle_files': 1} # bundle python25.dll in executable file
+                          'dll_excludes': dll_excludes,
+                          'packages': packages,
+                          'includes': includes,
+                          'excludes': excludes,
+                          'compressed': 1,
+                          'optimize': 0,
+                          'bundle_files': 1 # bundle python25.dll in executable
+                         }
               },
-      zipfile=None,                    # bundle library.zip in executable file
+      zipfile=None,                         # bundle library.zip in executable
       data_files=data_files
      )
