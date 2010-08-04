@@ -56,12 +56,13 @@ creating datasets from a simple model description of the sample.\
 
     if len(sys.argv) == 1: sys.argv.append('install')
 
+    # These parameters will appear in the .egg-info file created.
     setup(name='',  # set to null so that name from Configuration prevails
           description=short_desc,
           long_description=long_desc,
           author='University of Maryland, DANSE Reflectometry Group',
           author_email='UNKNOWN',
           url='http://reflectometry.org/danse',
-          license='BSD',
+          license='BSD style license',
           platforms='Windows, Linux, MacOSX',
           configuration=configuration)

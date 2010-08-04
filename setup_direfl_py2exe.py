@@ -119,18 +119,28 @@ packages = ['matplotlib', 'numpy', 'scipy', 'pytz']
 includes = []
 
 # Specify files to exclude from the executable image.
-excludes = ['Tkinter', 'PyQt4']
+# - We can safely exclude Tk/Tcl and Qt modules because our app uses wxPython.
+# - We do not use ssl services so they are omitted.
+# - We can safely exclude the TkAgg matplotlib backend because our app uses
+#   "matplotlib.use('WXAgg')" to override the default matplotlib configuration.
+# - On the web it is widely recommended to exclude certain lib*.dll modules
+#   but this does not seem necessary any more (but adding them does not hurt).
+# - Python25 requires mscvr71.dll, however, Win XP includes this file.
+# - Since we do not support Win 9x systems, w9xpopen.dll is not needed.
+# - For some reason cygwin1.dll gets included by default, but it is not needed.
 
-dll_excludes = ['MSVCR71.dll',
-                'w9xpopen.exe',
-                'libgdk_pixbuf-2.0-0.dll',
+excludes = ['Tkinter', 'PyQt4', '_ssl', '_tkagg']
+
+dll_excludes = ['libgdk_pixbuf-2.0-0.dll',
                 'libgobject-2.0-0.dll',
                 'libgdk-win32-2.0-0.dll',
-                'cygwin1.dll',
                 'tcl84.dll',
                 'tk84.dll',
                 'QtGui4.dll',
-                'QtCore4.dll']
+                'QtCore4.dll',
+                'msvcr71.dll',
+                'w9xpopen.exe',
+                'cygwin1.dll']
 
 class Target():
     """This class stores metadata about the distribution in a dictionary."""
@@ -138,12 +148,10 @@ class Target():
     def __init__(self, **kw):
         self.__dict__.update(kw)
         self.version = version
-        self.company_name = "University of Maryland"
-        self.copyright = "BSD style copyright"
 
 client = Target(
-    name = 'FOO DiRefl',
-    description = 'FOO Direct Inversion and Phase Reconstruction',
+    name = 'inversion',
+    description = 'DiRefl (Direct Inversion Reflectometry) GUI application',
     script = 'direfl.py',  # module to run on application start
     dest_base = 'direfl',  # file name part of the exe file to create
     icon_resources = [(1, 'direfl.ico')],  # also need to specify in data_files
@@ -170,7 +178,7 @@ setup(
                    'compressed': 1,   # standard compression
                    'optimize': 0,     # no byte-code optimization
                    'dist_dir': "dist",# where to put py2exe results
-                   'xref': False,     # display cross reference (as html)
+                   'xref': False,     # display cross reference (as html doc)
                    'bundle_files': 1  # bundle python25.dll in executable
                          }
               },
