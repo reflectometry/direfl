@@ -23,7 +23,7 @@
 # Author: James Krycka
 
 """
-This script creates direfl.exe in inversion\dist using py2exe.
+This script uses py2exe to create inversion\dist\direfl.exe.
 
 The resulting executable bundles the DiRefl application, the python runtime
 environment, and other required python packages into a single file.  Additional
@@ -133,7 +133,7 @@ dll_excludes = ['MSVCR71.dll',
                 'QtCore4.dll']
 
 class Target():
-    """This class stores metadata about the distribution."""
+    """This class stores metadata about the distribution in a dictionary."""
 
     def __init__(self, **kw):
         self.__dict__.update(kw)
@@ -141,30 +141,41 @@ class Target():
         self.company_name = "University of Maryland"
         self.copyright = "BSD style copyright"
 
-# This will create a console window when the DiRefl application is run.  The
-# application will then create a separate GUI application window.
-console_client = Target(
-    name = "DiRefl",
-    description = 'Direct Inversion and Phase Reconstruction',
-    script = os.path.join('.', 'direfl.py'),
-    dest_base = "direfl",
+client = Target(
+    name = 'FOO DiRefl',
+    description = 'FOO Direct Inversion and Phase Reconstruction',
+    script = 'direfl.py',  # module to run on application start
+    dest_base = 'direfl',  # file name part of the exe file to create
+    icon_resources = [(1, 'direfl.ico')],  # also need to specify in data_files
+    bitmap_resources = [],
     other_resources = [(24, 1, manifest)])
 
 # Now do the work to create a standalone distribution using py2exe.
-setup(windows=[],
-      console=[console_client],
+# Specify either console mode or windows mode build.
+#
+# When the application is run in console mode, a console window will be created
+# to receive any logging or error messages and the application will then create
+# a separate GUI application window.
+#
+# When the application is run in windows mode, it will create a GUI application
+# window and no console window will be provided.
+setup(
+      #console=[client],
+      windows=[client],
       options={'py2exe': {
-                          'packages': packages,
-                          'includes': includes,
-                          'excludes': excludes,
-                          'dll_excludes': dll_excludes,
-                          'compressed': 1,
-                          'optimize': 0,
-                          'bundle_files': 1 # bundle python25.dll in executable
+                   'packages': packages,
+                   'includes': includes,
+                   'excludes': excludes,
+                   'dll_excludes': dll_excludes,
+                   'compressed': 1,   # standard compression
+                   'optimize': 0,     # no byte-code optimization
+                   'dist_dir': "dist",# where to put py2exe results
+                   'xref': False,     # display cross reference (as html)
+                   'bundle_files': 1  # bundle python25.dll in executable
                          }
               },
-      zipfile=None,                         # bundle library.zip in executable
-      data_files=data_files                 # list of files to put in dist\
+      zipfile=None,                   # bundle files in exe, not in library.zip
+      data_files=data_files           # list of files to copy to dist directory
      )
 
 #==============================================================================

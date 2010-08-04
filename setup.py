@@ -11,12 +11,9 @@ def configuration(parent_package='', top_path=None):
     config = Configuration('inversion', parent_package, top_path)
 
     config.add_subpackage('core')
-    #config.add_subpackage('data')
     config.add_subpackage('gui')
 
-    #config.add_data_dir('config')
     config.add_data_dir('doc')
-    #config.add_data_dir('examples')
     config.add_data_dir('tests')
 
     config.add_data_files('direfl.ico')
@@ -26,7 +23,7 @@ def configuration(parent_package='', top_path=None):
     config.add_data_files('*.refl')
     config.add_data_files('*.txt')
 
-    config.get_version(os.path.join('version.py'))   # sets config.version
+    config.get_version(os.path.join('version.py'))  # sets config.version
 
     return config
 
@@ -34,7 +31,7 @@ def configuration(parent_package='', top_path=None):
 if __name__ == '__main__':
     """
     When run as a script ($ python .../inversion/setup.py), the DiRefl
-    application will be installed as a package named Inversion and an .egg-info
+    application will be installed as a package named inversion and an .egg-info
     file will be created (e.g. in c:\Python25\Lib\site-packages\ for Windows).
 
     When run indirectly as part of installing the Reflectometry package
@@ -48,12 +45,23 @@ if __name__ == '__main__':
     setup is run as a script, or installed as a subpackage of Reflectometry.
     """
 
+    short_desc = "DiRefl (Direct Inversion Reflectometry) GUI application"
+    long_desc = """\
+The Direct Inversion Reflectometry GUI application generates a
+scattering length density (SLD) profile of a thin film or free form
+sample using two neutron scattering datasets without the need to
+perform a fit of the data.  It also has a simulation capability for
+creating datasets from a simple model description of the sample.\
+    """
+
     if len(sys.argv) == 1: sys.argv.append('install')
 
     setup(name='',  # set to null so that name from Configuration prevails
-          maintainer='DANSE Reflectometry Group',
-          maintainer_email='UNKNOWN',
-          description='DiRefl - Direct Inversion Reflectometry',
-          url='http://www.reflectometry.org/danse',
+          description=short_desc,
+          long_description=long_desc,
+          author='University of Maryland, DANSE Reflectometry Group',
+          author_email='UNKNOWN',
+          url='http://reflectometry.org/danse',
           license='BSD',
+          platforms='Windows, Linux, MacOSX',
           configuration=configuration)
