@@ -57,8 +57,8 @@ from numpy import inf, pi
 from .resolution import Monochromatic
 from . import util
 
-# Comment out the following line from the pak2010 version of the file since
-# this pulls in files not needed by the inverson package.
+### The following line from the pak2010 version of the file is commented out
+### because it pulls in modules not needed by the inversion package.
 #from probe import PolarizedNeutronProbe
 
 def load(filename, instrument=None, **kw):
@@ -73,7 +73,7 @@ def load(filename, instrument=None, **kw):
     header.update(**kw)
     Q,R,dR = data
     resolution = instrument.resolution(Q, **header)
-    probe = resolution.probe(data=(R,dR))
+    probe = resolution.probe(data=(R,dR), **header)
     probe.title = header['title'] if 'title' in header else filename
     probe.date = header['date'] if 'date' in header else "unknown"
     probe.instrument = (header['instrument'] if 'instrument' in header
@@ -180,9 +180,28 @@ def parse_file(filename):
 
 class NCNRLoader(Monochromatic):
     def load(self, filename, **kw):
-        return load(filename, instrument=self)
+        return load(filename, instrument=self, **kw)
     def load_magnetic(self, filename, **kw):
-        return load_magnetic(filename, instrument=self)
+        return load_magnetic(filename, instrument=self, **kw)
+
+    ### The following code from the pak2010 version of the file is commented out
+    ### because it pulls in modules not needed by the inversion package.
+    '''
+    def simdata(self, sample, counts=None, **kw):
+        """
+        Simulate a run with a particular sample.
+        """
+        # TODO: more realistic simulation
+        from .experiment import Experiment
+        probe = self.simulate(**kw)
+        M = Experiment(probe=probe, sample=sample)
+        _, Rth = M.reflectivity()
+        dR = 0.01*M.fresnel()
+        R = Rth + numpy.random.randn(*Rth.shape)*dR
+        probe.data = R,dR
+
+        return probe
+    '''
 
 class ANDR(NCNRLoader):
     """
@@ -216,9 +235,9 @@ class NG7(NCNRLoader):
     radiation = "neutron"
     wavelength = 4.768
     dLoL = 0.040
-    d_s1 = None
-    d_s2 = None
-    d_detector = 2000
+    d_s2 = 275.   # TODO: check this number
+    d_s1 = d_s2 + 1350.
+    d_detector = 2000.
 
 class XRay(NCNRLoader):
     """
