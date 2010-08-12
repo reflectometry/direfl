@@ -13,6 +13,7 @@ if "%1" == "" goto help
 if "%1" == "help" (
 	:help
 	echo.Please use `make ^<target^>` where ^<target^> is one of
+	echo.  clean     to delete files and directories from previous run
 	echo.  html      to make standalone HTML files
 	echo.  dirhtml   to make HTML files named index.html in directories
 	echo.  pickle    to make pickle files
@@ -20,9 +21,11 @@ if "%1" == "help" (
 	echo.  htmlhelp  to make HTML files and a HTML help project
 	echo.  qthelp    to make HTML files and a qthelp project
 	echo.  latex     to make LaTeX files, you can set PAPER=a4 or PAPER=letter
+	echo.  pdf       to make PDF documentation, implicitly performs latex command
 	echo.  changes   to make an overview over all changed/added/deprecated items
 	echo.  linkcheck to check all external links for integrity
 	echo.  doctest   to run all doctests embedded in the documentation if enabled
+	echo.  upload    to copy HTML and PDF files to the reflectometry project website
 	goto end
 )
 
@@ -86,6 +89,13 @@ if "%1" == "latex" (
 	goto end
 )
 
+if "%1" == "pdf" (
+	%SPHINXBUILD% -b latex %ALLSPHINXOPTS% _build/latex
+	make _build/latex all-pdf
+	echo.Build finished; the PDF file is in _build/latex.
+	goto end
+)
+
 if "%1" == "changes" (
 	%SPHINXBUILD% -b changes %ALLSPHINXOPTS% _build/changes
 	echo.
@@ -106,6 +116,14 @@ if "%1" == "doctest" (
 	echo.
 	echo.Testing of doctests in the sources finished, look at the ^
 results in _build/doctest/output.txt.
+	goto end
+)
+
+if "%1" == "upload" (
+	scp -r _build/html/* reflectometry.org:web/danse/docs/inversion
+	scp _build/latex/Inversion.pdf reflectometry.org:web/danse/download
+	echo.
+	echo.Upload of HTML and PDF files to website complete.
 	goto end
 )
 

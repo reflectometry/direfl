@@ -15,6 +15,7 @@ ALLSPHINXOPTS   = -d _build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
+	@echo "  clean     to delete files and directories from previous run"
 	@echo "  html      to make standalone HTML files"
 	@echo "  dirhtml   to make HTML files named index.html in directories"
 	@echo "  pickle    to make pickle files"
@@ -22,9 +23,11 @@ help:
 	@echo "  htmlhelp  to make HTML files and a HTML help project"
 	@echo "  qthelp    to make HTML files and a qthelp project"
 	@echo "  latex     to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
+	@echo "  pdf       to make PDF documentation, implicitly performs latex command"
 	@echo "  changes   to make an overview of all changed/added/deprecated items"
 	@echo "  linkcheck to check all external links for integrity"
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
+	@echo "  upload    to copy HTML and PDF files to the reflectometry project website"
 
 clean:
 	-rm -rf _build/*
@@ -71,13 +74,8 @@ latex:
 	@echo "Run \`make all-pdf' or \`make all-ps' in that directory to" \
 	      "run these through (pdf)latex."
 
-pdf: latex _build/html/Inversion.pdf
+pdf: latex
 	$(MAKE) -C _build/latex all-pdf
-
-_build/html/Inversion.pdf:
-	-mkdir _build/html
-	ln -s $$PWD/_build/latex/Inversion.pdf _build/html/Inversion.pdf
-
 
 changes:
 	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) _build/changes
@@ -92,9 +90,12 @@ linkcheck:
 
 doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) _build/doctest
+	@echo
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in _build/doctest/output.txt."
 
 upload:
 	scp -r _build/html/* reflectometry.org:web/danse/docs/inversion
 	scp _build/latex/Inversion.pdf reflectometry.org:web/danse/download
+	@echo
+	@echo "Upload of HTML and PDF files to website complete."
