@@ -1,4 +1,4 @@
-README-direfl.txt contains release notes for DiRefl 1.0.0
+Release notes for DiRefl 1.0
 
 The Direct Inversion Reflectometry (DiRefl) application generates a scattering
 length density (SLD) profile of a thin film or free form sample using two

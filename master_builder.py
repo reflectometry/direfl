@@ -162,7 +162,7 @@ def checkout():
     print "\nStep 4 - Using py2exe to create a Win32 executable ...\n"
     os.chdir(SRC_DIR)
 
-    subprocess.call("%s setup_%s_py2exe.py" %(PYTHON, APP_NAME))
+    subprocess.call("%s setup_py2exe.py" %PYTHON)
 
     #--------------------------------------------------------------------------
 

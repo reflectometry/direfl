@@ -23,7 +23,7 @@
 # Author: James Krycka
 
 """
-This script uses py2exe to create inversion\dist\direfl.exe.
+This script uses py2exe to create inversion\dist\direfl.exe for Windows.
 
 The resulting executable bundles the DiRefl application, the python runtime
 environment, and other required python packages into a single file.  Additional
@@ -104,12 +104,12 @@ data_files.append( ('.', [os.path.join('.', 'demo_model_1.dat')]) )
 data_files.append( ('.', [os.path.join('.', 'demo_model_2.dat')]) )
 data_files.append( ('.', [os.path.join('.', 'demo_model_3.dat')]) )
 data_files.append( ('.', [os.path.join('.', 'direfl.ico')]) )
-data_files.append( ('.', [os.path.join('.', 'LICENSE-direfl.txt')]) )
+data_files.append( ('.', [os.path.join('.', 'LICENSE.txt')]) )
 data_files.append( ('.', [os.path.join('.', 'qrd1.refl')]) )
 data_files.append( ('.', [os.path.join('.', 'qrd2.refl')]) )
+data_files.append( ('.', [os.path.join('.', 'README.txt')]) )
 data_files.append( ('.', [os.path.join('.', 'surround_air_4.refl')]) )
 data_files.append( ('.', [os.path.join('.', 'surround_d2o_4.refl')]) )
-data_files.append( ('.', [os.path.join('.', 'README-direfl.txt')]) )
 data_files.append( ('.', [os.path.join('.', 'splash.png')]) )
 
 # Specify required packages to bundle in the executable image.

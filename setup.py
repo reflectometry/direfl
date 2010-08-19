@@ -2,7 +2,6 @@
 
 import os
 import sys
-import numpy
 from numpy.distutils.core import setup
 from numpy.distutils.misc_util import Configuration
 
@@ -17,9 +16,9 @@ def configuration(parent_package='', top_path=None):
     config.add_data_dir('tests')
 
     config.add_data_files('direfl.ico')
+    config.add_data_files('direfl.iss')
     config.add_data_files('splash.png')
     config.add_data_files('*.dat')
-    config.add_data_files('*.iss')
     config.add_data_files('*.refl')
     config.add_data_files('*.txt')
 
@@ -51,8 +50,7 @@ The Direct Inversion Reflectometry GUI application generates a
 scattering length density (SLD) profile of a thin film or free form
 sample using two neutron scattering datasets without the need to
 perform a fit of the data.  It also has a simulation capability for
-creating datasets from a simple model description of the sample.\
-    """
+creating datasets from a simple model description of the sample."""
 
     if len(sys.argv) == 1: sys.argv.append('install')
 

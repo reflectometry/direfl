@@ -36,8 +36,8 @@
 #define MyAppURL "http://www.reflectometry.org/danse/"
 #define MyAppFileName "direfl.exe"
 #define MyIconFileName "direfl.ico"
-#define MyReadmeFileName "README-direfl.txt"
-#define MyLicenseFileName "LICENSE-direfl.txt"
+#define MyReadmeFileName "README.txt"
+#define MyLicenseFileName "LICENSE.txt"
 #define Space " "
 ; Use updated version string if present in the include file.  It is expected that the
 ; Direfl build script will create this file using the version string from version.py.
