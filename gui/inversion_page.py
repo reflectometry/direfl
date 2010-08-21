@@ -73,6 +73,7 @@ TEXT_FILES = "Text files (*.txt)|*.txt"
 ALL_FILES = "All files (*.*)|*.*"
 
 # Resource files.
+DATA_DIR = "data"
 DEMO_REFLDATA1_1 = "qrd1.refl"
 DEMO_REFLDATA1_2 = "qrd2.refl"
 DEMO_REFLDATA2_1 = "surround_air_4.refl"
@@ -629,8 +630,8 @@ class InversionPage(wx.Panel):
         """Loads demo 1 reflectometry data files for measurements 1 and 2."""
 
         # Locate the demo data files.
-        datafile_1 = os.path.join(self.app_root_dir, DEMO_REFLDATA1_1)
-        datafile_2 = os.path.join(self.app_root_dir, DEMO_REFLDATA1_2)
+        datafile_1 = os.path.join(self.app_root_dir, DATA_DIR, DEMO_REFLDATA1_1)
+        datafile_2 = os.path.join(self.app_root_dir, DATA_DIR, DEMO_REFLDATA1_2)
 
         # Store the file names in text control boxes and position text so that
         # the file name is visible even if the beginning of the path is not.
@@ -672,8 +673,8 @@ class InversionPage(wx.Panel):
         """Loads demo 2 reflectometry data files for measurements 1 and 2."""
 
         # Locate the demo data files.
-        datafile_1 = os.path.join(self.app_root_dir, DEMO_REFLDATA2_1)
-        datafile_2 = os.path.join(self.app_root_dir, DEMO_REFLDATA2_2)
+        datafile_1 = os.path.join(self.app_root_dir, DATA_DIR, DEMO_REFLDATA2_1)
+        datafile_2 = os.path.join(self.app_root_dir, DATA_DIR, DEMO_REFLDATA2_2)
 
         # Store the file names in text control boxes and position text so that
         # the file name is visible even if the beginning of the path is not.

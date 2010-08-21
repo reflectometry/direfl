@@ -60,6 +60,7 @@ from inversion.core.core import SurroundVariation, Inversion
 from inversion.core.simulate import Simulation
 
 # Resource files.
+DATA_DIR = "data"
 DEMO_REFLDATA1_1 = "qrd1.refl"
 DEMO_REFLDATA1_2 = "qrd2.refl"
 DEMO_REFLDATA2_1 = "surround_air_4.refl"
@@ -172,9 +173,9 @@ def test2():
     from inversion.core.core import SurroundVariation, Inversion
 
     root = get_appdir()
-    #args = [os.path.join(root, 'wsh02_re.dat')]
-    file_1 = os.path.join(root, DEMO_REFLDATA1_1)
-    file_2 = os.path.join(root, DEMO_REFLDATA1_2)
+    #args = [os.path.join(root, DATA_DIR, 'wsh02_re.dat')]
+    file_1 = os.path.join(root, DATA_DIR, DEMO_REFLDATA1_1)
+    file_2 = os.path.join(root, DATA_DIR, DEMO_REFLDATA1_2)
     args = [file_1, file_2]
     if len(args) == 1:
         phase = None

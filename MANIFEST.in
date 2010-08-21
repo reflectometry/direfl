@@ -10,11 +10,10 @@
 # Add files that are not required to run or use the application.
 include app_builder.py
 
-# Add any auxiliary informational files
+# Add any ancillary informational files
+include LAYOUT.txt
 #recursive-include core *NOTES.txt
-#recursive-include doc *NOTES.txt
 #recursive-include gui *NOTES.txt
-#recursive-include tests *NOTES.txt
 
 # Delete files
 #prune this that
