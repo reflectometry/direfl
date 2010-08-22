@@ -19,8 +19,8 @@ amplitude which returns the scattering length density profile.  This profile
 can then be used to compute the expected reflectivity for the original
 measurements, which if all goes well, should agree prefectly.
 
-See :class:`core.Inversion`, :func:`core.reconstruct` and
+See :class:`invert.Inversion`, :func:`invert.reconstruct` and
 :class:`simulate.Simulation` for details.
 """
-from core import invert, reconstruct, Inversion, SurroundVariation
+from invert import invert, reconstruct, Inversion, SurroundVariation
 from simulate import Simulation

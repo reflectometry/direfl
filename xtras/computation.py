@@ -7,7 +7,7 @@ import numpy
 # DataLoader: svn://danse.us/sans/trunk/DataLoader
 from DataLoader import Data1D, plottable_1D
 #import matcomp as archive
-from core import Inversion
+from invert import Inversion
 
 class Computation(object):
     """
@@ -19,12 +19,12 @@ class Computation(object):
         self.errors = []
         # Information messages for the user
         self.messages = []
-        
+
     def __call__(self, data, **kw):
         """
         Computes inversion for a given dataset, defining profile z,rho,drho.
 
-        Key parameters are *thickness*, *substrate*, *Qmin*, *Qmax*, 
+        Key parameters are *thickness*, *substrate*, *Qmin*, *Qmax*,
         *rhopoints*, *calcpoints* and *noise*.
 
         For details see :class:`core.inversion.Inversion`.
@@ -33,26 +33,26 @@ class Computation(object):
         result.run()
         self.chisq = result.chisq()
         self.z, self.rho, self.drho = result.z, result.rho, result.drho
-        
+
     def get_plot_profile(self):
         """
         Plot the profile.
         """
         plottable = plottable_1D(self.z, self.rho, dy=self.drho)
         return plottable
-    
+
     def get_state(self):
         """
         Store the result of the computation in a dictionary.
         """
-        return dict(z=self.z, rho=self.rho, drho=self.drho)        
-        
+        return dict(z=self.z, rho=self.rho, drho=self.drho)
+
     def set_state(self, state):
         """
         Retrieve the result of a computation from a dictionary.
         """
         self.z,self.rho,self.drho = state['z'],state['rho'],state['drho']
-        
+
     def get_quality_parameters(self):
         """
         Returns the quality parameters for the last computation.
@@ -79,7 +79,7 @@ class Computation(object):
                               'type':'int',
                               'nullable':True,
                               'help':'Number of profile steps [dz=thickness/rhopoints]'},
-                              
+
                 'calcpoints': {'default':Inversion.calcpoints,
                               'units':'',
                               'type':'int',
@@ -99,7 +99,7 @@ class Computation(object):
                               'units':'&Aring;<span class="exponent">-1</span>',
                               'type':'float',
                               'nullable':True,
-                              'help':'Maximum Q-value of the data used in the inversion'},          
+                              'help':'Maximum Q-value of the data used in the inversion'},
                 }
 
 def test():
@@ -107,11 +107,11 @@ def test():
     # Need to reset the seed before internal and external computation
     # to check that the results are the same.
     numpy.random.seed(1)
-    
+
     # Call inversion directly
     res = Inversion('wsh02_re.dat',thickness=125)
     res.run()
-    
+
     # Call inversion via Computation object
     calc = Computation()
     Q,ReR = numpy.loadtxt('wsh02_re.dat').T
@@ -124,7 +124,7 @@ def test():
     assert norm(res.z - state['z']) < 1e-15
     assert norm(res.rho - state['rho']) < 1e-15
     assert norm(res.drho - state['drho']) < 1e-15
-    
+
     calc.get_plot_profile()
 
 if __name__ == "__main__":

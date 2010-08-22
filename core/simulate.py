@@ -22,9 +22,9 @@ from numpy import linspace, real
 
 from matplotlib.font_manager import FontProperties
 
-from .core import refl, SurroundVariation, Inversion, plottitle
-from .calc import convolve
 from . import profile
+from .calc import convolve
+from .invert import  plottitle, refl, SurroundVariation, Inversion
 
 # Note that for efficiency, pylab is only imported if plotting is requested.
 

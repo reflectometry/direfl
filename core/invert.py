@@ -98,7 +98,7 @@ from numpy import (interp, diff, sum, mean, std,
 from numpy.fft import fft
 
 # The following line is temporarily commented out because Sphinx on Windows
-# tries to document the three modules as part of inversion.core.core when it
+# tries to document the three modules as part of inversion.core.invert when it
 # should be skipping over them.  The problem may be caused by numpy shipping
 # these modules in a dll (mtrand.pyd) instead of in .pyc or .pyo files.
 # Furthermore, Sphinx 1.0 generates non-fatal error messages when processing
