@@ -5,10 +5,10 @@ Resolution
 ******************************************************************************
 Reflectometry resolution calculator.
 
-:mod:`core.resolution`
+:mod:`api.resolution`
 ==============================================================================
 
-.. automodule:: core.resolution
+.. automodule:: api.resolution
    :members:
    :undoc-members:
    :inherited-members:

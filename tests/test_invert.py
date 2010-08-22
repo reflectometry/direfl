@@ -8,7 +8,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(
                 os.path.dirname(os.path.abspath(sys.argv[0])))))
 
-from inversion.core.simulate import Simulation
+from inversion.api.simulate import Simulation
 from numpy import linspace
 
 def test():

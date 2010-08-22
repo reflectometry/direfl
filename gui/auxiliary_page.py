@@ -55,8 +55,8 @@ import numpy
 from numpy import linspace
 
 from inversion.common.utilities import get_appdir, log_time
-from inversion.core.invert import SurroundVariation, Inversion
-from inversion.core.simulate import Simulation
+from inversion.api.invert import SurroundVariation, Inversion
+from inversion.api.simulate import Simulation
 
 from .wx_utils import StatusBarInfo
 
@@ -171,7 +171,7 @@ def test2():
     Tests use of the SurroundVariation and Inversion classes in invert.py using
     two actual reflectometry data files.
     """
-    from inversion.core.invert import SurroundVariation, Inversion
+    from inversion.api.invert import SurroundVariation, Inversion
 
     root = get_appdir()
     #args = [os.path.join(root, DATA_DIR, 'wsh02_re.dat')]

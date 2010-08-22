@@ -4,10 +4,10 @@
 Profile
 ******************************************************************************
 
-:mod:`core.profile`
+:mod:`api.profile`
 ==============================================================================
 
-.. automodule:: core.profile
+.. automodule:: api.profile
    :members:
    :undoc-members:
    :inherited-members:

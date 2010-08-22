@@ -8,10 +8,10 @@
 
 If you are new to Direct Inversion, start with the :ref:`User's Guide <users-guide-index>`.
 This section provides details about how Direct Inversion works internally.
-Most of the features are already documented in this document, which is automatically 
+Most of the features are already documented in this document, which is automatically
 generated using Direct Inversion’s docstrings.
 
-Click the “modules” (:ref:`Module Index <modindex>`) link in the top right corner to 
+Click the “modules” (:ref:`Module Index <modindex>`) link in the top right corner to
 easily access any Direct Inversion module, or use this contents.
 
 .. only:: html
@@ -21,6 +21,6 @@ easily access any Direct Inversion module, or use this contents.
 
 .. toctree::
 
-   core.rst
+   invert.rst
    simulate.rst
    resolution.rst

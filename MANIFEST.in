@@ -13,8 +13,9 @@ recursive-include xtras/*
 
 # Add any ancillary informational files.
 include LAYOUT.txt
-#recursive-include core *NOTES.txt
-#recursive-include gui *NOTES.txt
+#recursive-include api *DEV_NOTES.txt
+#recursive-include common *DEV_NOTES.txt
+#recursive-include gui *DEV_NOTES.txt
 
 # Delete files
 #prune this that

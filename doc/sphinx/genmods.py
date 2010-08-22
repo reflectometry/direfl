@@ -52,11 +52,11 @@ def genfiles(package, package_name, modules, dir='api'):
 
 
 modules=[
-    ('core','Core'),
+    ('invert','Inversion'),
     ('simulate','Simulation'),
     ('resolution','Resolution'),
-        
+
 ]
-package='core'
+package='api'
 package_name='Reference'
 genfiles(package, package_name, modules)

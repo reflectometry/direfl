@@ -27,7 +27,7 @@ class Computation(object):
         Key parameters are *thickness*, *substrate*, *Qmin*, *Qmax*,
         *rhopoints*, *calcpoints* and *noise*.
 
-        For details see :class:`core.inversion.Inversion`.
+        For details see :class:`api.invert.Inversion`.
         """
         result = Inversion(data=(data.x,data.y), **kw)
         result.run()

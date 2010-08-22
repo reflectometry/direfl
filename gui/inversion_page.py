@@ -59,7 +59,7 @@ import numpy
 from numpy import linspace, inf
 
 from inversion.common.utilities import get_appdir
-from inversion.core.invert import SurroundVariation, Inversion
+from inversion.api.invert import SurroundVariation, Inversion
 
 from .input_list import InputListPanel
 from .instrument_params import InstrumentParameters

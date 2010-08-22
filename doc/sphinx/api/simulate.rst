@@ -5,10 +5,10 @@ Simulation
 ******************************************************************************
 Phase reconstruction and direct inversion simulation code.
 
-:mod:`core.simulate`
+:mod:`api.simulate`
 ==============================================================================
 
-.. automodule:: core.simulate
+.. automodule:: api.simulate
    :members:
    :undoc-members:
    :inherited-members:
