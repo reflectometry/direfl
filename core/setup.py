@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os.path
-
 from numpy.distutils.misc_util import Configuration
 
 
@@ -18,3 +17,7 @@ def configuration(parent_package='', top_path=None):
     config.add_extension('reflmodule', sources=sources)
 
     return config
+
+
+if __name__ == '__main__':
+    print 'This is the wrong setup.py file to run'

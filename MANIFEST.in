@@ -4,13 +4,14 @@
 # the directives in this file add or subtract files from the resulting MANIFEST
 # file that drives the creation of the archive.
 #
-# Note: apparantly due to a bug in setup, you cannot include a file whose name
+# Note: apparently due to a bug in setup, you cannot include a file whose name
 # starts with 'build' as in 'build_everything.py'.
 
 # Add files that are not required to run or use the application.
-include app_builder.py
+include master_builder.py
+recursive-include xtras/*
 
-# Add any ancillary informational files
+# Add any ancillary informational files.
 include LAYOUT.txt
 #recursive-include core *NOTES.txt
 #recursive-include gui *NOTES.txt

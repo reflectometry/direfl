@@ -1,1 +1,34 @@
-This is the top-level or root directory of the inversion package.
+This is the top-level directory of the inversion package.
+
+From this directory, setup.py, setup_py2exe.py, or the application direfl.py
+can be run.  However, to execute the master_builder.py script, a root directory
+must exist as the parent of this directory.  The root can have any name and the
+build script should be copied to it and run from there.
+
+The directory layout after running master_builder.py is:
+
+<root>                  : copy master_builder.py here & run to build everything
+|-- <builder output>    : windows installer, source zip, copy of pdf, etc files
+|-- inversion           : top-level of package
+|   |-- api             : modules that implement the api
+|   |-- build           : created by running setup.py
+|   |-- common          : modules for common code, constants, configuration info
+|   |-- dist            : created by running setup_py2exe and used by Inno Setup
+|   |-- data            : example data files
+|   |-- doc             : sphinx files used to build html and pdf documentation
+|   |-- gui             : modules that implement the gui
+|   |-- tests           : modules for testing
+|   `-- xtras           : ancillary files kept in the repository for convenience
+`-- local-site-packages : created by running master_builder.py
+    `-- inversion       : package installed locally in this directory tree ...
+        |-- api
+        |-- common
+        |-- data
+        |-- doc
+        |   `-- sphinx
+        |       `-- _build  : subdirectories contain html and pdf files
+        |-- gui
+        `-- tests
+
+Plus an .svn directory is created in every source directory or subdirectory
+when an 'svn checkout' operation is performed.
