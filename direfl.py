@@ -74,7 +74,7 @@ import wx
 # work as it traverses outside of the imported module chain through 'appdir'.
 # Note also that this technique works when running the py2exe image of the app.
 
-from gui.utilities import get_appdir, log_time
+from common.utilities import get_appdir, log_time
 sys.path.append(os.path.dirname(get_appdir()))
 
 if len(sys.argv) > 1 and '-syspath' in sys.argv[1:]:

@@ -59,14 +59,14 @@ import pylab
 import numpy
 from numpy import linspace, inf
 
-from inversion.core.simulate import Simulation
+from inversion.common.utilities import get_appdir
 from inversion.core.resolution import bins, binwidths
+from inversion.core.simulate import Simulation
 
-from .instrument_params import InstrumentParameters
 from .input_list import InputListPanel
-from .utilities import (get_appdir, log_time,
-                        popup_error_message, popup_warning_message,
-                        StatusBarInfo, ExecuteInThread, WorkInProgress)
+from .instrument_params import InstrumentParameters
+from .wx_utils import (popup_error_message, popup_warning_message,
+                       StatusBarInfo, ExecuteInThread, WorkInProgress)
 
 # Text strings for use in file selection dialog boxes.
 DATA_FILES = "Data files (*.dat)|*.dat"

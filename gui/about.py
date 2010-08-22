@@ -37,7 +37,7 @@ except ImportError: # if it's not there, try the older location.
 from wx.lib.wordwrap import wordwrap
 
 from inversion.version import version as APP_VERSION
-from .utilities import get_appdir
+from inversion.common.utilities import get_appdir
 
 # Resource files.
 PROG_ICON = "direfl.ico"

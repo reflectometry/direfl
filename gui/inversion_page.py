@@ -58,13 +58,13 @@ import pylab
 import numpy
 from numpy import linspace, inf
 
+from inversion.common.utilities import get_appdir
 from inversion.core.core import SurroundVariation, Inversion
 
-from .instrument_params import InstrumentParameters
 from .input_list import InputListPanel
-from .utilities import (get_appdir, log_time,
-                        popup_error_message, popup_warning_message,
-                        StatusBarInfo, ExecuteInThread, WorkInProgress)
+from .instrument_params import InstrumentParameters
+from .wx_utils import (popup_error_message, popup_warning_message,
+                       StatusBarInfo, ExecuteInThread, WorkInProgress)
 
 # Text strings for use in file selection dialog boxes.
 REFL_FILES = "Refl files (*.refl)|*.refl"

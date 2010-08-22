@@ -54,10 +54,11 @@ import pylab
 import numpy
 from numpy import linspace
 
-from .utilities import get_appdir, log_time, StatusBarInfo
-
+from inversion.common.utilities import get_appdir, log_time
 from inversion.core.core import SurroundVariation, Inversion
 from inversion.core.simulate import Simulation
+
+from .wx_utils import StatusBarInfo
 
 # Resource files.
 DATA_DIR = "data"

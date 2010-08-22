@@ -33,10 +33,12 @@ import sys
 
 import wx
 
-from .app_panel import AppPanel
+from inversion.common.utilities import get_appdir
+
 from .about import (AboutDialog, APP_TITLE, APP_DESCRIPTION, APP_LICENSE,
                     APP_CREDITS, APP_TUTORIAL)
-from .utilities import (get_appdir, choose_fontsize, display_fontsize)
+from .app_panel import AppPanel
+from .wx_utils import choose_fontsize, display_fontsize
 
 # Resource files.
 PROG_ICON = "direfl.ico"
