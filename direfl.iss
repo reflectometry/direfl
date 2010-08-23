@@ -60,7 +60,7 @@ SolidCompression=yes
 DisableProgramGroupPage=yes
 ; A file extension of .exe will be appended to OutputBaseFilename.
 OutputBaseFilename={#MyAppNameLowercase}-{#MyAppVersion}-win32
-OutputManifestFile={#MyAppNameLowercase}-{#MyAppVersion}-manifest.txt
+OutputManifestFile={#MyAppNameLowercase}-{#MyAppVersion}-win32-manifest.txt
 SetupIconFile={#MyIconFileName}
 LicenseFile={#MyLicenseFileName}
 SourceDir=.
