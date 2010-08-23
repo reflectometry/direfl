@@ -29,7 +29,6 @@ unit tests and doc tests.
 
 import os
 import sys
-import zipfile
 import shutil
 import subprocess
 
@@ -42,26 +41,30 @@ INNO   = r'"C:\Program Files\Inno Setup 5\ISCC"'  # command line Inno compiler
 SVN_REPO_URL = "svn://svn@danse.us/reflectometry/trunk/reflectometry/inversion"
 # Name of the package
 PKG_NAME = "inversion"
-# Local installation root directory (in place of C:\PythonNN\Lib\site-packages
+# Relative path for local install (by default the installation path on Windows
+# is C:\PythonNN\Lib\site-packages)
 LOCAL_INSTALL = "local-site-packages"
 # Name of the application we're building
 APP_NAME = "direfl"
 
-# Normally this script is downloaded into a top-level directory.  When run it
-# downloads the files from the application repository into a subdirectory.  For
-# example if test1 is the top-level directory, we might have:
+# Usually, you downloaded this script into a top-level directory (the root) and
+# run it from there which downloads the files from the application repository
+# into a subdirectory (the package directory).  For example if test1 is the
+# root directory, we might have:
 #   E:/work/test1/this-script.py
 #                /inversion/this-script.py
 #                /inversion/...
 #
-# Alternatively, the repository can be downloaded by the user and this script
-# can be run from the application subdirectory:
+# Alternatively, you can download the whole application repository and run this
+# script from the application's package directory where it is stored.  The
+# script determines whether it is executing from the root or the package
+# directory and makes the necessary adjustments.  In this case, the root
+# directory is defined as one-level-up and the repository is not downloaded
+# (as it is assumed to be fully present).  In the example below test1 is the
+# implicit root (i.e. top-level) directory.
 #   E:/work/test1/inversion/this-script.py
 #                /inversion/...
-#
-# In this case, the top-level directory is defined as one-level-up and the
-# repository is not downloaded (as it is assumed to be fully present).
-#
+
 # Determine the full directory paths of the top-level, source, and installation
 # directories based on the directory where the script is running.
 RUN_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -77,9 +80,10 @@ print "TOP_DIR =", TOP_DIR
 print "SRC_DIR =", SRC_DIR
 print "INS_DIR =", INS_DIR
 
-def checkout():
+
+def build_it():
     # Check the system for all required dependent packages.
-    check_packages()
+    check_dependencies()
 
     #--------------------------------------------------------------------------
 
@@ -89,15 +93,15 @@ def checkout():
     os.chdir(TOP_DIR)
 
     if RUN_DIR == TOP_DIR:
-        subprocess.call("%s checkout %s %s" % (SVN, SVN_REPO_URL, PKG_NAME))
+        exec_cmd("%s checkout %s %s" % (SVN, SVN_REPO_URL, PKG_NAME))
     else:
         print "*** Skipping checkout of repository because the executing script"
         print "*** is within the repository, not in the top-level directory."
 
     #--------------------------------------------------------------------------
 
-    # Create a zip file to archive the source code.
-    print "\nStep 2 - Creating a zip archive of the application repository ...\n"
+    # Create a zip or tar file to archive the source code.
+    print "\nStep 2 - Creating an archive of the source code ...\n"
     os.chdir(SRC_DIR)
 
     # Get the version string for the application.
@@ -108,13 +112,15 @@ def checkout():
         from version import version as version
 
     try:
-        subprocess.call("%s setup.py sdist --dist-dir=%s" %(PYTHON, TOP_DIR))
+        exec_cmd("%s setup.py sdist --dist-dir=%s" %(PYTHON, TOP_DIR))
     except:
-        print "*** Failed to create zip file ***"
+        print "*** Failed to create the archive ***"
     else:
-        print "Zip file created"
-        shutil.move(os.path.join(TOP_DIR, PKG_NAME+"-"+str(version)+".zip"),
-                    os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source.zip"))
+        print "Archive created"
+        if os.name == 'nt': ext = ".zip"
+        else:               ext = ".tar.gz"
+        shutil.move(os.path.join(TOP_DIR, PKG_NAME+"-"+str(version)+ext),
+                    os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source"+ext))
         shutil.copy(os.path.join(SRC_DIR, "MANIFEST"),
                     os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source-manifest.txt"))
 
@@ -144,7 +150,7 @@ def checkout():
     # Perform the installation to a private directory tree and create the
     # PYTHONPATH environment variable to pass this info to the py2exe build
     # script later on.
-    subprocess.call("%s setup.py -q install --install-lib=%s" %(PYTHON, INS_DIR))
+    exec_cmd("%s setup.py -q install --install-lib=%s" %(PYTHON, INS_DIR))
     os.environ["PYTHONPATH"] = INS_DIR
 
     #--------------------------------------------------------------------------
@@ -154,7 +160,7 @@ def checkout():
     print "\nStep 4 - Using py2exe to create a Win32 executable ...\n"
     os.chdir(SRC_DIR)
 
-    subprocess.call("%s setup_py2exe.py" %PYTHON)
+    exec_cmd("%s setup_py2exe.py" %PYTHON)
 
     #--------------------------------------------------------------------------
 
@@ -174,7 +180,7 @@ def checkout():
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller.
     # Override the output specification in <APP_NAME>.iss to put the executable
     # and the manifest file in the top-level directory.
-    subprocess.call("%s /Q /O%s %s.iss" % (INNO, TOP_DIR, APP_NAME))
+    exec_cmd("%s /Q /O%s %s.iss" % (INNO, TOP_DIR, APP_NAME))
 
     #--------------------------------------------------------------------------
 
@@ -183,11 +189,11 @@ def checkout():
     os.chdir(os.path.join(INS_DIR, PKG_NAME, "doc", "sphinx"))
 
     # Delete any left over files from a previous build.
-    subprocess.call("make clean")
+    exec_cmd("make clean")
     # Create documentation in HTML format.
-    subprocess.call("make html")
+    exec_cmd("make html")
     # Create documentation in PDF format.
-    subprocess.call("make pdf")
+    exec_cmd("make pdf")
     # Copy PDF file to the top-level directory.
     os.chdir(os.path.join("_build", "latex"))
     if os.path.isfile("DirectInversion.pdf"):
@@ -199,10 +205,10 @@ def checkout():
     print "\nStep 7 - Running Nose unittests and doctests ...\n"
     os.chdir(INS_DIR)
 
-    subprocess.call("nosetests -v %s" % PKG_NAME)
+    exec_cmd("nosetests -v %s" % PKG_NAME)
 
 
-def check_packages():
+def check_dependencies():
     """
     Checks that the system has the necessary Python packages installed.
     """
@@ -212,7 +218,7 @@ def check_packages():
     # p = subprocess.Popen("%s -V" % PYTHON, stdout=subprocess.PIPE)
     # print "Using ", p.stdout.read().strip()
     print "Using ",
-    subprocess.call("%s -V" % PYTHON)  # displays python name and version string
+    exec_cmd("%s -V" % PYTHON)  # displays python name and version string
 
     req_pack = {}
 
@@ -281,6 +287,15 @@ def check_packages():
         if ans.upper() != "Y":
             sys.exit()
 
+def exec_cmd(command):
+    """Runs the specified command in a subprocess."""
+
+    if os.name == 'nt': flag = False
+    else:               flag = True
+
+    subprocess.call(command, shell=flag)
+
+
 if __name__ == "__main__":
     print "Build script for "+APP_NAME
     if len(sys.argv)==1:
@@ -300,8 +315,7 @@ if __name__ == "__main__":
             # Check the command line argument
             if sys.argv[1]=="-t":
                 print("Building from reflectometry/trunk")
-                checkout()
+                build_it()
             elif sys.argv[1]=="-i":
                 print("Building from reflectometry/trunk")
-                checkout()
-
+                build_it()
