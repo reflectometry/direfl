@@ -20,11 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# Authors: Nikunj Patel and James Krycka
+# Authors: James Krycka and Nikunj Patel
 
 """
-This script builds the DiRefl application and documentation from source and runs
-unit tests and doc tests.
+This script builds the DiRefl application and documentation from source and
+runs unit tests and doc tests.  It supports building on Windows and Linux.
 """
 
 import os
@@ -41,11 +41,20 @@ INNO   = r'"C:\Program Files\Inno Setup 5\ISCC"'  # command line Inno compiler
 SVN_REPO_URL = "svn://svn@danse.us/reflectometry/trunk/reflectometry/inversion"
 # Name of the package
 PKG_NAME = "inversion"
+# Name of the application we're building
+APP_NAME = "direfl"
 # Relative path for local install (by default the installation path on Windows
 # is C:\PythonNN\Lib\site-packages)
 LOCAL_INSTALL = "local-site-packages"
-# Name of the application we're building
-APP_NAME = "direfl"
+
+# Required Python packages and utilities and their minimum versions
+MIN_MATPLOTLIB = "0.99.0"
+MIN_NUMPY = "1.2.1"
+MIN_SCIPY = "0.7.0"
+MIN_WXPYTHON = "2.8.11.0"
+MIN_SETUPTOOLS = "0.6c9"
+MIN_SPHINX = "1.0"
+MIN_GCC = "3.4.4"
 
 # Usually, you downloaded this script into a top-level directory (the root) and
 # run it from there which downloads the files from the application repository
@@ -75,10 +84,6 @@ else:
     TOP_DIR = RUN_DIR
 SRC_DIR = os.path.join(TOP_DIR, PKG_NAME)
 INS_DIR = os.path.join(TOP_DIR, LOCAL_INSTALL)
-print "RUN_DIR =", RUN_DIR
-print "TOP_DIR =", TOP_DIR
-print "SRC_DIR =", SRC_DIR
-print "INS_DIR =", INS_DIR
 
 
 def build_it():
@@ -213,79 +218,88 @@ def check_dependencies():
     Checks that the system has the necessary Python packages installed.
     """
 
+    from pkg_resources import parse_version as PV
+
     # Python appears to write directly to the console, not to stdout, so the
     # following code does not work as expected:
     # p = subprocess.Popen("%s -V" % PYTHON, stdout=subprocess.PIPE)
     # print "Using ", p.stdout.read().strip()
     print "Using ",
     exec_cmd("%s -V" % PYTHON)  # displays python name and version string
+    print ""
 
-    req_pack = {}
-
-    try:
-        import matplotlib
-    except:
-        print "matplotlib not found"
-
-    if not matplotlib.__version__ == "0.99.0":
-        req_pack["matplotlib"]= ("0.99.0", matplotlib.__version__)
+    req_pkg = {}
 
     try:
-        import numpy
+        from matplotlib import __version__ as mpl_ver
     except:
-        print "numpy not found"
-
-    if not numpy.__version__ == "1.2.1":
-        req_pack["numpy"]= ("1.2.1", numpy.__version__)
+        mpl_ver = "0"
+    finally:
+        req_pkg["matplotlib"] = (mpl_ver, MIN_MATPLOTLIB)
 
     try:
-        import scipy
+        from numpy import __version__ as numpy_ver
     except:
-        print "scipy not found"
-
-    if not scipy.__version__ == "0.7.0":
-        req_pack["scipy"]= ("0.7.0", scipy.__version__)
+        numpy_ver = "0"
+    finally:
+        req_pkg["numpy"] = (numpy_ver, MIN_NUMPY)
 
     try:
-        import wx
+        from scipy import __version__ as scipy_ver
     except:
-        print "wx not found"
-
-    if not wx.__version__ == "2.8.11.0":
-        req_pack["wx"]= ("2.8.11.0", wx.__version__)
+        scipy_ver = "0"
+    finally:
+        req_pkg["scipy"] = (scipy_ver, MIN_SCIPY)
 
     try:
-        import setuptools
+        from wx import __version__ as wx_ver
     except:
-        print "setuptools not found"
-
-    if not setuptools.__version__ == "0.6c11":
-        req_pack["setuptools"]= ("0.6c11", setuptools.__version__)
+        wx_ver = "0"
+    finally:
+        req_pkg["wxpython"] = (wx_ver, MIN_WXPYTHON)
 
     try:
-        import sphinx
+        from setuptools import __version__ as su_ver
     except:
-        print "sphinx not found"
+        su_ver = "0"
+    finally:
+        req_pkg["setuptools"] = (su_ver, MIN_SETUPTOOLS)
 
-    if not sphinx.__version__ == "1.0":
-        req_pack["sphinx"]= ("1.0", sphinx.__version__)
+    try:
+        from sphinx import __version__ as spx_ver
+    except:
+        spx_ver = "0"
+    finally:
+        req_pkg["sphinx"] = (spx_ver, MIN_SPHINX)
 
     try:
         p = subprocess.Popen("gcc -dumpversion", stdout=subprocess.PIPE)
-        gcc_version = p.stdout.read().strip()
-        if not gcc_version == "3.4.5":
-            req_pack["gcc"]= ("3.4.5", gcc_version)
+        gcc_ver = p.stdout.read().strip()
     except:
-        print "gcc compiler not found"
+        gcc_ver = "0"
+    finally:
+        req_pkg["gcc"] = (gcc_ver, MIN_GCC)
 
-    if not req_pack == {}:
-        print "\n WARNING!\n"
-        for key, values in req_pack.items():
-            print key, ("required version is %s and your system version is %s"
-                        % (req_pack[key][0], req_pack[key][1]))
+    error = False
+    for key, values in req_pkg.items():
+        if req_pkg[key][0] == "0":
+            print "====> %s not found; version %s or later is required - ERROR" \
+                %(key, req_pkg[key][1])
+            error = True
+        elif PV(req_pkg[key][0]) >= PV(req_pkg[key][1]):
+            print "Found %s %s" %(key, req_pkg[key][0])
+        else:
+            print "Found %s %s but minimum tested version is %s - WARNING" \
+                %(key, req_pkg[key][0], req_pkg[key][1])
+            error = True
+
+    if error:
         ans = raw_input("\nDo you want to continue (Y|N)? [N]: ")
         if ans.upper() != "Y":
             sys.exit()
+    else:
+        print "\nSoftware dependencies have been satisfied"
+
 
 def exec_cmd(command):
     """Runs the specified command in a subprocess."""
@@ -297,7 +311,8 @@ def exec_cmd(command):
 
 
 if __name__ == "__main__":
-    print "Build script for "+APP_NAME
+    print "\nBuilding the %s application from the %s repository ..." \
+        % (APP_NAME, PKG_NAME)
     if len(sys.argv)==1:
         # If there is no argument, build the installer
         sys.argv.append("-i")
@@ -315,7 +330,14 @@ if __name__ == "__main__":
             # Check the command line argument
             if sys.argv[1]=="-t":
                 print("Building from reflectometry/trunk")
-                build_it()
             elif sys.argv[1]=="-i":
                 print("Building from reflectometry/trunk")
-                build_it()
+
+    print ""
+    print "Current working directory  =", RUN_DIR
+    print "Top-level (root) directory =", TOP_DIR
+    print "Package (source) directory =", SRC_DIR
+    print "Installation directory     =", INS_DIR
+    print ""
+
+    build_it()
