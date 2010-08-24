@@ -54,7 +54,13 @@ MIN_SCIPY = "0.7.0"
 MIN_WXPYTHON = "2.8.11.0"
 MIN_SETUPTOOLS = "0.6c9"
 MIN_SPHINX = "1.0"
+MIN_DOCUTILS = "0.5"
+MIN_PYGMENTS = "1.0"
+MIN_NOSE = "0.11.3"
 MIN_GCC = "3.4.4"
+
+# Create a line separator string for printing
+SEPARATOR = "\n" + "/"*79
 
 # Usually, you downloaded this script into a top-level directory (the root) and
 # run it from there which downloads the files from the application repository
@@ -85,15 +91,50 @@ else:
 SRC_DIR = os.path.join(TOP_DIR, PKG_NAME)
 INS_DIR = os.path.join(TOP_DIR, LOCAL_INSTALL)
 
+#==============================================================================
 
 def build_it():
     # Check the system for all required dependent packages.
     check_dependencies()
 
-    #--------------------------------------------------------------------------
+    # Checkout code from repository.
+    checkout_code()
 
+    # Get the version string for the application so use later.
+    # This has to be done after we have checked out the repository.
+    if RUN_DIR == TOP_DIR:
+        from inversion.version import version as version
+    else:
+        from version import version as version
+
+    # Create an archive of the source code.
+    create_archive(version)
+
+    # Install the application in a local directory tree.
+    install_app()
+
+    # Create a Windows executable file using py2exe.
+    if os.name == 'nt':
+        create_windows_exe()
+
+    # create a Windows installer/uninstaller exe using the Inno Setup Compiler.
+    if os.name == 'nt':
+        create_windows_installer(version)
+
+    # Build HTML and PDF documentaton using sphinx.
+    build_documentation()
+
+    # Run unittests using nose.
+    run_unittests()
+
+    # Run doctests.
+    run_doc_tests()
+
+
+def checkout_code():
     # Checkout the application code from the repository into a directory tree
     # under the top level directory.
+    print SEPARATOR
     print "\nStep 1 - Checking out application code from the repository ...\n"
     os.chdir(TOP_DIR)
 
@@ -103,18 +144,12 @@ def build_it():
         print "*** Skipping checkout of repository because the executing script"
         print "*** is within the repository, not in the top-level directory."
 
-    #--------------------------------------------------------------------------
 
+def create_archive(version=None):
     # Create a zip or tar file to archive the source code.
+    print SEPARATOR
     print "\nStep 2 - Creating an archive of the source code ...\n"
     os.chdir(SRC_DIR)
-
-    # Get the version string for the application.
-    # This has to be done after we have checked out the repository.
-    if RUN_DIR == TOP_DIR:
-        from inversion.version import version as version
-    else:
-        from version import version as version
 
     try:
         exec_cmd("%s setup.py sdist --dist-dir=%s" %(PYTHON, TOP_DIR))
@@ -129,16 +164,17 @@ def build_it():
         shutil.copy(os.path.join(SRC_DIR, "MANIFEST"),
                     os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source-manifest.txt"))
 
-    #--------------------------------------------------------------------------
 
+def install_app():
     # Install the application package in a private directory tree.
     # If the INS_DIR directory already exists, warn the user.
     # Intermediate work files are stored in the <SRC_DIR>/build directory tree.
+    print SEPARATOR
     print "\nStep 3 - Installing the %s package in %s...\n" %(PKG_NAME, INS_DIR)
     os.chdir(SRC_DIR)
 
     if os.path.isdir(INS_DIR):
-        print "\n WARNING!\n"
+        print "WARNING!\n"
         print "In order to build "+APP_NAME+" cleanly, the local build directory"
         print INS_DIR+" needs to be deleted."
         print "Do you want to delete this directory and continue (Y)"
@@ -158,19 +194,21 @@ def build_it():
     exec_cmd("%s setup.py -q install --install-lib=%s" %(PYTHON, INS_DIR))
     os.environ["PYTHONPATH"] = INS_DIR
 
-    #--------------------------------------------------------------------------
 
+def create_windows_exe():
     # Use py2exe to create a Win32 executable along with auxiliary files in the
     # <SRC_DIR>/dist directory tree.
+    print SEPARATOR
     print "\nStep 4 - Using py2exe to create a Win32 executable ...\n"
     os.chdir(SRC_DIR)
 
     exec_cmd("%s setup_py2exe.py" %PYTHON)
 
-    #--------------------------------------------------------------------------
 
+def create_windows_installer(version=None):
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller for
     # the application.
+    print SEPARATOR
     print "\nStep 5 - Running Inno Setup Compiler to create Win32 "\
           "installer/uninstaller ...\n"
     os.chdir(SRC_DIR)
@@ -187,9 +225,10 @@ def build_it():
     # and the manifest file in the top-level directory.
     exec_cmd("%s /Q /O%s %s.iss" % (INNO, TOP_DIR, APP_NAME))
 
-    #--------------------------------------------------------------------------
 
+def build_documentation():
     # Run the Sphinx utility to build the application's documentation.
+    print SEPARATOR
     print "\nStep 6 - Running the Sphinx utility to build documentation ...\n"
     os.chdir(os.path.join(INS_DIR, PKG_NAME, "doc", "sphinx"))
 
@@ -204,13 +243,25 @@ def build_it():
     if os.path.isfile("DirectInversion.pdf"):
         shutil.copy("DirectInversion.pdf", TOP_DIR)
 
-    #--------------------------------------------------------------------------
 
-    # Run Nose unittests and doctests.
-    print "\nStep 7 - Running Nose unittests and doctests ...\n"
+def run_unittests():
+    # Run Nose unittests.
+    print SEPARATOR
+    print "\nStep 7 - Running Nose unittests ...\n"
     os.chdir(INS_DIR)
 
     exec_cmd("nosetests -v %s" % PKG_NAME)
+
+
+def run_doctests():
+    # Run Nose doctests.
+    print SEPARATOR
+    print "\nStep 8 - Running Nose doctests ...\n"
+    os.chdir(INS_DIR)
+
+    exec_cmd("nosetests -v --with-doctest %s" % os.path.join(PKG_NAME, "api/invert.py"))
+    #exec_cmd("nosetests -v --with-doctest %s" % os.path.join(PKG_NAME, "api/resolution.py"))
+    #exec_cmd("nosetests -v --with-doctest %s" % os.path.join(PKG_NAME, "api/simulate.py"))
 
 
 def check_dependencies():
@@ -259,18 +310,39 @@ def check_dependencies():
         req_pkg["wxpython"] = (wx_ver, MIN_WXPYTHON)
 
     try:
-        from setuptools import __version__ as su_ver
+        from setuptools import __version__ as sut_ver
     except:
-        su_ver = "0"
+        sut_ver = "0"
     finally:
-        req_pkg["setuptools"] = (su_ver, MIN_SETUPTOOLS)
+        req_pkg["setuptools"] = (sut_ver, MIN_SETUPTOOLS)
 
     try:
-        from sphinx import __version__ as spx_ver
+        from sphinx import __version__ as sph_ver
     except:
-        spx_ver = "0"
+        sph_ver = "0"
     finally:
-        req_pkg["sphinx"] = (spx_ver, MIN_SPHINX)
+        req_pkg["sphinx"] = (sph_ver, MIN_SPHINX)
+
+    try:
+        from docutils import __version__ as du_ver
+    except:
+        du_ver = "0"
+    finally:
+        req_pkg["docutils"] = (du_ver, MIN_DOCUTILS)
+
+    try:
+        from pygments import __version__ as pyg_ver
+    except:
+        pyg_ver = "0"
+    finally:
+        req_pkg["pygments"] = (pyg_ver, MIN_PYGMENTS)
+
+    try:
+        from nose import __version__ as nose_ver
+    except:
+        nose_ver = "0"
+    finally:
+        req_pkg["nose"] = (pyg_ver, MIN_NOSE)
 
     try:
         p = subprocess.Popen("gcc -dumpversion", stdout=subprocess.PIPE)
