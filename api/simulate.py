@@ -13,6 +13,7 @@ Simulate classes and functions:
 * :func:`wait`
    Wait for the user to acknowledge the plot.
 """
+
 #TODO: allow sample to be a full reflectivity model
 #TODO: include resolution in the simulation
 
@@ -47,9 +48,9 @@ class Simulation():
 
     The default values for the surround are set to u=Si (2.07), v1=Air (0),
     and v2=D2O (6.33). Noise and roughness are set to 0.
-
-    TODO: Resolution and roughness are not yet supported.
     """
+
+    #TODO: Resolution and roughness are not yet supported.
 
     def __init__(self, sample=None, q=None, dq=None, urough=0,
                  u=2.07, v1=0, v2=6.33, noise=0, seed=None,
@@ -71,6 +72,7 @@ class Simulation():
         """
         Reset or adjust input parameters, generating new sample data.
         """
+
         for k,v in kw.items():
             setattr(self, k, v)
 

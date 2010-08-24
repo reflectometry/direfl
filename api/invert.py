@@ -130,6 +130,7 @@ def invert(**kw):
     If outfile is specified, save z,rho,drho to the named file.
     If plot=True, show a plot before returning
     """
+
     doplot = kw.pop('plot', True)
     outfile = kw.pop('outfile', None)
     inverter = Inversion(**kw)
@@ -160,7 +161,7 @@ class Inversion():
 
     The following attributes and methods are of most interest:
 
-    Inputs:
+    **Inputs:**
 
       =================   =========================================================
       Input Parameters    Description
@@ -202,7 +203,7 @@ class Inversion():
                           substrate rather than the surface.
       =================   =========================================================
 
-    Uncertainty controls:
+    **Uncertainty controls:**
 
       Uncertainty is handled by averaging over *stages* inversions with noise
       added to the input data for each inversion.  Usually the measurement
@@ -230,7 +231,7 @@ class Inversion():
       *monitor* (None)      incident beam intensity (poisson noise source)
       ====================  =======================================================
 
-    Inversion controls:
+    **Inversion controls:**
 
       ===================  ========================================================
       Inversions controls  Description
@@ -257,7 +258,7 @@ class Inversion():
                            for no smoothing.
       ===================  ========================================================
 
-    Computed profile:
+    **Computed profile:**
       The reflectivity computed from *z*, *rho* will not match the input data
       because the effect of the substrate has been removed in the process of
       reconstructing the phase.  Instead, you will need to compute reflectivity
@@ -304,7 +305,7 @@ class Inversion():
                               output of the inversion process without additional noise.
       ======================  ===========================================================
 
-    Output methods:
+    **Output methods:**
       The primary output methods are
 
       ==============  ===========================================================
@@ -317,7 +318,7 @@ class Inversion():
       *run*           run or rerun the inversion with new settings.
       ==============  ===========================================================
 
-    Additional methods for finer control of plots:
+    **Additional methods for finer control of plots:**
 
       ===============  ===========================================================
       Output methods   Description
@@ -368,6 +369,7 @@ class Inversion():
         """
         Set *Qinput*, *RealRinput* from Q ,real(R) vectors.
         """
+
         self.name = name
         if len(data) == 3:
             q, rer, drer = data
@@ -424,6 +426,7 @@ class Inversion():
         Sets *signals* to the list of noisy (Q, RealR) signals and sets
         *profiles* to the list of generated (z,rho) profiles.
         """
+
         from numpy.random import uniform, poisson, normal
 
         self._set(**kw)
@@ -525,9 +528,15 @@ class Inversion():
 
     def save(self, outfile=None):
         """
-        Save z,rho,drho to three column text file named *outfile*.  If
-        *outfile* is not provided, the name of the input file will be
-        used, but with the extension replaced by '.amp'.
+        Save z,rho,drho to three column text file named *outfile*.
+
+        :Parameters:
+            *outfile:* file
+                If *outfile* is not provided, the name of the input file
+                will be used, but with the extension replaced by '.amp'.
+
+        :Returns:
+            *None*
         """
 
         if outfile is None:
@@ -543,13 +552,19 @@ class Inversion():
         """
         Return the complex reflectivity amplitude.
 
-        Use *Q* if provided, otherwise use the evenly spaced Q values used for
-        the inversion.
+        :Parameters:
+            *Q:* boolean
+                Use *Q* if provided, otherwise use the evenly spaced Q values
+                used for the inversion.
+            *surround:* boolean
+                If *surround* is provided, compute the reflectivity for the free
+                film in the context of the substrate and the surround, otherwise
+                compute the reflectivity of the reversed free film embedded in
+                the substrate to match against the reflectivity amplitude
+                supplied as input.
 
-        If *surround* is provided, compute the reflectivity for the free film
-        in the context of the substrate and the surround, otherwise compute the
-        reflectivity of the reversed free film embedded in the substrate to
-        match against the reflectivity amplitude supplied as input.
+        :Returns:
+            *None*
         """
 
         if Q is None:
@@ -572,12 +587,18 @@ class Inversion():
         """
         Plot the data and the inversion.
 
-        If *details* is True, then plot the individual stages used to calculate
-        the average, otherwise just plot the envelope.
+        :Parameters:
+            *details:* boolean
+                If *details* is True, then plot the individual stages used to
+                calculate the average, otherwise just plot the envelope.
+            *phase:* boolean
+                 If *phase* is a phase reconstruction object, plot the original
+                 measurements.
 
-        If *phase* is a phase reconstruction object, plot the original
-        measurements.
+        :Returns:
+            *None*
         """
+
         import pylab
 
         if phase:
@@ -595,12 +616,18 @@ class Inversion():
         """
         Plot the real R vs. the real R computed from inversion.
 
-        If *details* is True, then plot the individual stages used
-        to calculate the average, otherwise just plot the envelope.
+        :Parameters:
+            *details:* boolean
+                If *details* is True, then plot the individual stages used to
+                calculate the average, otherwise just plot the envelope.
+            *lowQ_inset:* intger
+                If *lowQ_inset* > 0, then plot a graph of Q, real R values
+                below lowQ_inset, without scaling by Q**2.
 
-        If *lowQ_inset* > 0, then plot a graph of Q, real R values
-        below lowQ_inset, without scaling by Q**2.
+        :Returns:
+            *None*
         """
+
         import pylab
 
         if details:
@@ -645,10 +672,17 @@ class Inversion():
         """
         Plot the computed profiles.
 
-        If *details* is True, then plot the individual stages used to calculate
-        the average, otherwise just plot the envelope.
+        :Parameters:
+            *details:* boolean
+                If *details* is True, then plot the individual stages used to
+                calculate the average, otherwise just plot the envelope.
+
+        :Returns:
+            *None*
         """
+
         import pylab
+
         pylab.grid(True)
         if details:
             hold = pylab.ishold()
@@ -676,8 +710,18 @@ class Inversion():
     def plot_residual(self, details=False):
         """
         Plot the residuals (inversion minus input).
+
+        :Parameters:
+            *details:* boolean
+                If *details* is True, then plot the individual stages used to
+                calculate the average, otherwise just plot the envelope.
+
+        :Returns:
+            *None*
         """
+
         import pylab
+
         Q,RealR = self.Qinput, self.RealRinput
         r = self.refl(Q)
         pylab.plot(Q, Q**2*(real(r)-RealR))
@@ -690,6 +734,7 @@ class Inversion():
         """
         Set a group of attributes.
         """
+
         for k,v in kw.items():
             if hasattr(self, k):
                 setattr(self, k, v)
@@ -753,6 +798,7 @@ class Inversion():
         """
         Perform the inversion.
         """
+
         dz = 2/(self.calcpoints*self.rhopoints)
         x = arange(0, ceil(2/dz))*dz
         maxm = len(x)
@@ -803,6 +849,7 @@ def plotamp(Q, r, dr=None, scaled=True, ylabel="Real R", **kw):
     """
     Plot Q, realR data.
     """
+
     import pylab
 
     scale = 1e4*Q**2 if scaled else 1
@@ -819,6 +866,7 @@ class Interpolator():
     """
     Construct an interpolation function from pairs (xi,yi).
     """
+
     def __init__(self, xi, yi, porder=1):
         if len(xi) != len(yi):
             raise ValueError("xi:%d and yi:%d must have the same length"
@@ -840,6 +888,7 @@ def remesh(data, xmin, xmax, npts, left=None, right=None):
     """
     Resample the data on a fixed grid.
     """
+
     x, y = data
     x, y = x[isfinite(x)], y[isfinite(y)]
     if npts > len(x): npts = len(x)
@@ -855,6 +904,7 @@ Optical matrix form of the reflectivity calculation.
 
 O.S. Heavens, Optical Properties of Thin Solid Films
 """
+
 from numpy import isscalar, asarray, zeros, ones, empty
 from numpy import exp, sqrt
 
@@ -862,22 +912,24 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     """
     Reflectometry as a function of Qz and wavelength.
 
-    Qz (inv angstrom)
-        Scattering vector 4*pi*sin(theta)/wavelength.  This is an array.
-    wavelength (angstrom)
-        Incident wavelength. If present this is a
-    rho, mu (uNb)
-        Scattering length density and absorption of each layer.
-    depth (angstrom)
-        Thickness of each layer.  The thickness of the incident medium
-        and substrate are ignored.
-    sigma (angstrom)
-        Interfacial roughness.  This is the roughness between a layer
-        and the subsequent layer.  There is no interface associated
-        with the substrate.  The sigma array should have at least n-1
-        entries, though it may have n with the last entry ignored.
-    method (parratt | abeles | opticalmatrix)
-        Method used to compute the reflectivity.
+    :Parameters:
+        *Qz:* float|A
+            Scattering vector 4*pi*sin(theta)/wavelength. This is an array.
+        *depth:* float|A
+            Thickness of each layer.  The thickness of the incident medium
+            and substrate are ignored.
+        *rho, mu (uNb):* (float, float)|
+            Scattering length density and absorption of each layer.
+        *wavelength:* float|A
+            Incident wavelength (angstrom).
+        *sigma:* float|A
+            Interfacial roughness. This is the roughness between a layer
+            and the subsequent layer. There is no interface associated
+            with the substrate. The sigma array should have at least n-1
+            entries, though it may have n with the last entry ignored.
+
+    :Returns:
+        *r* array of float
     """
 
     if isscalar(Qz): Qz = array([Qz], 'd')
@@ -1008,7 +1060,7 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
     If the input file records uncertainty in the measurement, we perform a
     Monte Carlo uncertainty estimate of the reconstructed complex amplitude.
 
-    Inputs:
+    **Inputs:**
 
     ================  =============================================================
     Input parameters  Description
@@ -1044,7 +1096,7 @@ class SurroundVariation():
     """
     See :func:`reconstruct` for details.
 
-    Attributes:
+    **Attributes:**
 
     =====================  ========================================
     Attributes             Description
@@ -1073,10 +1125,18 @@ class SurroundVariation():
     def optimize(self, z, rho_initial):
         """
         Run a quasi-Newton optimizer on a discretized profile.
-        The profile steps *z* are not changed.  The initial profile
-        *rho_initial* should come from direct inversion.  Returns the
-        final profile rho which minimizes chisq.
+
+        :Parameters:
+            *z:* boolean
+                The profile steps *z* are not changed.
+            *rho_initial:* boolean
+                The initial profile *rho_initial* should come from direct
+                inversion.
+        :Returns:
+            *rho:* (boolean, boolean)|
+                Returns the final profile rho which minimizes chisq.
         """
+
         from scipy.optimize import fmin_l_bfgs_b as fmin
 
         def cost(rho):
@@ -1092,9 +1152,21 @@ class SurroundVariation():
         """
         Return the reflectivities R1 and R2 for the film *z*,*rho* in the
         context of the substrate and surround variation.
-        If the resolution is known, then return the convolved theory function.
-        If *resid* is True, then return the weighted residuals vector.
+
+        :Parameters:
+            *z:* boolean
+                The profile steps *z* are not changed.
+            *rho:* boolean
+                If the resolution is known, then return the convolved theory
+                function.
+            *resid:* boolean
+                If *resid* is True, then return the weighted residuals vector.
+
+        :Returns:
+            *R1, R2:* (boolean, boolean)|
+                Return the reflectivities R1 and R2 for the film *z*,*rho*.
         """
+
         w = numpy.hstack((0, numpy.diff(z), 0))
         rho = numpy.hstack((0, rho[1:], self.u))
         rho[0] = self.v1
@@ -1123,6 +1195,7 @@ class SurroundVariation():
         """
         Remove points which are NaN or Inf from the computed phase.
         """
+
         # Toss invalid values
         Q, re, im = self.Qin, self.RealR, self.ImagR
         if self.dRealR is not None:
@@ -1138,9 +1211,18 @@ class SurroundVariation():
     def save(self, outfile=None, uncertainty=True):
         """
         Save Q,RealR,ImagR to three column text file named *outfile*.
-        Include dRealR,dImagR if they exist and if *uncertainty* is True,
-        making a five column file.
+
+        :Parameters:
+            *outfile:* file
+                Include dRealR,dImagR if they exist and if *uncertainty*
+                is True, making a five column file.
+            *uncertainity:* boolean
+                Include dRealR and dImagR if True.
+
+        :Returns:
+            *None*
         """
+
         if outfile is None:
             basefile = os.path.splitext(os.path.basename(self.name1))[0]
             outfile = basefile+os.extsep+"amp"
@@ -1293,6 +1375,7 @@ class SurroundVariation():
         """
         Call the phase reconstruction calculator.
         """
+
         re, im = _phase_reconstruction(self.Qin, self.R1in, self.R2in,
                                        self.u, self.v1, self.v2)
         self.RealR, self.ImagR = re, im
@@ -1363,6 +1446,7 @@ def main():
     """
     Drive phase reconstruction and direct inversion from the command line.
     """
+
     import sys
     import os
     from optparse import OptionParser, OptionGroup

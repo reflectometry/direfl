@@ -267,6 +267,7 @@ from util import TL2Q, QL2T, dTdL2dQ, dQdT2dLoL, FWHM2sigma, sigma2FWHM
 PROBE_KW = ('intensity', 'background', 'back_absorption',
             'theta_offset', 'back_reflectivity', 'data')
 
+
 class Resolution:
     """
     Reflectometry resolution object.
@@ -275,6 +276,7 @@ class Resolution:
     *L*, *dL*   (Angstroms) wavelength and FWHM dispersion
     *Q*, *dQ*   (inv Angstroms) calculated Q and 1-sigma resolution
     """
+
     def __init__(self, T, dT, L, dL, radiation="neutron"):
         self.T, self.dT = T, dT
         self.L, self.dL = L, dL
@@ -284,11 +286,14 @@ class Resolution:
     def _dQ(self):
         return dTdL2dQ(self.T,self.dT,self.L,self.dL)
     Q,dQ = property(_Q), property(_dQ)
+
     def probe(self, **kw):
         """
         Return a reflectometry measurement object of the given resolution.
         """
+
         from .probe import NeutronProbe, XrayProbe
+
         kw = dict((k,v) for k,v in kw.items() if k in PROBE_KW)
         if self.radiation == 'neutron':
             return NeutronProbe(T=self.T, dT=self.dT,
@@ -297,10 +302,12 @@ class Resolution:
             return XrayProbe(T=self.T, dT=self.dT,
                              L=self.L, dL=self.dL, **kw)
 
+
 class Monochromatic:
     """
     Resolution calculator for scanning reflectometers.
     """
+
     instrument = "monochromatic"
     radiation = "unknown"
     # Required attributes
@@ -344,7 +351,17 @@ class Monochromatic:
         particular, slit settings *slits_at_Tlo*, *Tlo*, *Thi*,
         and *slits_below*, and *slits_above* are used to define the
         angular divergence.
+
+        :Parameters:
+            *filename:* boolean
+                Name of file which holds data.
+
+        :Returns:
+            *Associated probe*
+                This probe will contain Q, angle, wavelength, measured
+                reflectivity and the associated uncertainties.
         """
+
         # Load the data
         data = numpy.loadtxt(filename).T
         if data.shape[0] == 2:
@@ -370,7 +387,19 @@ class Monochromatic:
         particular, settings for *slits_at_Tlo*, *Tlo*, *Thi*,
         *slits_below*, and *slits_above* are used to define the
         angular divergence.
+
+        :Parameters:
+            *T:* angle | A
+                Angle for measurement.
+            *Q:* float
+                Value for the measurement.
+
+        :Returns:
+            *Associated probe*
+                Returns a probe with Q, angle, wavelength and the associated
+                uncertainties, but not any data.
         """
+
         if (Q is None) == (T is None):
             raise ValueError("requires either Q or angle T")
         if Q is None:
@@ -391,8 +420,22 @@ class Monochromatic:
         arguments for the geometry of the probe cross sections such as
         *slits_at_Tlo*, *Tlo*, *Thi*, *slits_below*, and *slits_above*
         to define the angular divergence.
+
+        :Parameters:
+            *T:* angle | A
+                Angle for measurement.
+            *Tguide:* float
+                Guide field angle for the measurement.
+            *shared_beam:* boolean
+
+        :Returns:
+            *Associated probe*
+                Returns a probe with Q, angle, wavelength and the associated
+                uncertainties, but not any data.
         """
+
         from .probe import PolarizedNeutronProbe
+
         probes = [self.simulate(T, **kw) for i in range(4)]
         probe = PolarizedNeutronProbe(probes, Tguide=Tguide)
         if shared_beam:
@@ -418,6 +461,7 @@ class Monochromatic:
 
         Use fixed_slits if available, otherwise use opening slits.
         """
+
         Tlo = kw.get('Tlo',self.Tlo)
         Thi = kw.get('Thi',self.Thi)
         slits_at_Tlo = kw.get('slits_at_Tlo',self.slits_at_Tlo)
@@ -441,6 +485,7 @@ class Monochromatic:
         *sample_width*  size of sample
         *sample_broadening* resolution changes from sample warping
         """
+
         d_s1 = kw.get('d_s1',self.d_s1)
         d_s2 = kw.get('d_s2',self.d_s2)
         if d_s1 is None or d_s2 is None:
@@ -458,7 +503,17 @@ class Monochromatic:
         Return the resolution for a given Q.
 
         Resolution is an object with fields T, dT, L, dL, Q, dQ
+
+        :Parameters:
+            *Q:* float
+                Value for the measurement.
+
+        :Returns:
+            *object*
+                Return the resolution for a given Q. Resolution is an object
+                with fields T, dT, L, dL, Q, dQ
         """
+
         L = kw.get('L',kw.get('wavelength',self.wavelength))
         dLoL = kw.get('dLoL',self.dLoL)
         if L is None:
@@ -496,6 +551,7 @@ sample broadening = %(sample_broadening)g degrees
         """
         Return default instrument properties as a printable string.
         """
+
         msg = """\
 == Instrument class %(name)s ==
 radiation = %(radiation)s at %(L)g Angstrom with %(dLpercent)g%% resolution
@@ -506,10 +562,12 @@ slit distances = %(d_s1)g mm and %(d_s2)g mm
            )
         return msg
 
+
 class Polychromatic:
     """
     Resolution calculator for multi-wavelength reflectometers.
     """
+
     instrument = "polychromatic"
     radiation = "neutron" # unless someone knows how to do TOF Xray...
     # Required attributes
@@ -538,7 +596,17 @@ class Polychromatic:
         You can override instrument parameters using key=value.
         In particular, slit settings *slits* and *T* define the
         angular divergence.
+
+        :Parameters:
+            *filename:* boolean
+                Name of file which holds data.
+
+        :Returns:
+            *Associated probe*
+                This probe will contain Q, angle, wavelength, measured
+                reflectivity and the associated uncertainties.
         """
+
         # Load the data
         data = numpy.loadtxt(filename).T
         Q,dQ,R,dR,L = data
@@ -558,7 +626,15 @@ class Polychromatic:
         In particular, slit settings *slits* and *T* define
         the angular divergence and *dLoL* defines the wavelength
         resolution.
+
+        :Parameters:
+
+        :Returns:
+            *Associated probe*
+                Returns a probe with Q, angle, wavelength and the associated
+                uncertainties, but not any data.
         """
+
         low,high = kw.get('wavelength',self.wavelength)
         dLoL = kw.get('dLoL',self.dLoL)
         L = bins(low,high,dLoL)
@@ -577,7 +653,20 @@ class Polychromatic:
         arguments for the geometry of the probe cross sections such as
         slit settings *slits* and *T* to define the angular divergence
         and *dLoL* to define the wavelength resolution.
+
+        :Parameters:
+            *T:* angle | A
+                Angle for measurement.
+            *Tguide:* float
+                Guide field angle for the measurement.
+            *shared_beam:* boolean
+
+        :Returns:
+            *Associated probe*
+                Returns a probe with Q, angle, wavelength and the associated
+                uncertainties, but not any data.
         """
+
         from .probe import PolarizedNeutronProbe
         probes = [self.simulate(T, **kw) for i in range(4)]
         probe = PolarizedNeutronProbe(probes, Tguide=Tguide)
@@ -602,7 +691,18 @@ class Polychromatic:
         specified as keywords.
 
         Resolution is an object with fields T, dT, L, dL, Q, dQ
+
+        :Parameters:
+            *L:* float
+                Value for the measurement.
+            *dL:* float
+
+        :Returns:
+            *object*
+                Return the resolution for a given Q. Resolution is an object
+                with fields T, dT, L, dL, Q, dQ
         """
+
         radiation = kw.get('radiation',self.radiation)
         T = kw.pop('T', self.T)
         slits = kw.pop('slits', self.slits)
@@ -635,6 +735,7 @@ sample broadening = %(sample_broadening)g degrees FWHM
         """
         Return default instrument properties as a printable string.
         """
+
         msg = """\
 == Instrument class %(name)s ==
 radiation = %(radiation)s in %(L_min)g to %(L_max)g Angstrom with %(dLpercent)g%% resolution
@@ -683,6 +784,7 @@ def binwidths(L):
         dL[i] = E[i+1]-E[i] = (1+dLoL)*E[i]-E[i]
               = dLoL*E[i] = 2*dLoL/(2+dLoL)*L[i]
     """
+
     if L[1] > L[0]:
         dLoL = L[1]/L[0] - 1
     else:
@@ -711,6 +813,7 @@ def binedges(L):
         E[i] = L[i]*2/(2+dLoL)
         E[n+1] = L[n]*2/(2+dLoL)*(1+dLoL)
     """
+
     if L[1] > L[0]:
         dLoL = L[1]/L[0] - 1
     else:
@@ -747,6 +850,7 @@ def divergence(T=None, slits=None, distance=None,
     .. Note:: default sample width is large but not infinite so that at T=0,
        sin(0)*sample_width returns 0 rather than NaN.
     """
+
     # TODO: check that the formula is correct for T=0 => dT = s1 / 2 d1
     # TODO: add sample_offset and compute full footprint
     d1,d2 = distance
@@ -822,7 +926,6 @@ def opening_slits(T=None,slits_at_Tlo=None,Tlo=None,Thi=None,
 
     return s1,s2
 
-
 '''
 def resolution(Q=None,s=None,d=None,L=None,dLoL=None,Tlo=None,Thi=None,
                s_below=None, s_above=None,
@@ -876,7 +979,6 @@ def demo2():
     pylab.grid(True)
     pylab.semilogy(Q,R,',b')
     pylab.show()
-
 
 
 if __name__ == "__main__":
