@@ -352,11 +352,11 @@ class Monochromatic:
         and *slits_below*, and *slits_above* are used to define the
         angular divergence.
 
-        :Parameters:
+        **Parameters:**
             *filename:* boolean
                 Name of file which holds data.
 
-        :Returns:
+        **Returns:**
             *Associated probe*
                 This probe will contain Q, angle, wavelength, measured
                 reflectivity and the associated uncertainties.
@@ -388,13 +388,13 @@ class Monochromatic:
         *slits_below*, and *slits_above* are used to define the
         angular divergence.
 
-        :Parameters:
+        **Parameters:**
             *T:* angle | A
                 Angle for measurement.
             *Q:* float
                 Value for the measurement.
 
-        :Returns:
+        **Returns:**
             *Associated probe*
                 Returns a probe with Q, angle, wavelength and the associated
                 uncertainties, but not any data.
@@ -421,14 +421,14 @@ class Monochromatic:
         *slits_at_Tlo*, *Tlo*, *Thi*, *slits_below*, and *slits_above*
         to define the angular divergence.
 
-        :Parameters:
+        **Parameters:**
             *T:* angle | A
                 Angle for measurement.
             *Tguide:* float
                 Guide field angle for the measurement.
             *shared_beam:* boolean
 
-        :Returns:
+        **Returns:**
             *Associated probe*
                 Returns a probe with Q, angle, wavelength and the associated
                 uncertainties, but not any data.
@@ -484,6 +484,16 @@ class Monochromatic:
         *d_s1*, *d_s2*  slit distances
         *sample_width*  size of sample
         *sample_broadening* resolution changes from sample warping
+        
+        **Parameters:**
+            *T:* angle | A
+                Angle for measurement.
+            *slits:* float
+                slits openings.
+                    
+        **Returns:**
+            object of FWHM divergence
+            
         """
 
         d_s1 = kw.get('d_s1',self.d_s1)
@@ -504,11 +514,11 @@ class Monochromatic:
 
         Resolution is an object with fields T, dT, L, dL, Q, dQ
 
-        :Parameters:
+        **Parameters:**
             *Q:* float
                 Value for the measurement.
 
-        :Returns:
+        **Returns:**
             *object*
                 Return the resolution for a given Q. Resolution is an object
                 with fields T, dT, L, dL, Q, dQ
@@ -597,11 +607,11 @@ class Polychromatic:
         In particular, slit settings *slits* and *T* define the
         angular divergence.
 
-        :Parameters:
+        **Parameters:**
             *filename:* boolean
                 Name of file which holds data.
 
-        :Returns:
+        **Returns:**
             *Associated probe*
                 This probe will contain Q, angle, wavelength, measured
                 reflectivity and the associated uncertainties.
@@ -627,9 +637,9 @@ class Polychromatic:
         the angular divergence and *dLoL* defines the wavelength
         resolution.
 
-        :Parameters:
+        **Parameters:**
 
-        :Returns:
+        **Returns:**
             *Associated probe*
                 Returns a probe with Q, angle, wavelength and the associated
                 uncertainties, but not any data.
@@ -654,14 +664,12 @@ class Polychromatic:
         slit settings *slits* and *T* to define the angular divergence
         and *dLoL* to define the wavelength resolution.
 
-        :Parameters:
-            *T:* angle | A
-                Angle for measurement.
+        **Parameters:**
             *Tguide:* float
                 Guide field angle for the measurement.
             *shared_beam:* boolean
 
-        :Returns:
+        **Returns:**
             *Associated probe*
                 Returns a probe with Q, angle, wavelength and the associated
                 uncertainties, but not any data.
@@ -692,15 +700,17 @@ class Polychromatic:
 
         Resolution is an object with fields T, dT, L, dL, Q, dQ
 
-        :Parameters:
+        **Parameters:**
             *L:* float
                 Value for the measurement.
+                
             *dL:* float
 
-        :Returns:
+        **Returns:**
             *object*
                 Return the resolution for a given Q. Resolution is an object
                 with fields T, dT, L, dL, Q, dQ
+                
         """
 
         radiation = kw.get('radiation',self.radiation)

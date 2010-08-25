@@ -54,7 +54,6 @@ Scripts can use :func:`reconstruct` and :func:`invert`.  For example:
 
 .. doctest::
 
-    >>> from reflectometry import
     >>> import invert
     >>> substrate = 2.07
     >>> f1, f2 = 0, -0.53
@@ -530,12 +529,12 @@ class Inversion():
         """
         Save z,rho,drho to three column text file named *outfile*.
 
-        :Parameters:
+        **Parameters:**
             *outfile:* file
                 If *outfile* is not provided, the name of the input file
                 will be used, but with the extension replaced by '.amp'.
 
-        :Returns:
+        **Returns:**
             *None*
         """
 
@@ -552,7 +551,7 @@ class Inversion():
         """
         Return the complex reflectivity amplitude.
 
-        :Parameters:
+        **Parameters:**
             *Q:* boolean
                 Use *Q* if provided, otherwise use the evenly spaced Q values
                 used for the inversion.
@@ -563,7 +562,7 @@ class Inversion():
                 the substrate to match against the reflectivity amplitude
                 supplied as input.
 
-        :Returns:
+        **Returns:**
             *None*
         """
 
@@ -587,7 +586,7 @@ class Inversion():
         """
         Plot the data and the inversion.
 
-        :Parameters:
+        **Parameters:**
             *details:* boolean
                 If *details* is True, then plot the individual stages used to
                 calculate the average, otherwise just plot the envelope.
@@ -595,7 +594,7 @@ class Inversion():
                  If *phase* is a phase reconstruction object, plot the original
                  measurements.
 
-        :Returns:
+        **Returns:**
             *None*
         """
 
@@ -616,7 +615,7 @@ class Inversion():
         """
         Plot the real R vs. the real R computed from inversion.
 
-        :Parameters:
+        **Parameters**
             *details:* boolean
                 If *details* is True, then plot the individual stages used to
                 calculate the average, otherwise just plot the envelope.
@@ -624,7 +623,7 @@ class Inversion():
                 If *lowQ_inset* > 0, then plot a graph of Q, real R values
                 below lowQ_inset, without scaling by Q**2.
 
-        :Returns:
+        **Returns:**
             *None*
         """
 
@@ -672,12 +671,12 @@ class Inversion():
         """
         Plot the computed profiles.
 
-        :Parameters:
+        **Parameters:**
             *details:* boolean
                 If *details* is True, then plot the individual stages used to
                 calculate the average, otherwise just plot the envelope.
 
-        :Returns:
+        **Returns:**
             *None*
         """
 
@@ -711,12 +710,12 @@ class Inversion():
         """
         Plot the residuals (inversion minus input).
 
-        :Parameters:
+        **Parameters:**
             *details:* boolean
                 If *details* is True, then plot the individual stages used to
                 calculate the average, otherwise just plot the envelope.
 
-        :Returns:
+        **Returns:**
             *None*
         """
 
@@ -912,7 +911,7 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     """
     Reflectometry as a function of Qz and wavelength.
 
-    :Parameters:
+    **Parameters:**
         *Qz:* float|A
             Scattering vector 4*pi*sin(theta)/wavelength. This is an array.
         *depth:* float|A
@@ -1005,12 +1004,12 @@ def _refl_calc(kz, wavelength, depth, rho, mu, sigma):
 def reconstruct(file1, file2, u, v1, v2, stages=100):
     """
     Two reflectivity measurements of a film with different surrounding media
-    |r_1|^2 and |r_2|^2 can be combined to compute the expected complex
-    reflection amplitude r_reversed of the free standing film measured from the
-    opposite side. The calculation can be done by varying the fronting media
-    or by varying the backing media. For this code we only support measurements
-    through a uniform substrate *u*, on two varying surrounding materials
-    *v1*, *v2*.
+    :math:`|r_1|^2` and :math:`|r_2|^2` can be combined to compute the expected 
+    complex reflection amplitude r_reversed of the free standing film measured 
+    from the opposite side. The calculation can be done by varying the fronting 
+    media or by varying the backing media. For this code we only support 
+    measurements through a uniform substrate *u*, on two varying surrounding 
+    materials *v1*, *v2*.
 
     We have to be careful about terminology. We will use the term substrate to
     mean the base on which we deposit our film of interest, and surface to be
@@ -1039,6 +1038,7 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
        the same absorption as the reflected beam. Refraction on entering and
        leaving the substrated is accounted for by a small adjustment to Q
        inside the reflectivity calculation.
+       
 
     When measuring reflectivity through the substrate, the beam enters the
     substrate from the side, refracts a little because of the steep angle of
@@ -1126,13 +1126,15 @@ class SurroundVariation():
         """
         Run a quasi-Newton optimizer on a discretized profile.
 
-        :Parameters:
+        **Parameters:**
             *z:* boolean
-                The profile steps *z* are not changed.
+                Represents the depth into the profile. z equals thickness at
+                the substrate.
+                
             *rho_initial:* boolean
                 The initial profile *rho_initial* should come from direct
                 inversion.
-        :Returns:
+        **Returns:**
             *rho:* (boolean, boolean)|
                 Returns the final profile rho which minimizes chisq.
         """
@@ -1153,16 +1155,18 @@ class SurroundVariation():
         Return the reflectivities R1 and R2 for the film *z*,*rho* in the
         context of the substrate and surround variation.
 
-        :Parameters:
+        **Parameters:**
             *z:* boolean
-                The profile steps *z* are not changed.
+                Represents the depth into the profile. z equals thickness at
+                the substrate.
+                
             *rho:* boolean
                 If the resolution is known, then return the convolved theory
                 function.
             *resid:* boolean
                 If *resid* is True, then return the weighted residuals vector.
 
-        :Returns:
+        **Returns:**
             *R1, R2:* (boolean, boolean)|
                 Return the reflectivities R1 and R2 for the film *z*,*rho*.
         """
@@ -1212,14 +1216,14 @@ class SurroundVariation():
         """
         Save Q,RealR,ImagR to three column text file named *outfile*.
 
-        :Parameters:
+        **Parameters:**
             *outfile:* file
                 Include dRealR,dImagR if they exist and if *uncertainty*
                 is True, making a five column file.
             *uncertainity:* boolean
                 Include dRealR and dImagR if True.
 
-        :Returns:
+        **Returns:**
             *None*
         """
 
