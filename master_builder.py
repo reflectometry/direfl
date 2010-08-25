@@ -95,12 +95,11 @@ INS_DIR = os.path.join(TOP_DIR, LOCAL_INSTALL)
 
 def build_it():
     # Check the system for all required dependent packages.
-    if len(sys.argv) > 1 and not '-s' in sys.argv[1:]:
+    if not (len(sys.argv) > 1 and '-s' in sys.argv[1:]):
         check_dependencies()
 
     # Checkout code from repository.
-    if len(sys.argv) > 1 and not '-c' in sys.argv[1:]:
-        checkout_code()
+    checkout_code()
 
     # Get the version string for the application so use later.
     # This has to be done after we have checked out the repository.
@@ -110,35 +109,34 @@ def build_it():
         from version import version as version
 
     # Create an archive of the source code.
-    if len(sys.argv) > 1 and not '-a' in sys.argv[1:]:
+    if not (len(sys.argv) > 1 and not '-a' in sys.argv[1:]):
         create_archive(version)
 
     # Install the application in a local directory tree.
-    if len(sys.argv) > 1 and not '-i' in sys.argv[1:]:
-        install_package()
+    install_package()
 
     # Create a Windows executable file using py2exe.
-    if len(sys.argv) > 1 and not '-e' in sys.argv[1:]:
+    if not (len(sys.argv) > 1 and not '-w' in sys.argv[1:]):
         if os.name == 'nt':
             create_windows_exe()
 
-    # create a Windows installer/uninstaller exe using the Inno Setup Compiler.
-    if len(sys.argv) > 1 and not '-w' in sys.argv[1:]:
+    # Create a Windows installer/uninstaller exe using the Inno Setup Compiler.
+    if not (len(sys.argv) > 1 and not '-w' in sys.argv[1:]):
         if os.name == 'nt':
             create_windows_installer(version)
 
     # Build HTML and PDF documentaton using sphinx.
-    if len(sys.argv) > 1 and not '-b' in sys.argv[1:]:
+    if not (len(sys.argv) > 1 and not '-b' in sys.argv[1:]):
         build_documentation()
 
     # Run unittests using nose.
-    if len(sys.argv) > 1 and not '-u' in sys.argv[1:] \
-                         and not '-t' in sys.argv[1:]:
+    if not (len(sys.argv) > 1 and not '-t' in sys.argv[1:] and
+                                  not '-u' in sys.argv[1:]):
         run_unittests()
 
     # Run doctests using nose.
-    if len(sys.argv) > 1 and not '-d' in sys.argv[1:] \
-                         and not '-t' in sys.argv[1:]:
+    if not (len(sys.argv) > 1 and not '-t' in sys.argv[1:] and
+                                  not '-d' in sys.argv[1:]):
         run_doctests()
 
 
@@ -401,15 +399,13 @@ if __name__ == "__main__":
             print "Options:"
             print "  -a  Skip build of source archive"
             print "  -b  Skip build of books (documentation)"
-            print "  -c  Skip checkout from repository"
             print "  -d  Skip doctests"
             print "  -e  Skip build of Windows executable"
             print "  -h  Show help text"
-            print "  -i  Skip install of package in local directory tree"
             print "  -s  Skip software dependency checks"
             print "  -t  Skip all tests (unittests and doctests)"
             print "  -u  Skip unittests"
-            print "  -w  Skip build of Windows installar/uninstaller"
+            print "  -w  Skip build of Windows executable and installer"
             sys.exit()
 
     print "\nBuilding the %s application from the %s repository ...\n" \
