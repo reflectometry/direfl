@@ -25,6 +25,24 @@
 """
 This script builds the DiRefl application and documentation from source and
 runs unit tests and doc tests.  It supports building on Windows and Linux.
+
+Usually, you downloaded this script into a top-level directory (the root)
+and run it from there which downloads the files from the application
+repository into a subdirectory (the package directory).  For example if
+test1 is the root directory, we might have:
+  E:/work/test1/this-script.py
+               /inversion/this-script.py
+               /inversion/...
+
+Alternatively, you can download the whole application repository and run
+this script from the application's package directory where it is stored.
+The script determines whether it is executing from the root or the package
+directory and makes the necessary adjustments.  In this case, the root
+directory is defined as one-level-up and the repository is not downloaded
+(as it is assumed to be fully present).  In the example below test1 is the
+implicit root (i.e. top-level) directory.
+  E:/work/test1/inversion/this-script.py
+               /inversion/...
 """
 
 import os
@@ -62,24 +80,6 @@ MIN_GCC = "3.4.4"
 # Create a line separator string for printing
 SEPARATOR = "\n" + "/"*79
 
-# Usually, you downloaded this script into a top-level directory (the root) and
-# run it from there which downloads the files from the application repository
-# into a subdirectory (the package directory).  For example if test1 is the
-# root directory, we might have:
-#   E:/work/test1/this-script.py
-#                /inversion/this-script.py
-#                /inversion/...
-#
-# Alternatively, you can download the whole application repository and run this
-# script from the application's package directory where it is stored.  The
-# script determines whether it is executing from the root or the package
-# directory and makes the necessary adjustments.  In this case, the root
-# directory is defined as one-level-up and the repository is not downloaded
-# (as it is assumed to be fully present).  In the example below test1 is the
-# implicit root (i.e. top-level) directory.
-#   E:/work/test1/inversion/this-script.py
-#                /inversion/...
-
 # Determine the full directory paths of the top-level, source, and installation
 # directories based on the directory where the script is running.
 RUN_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -95,10 +95,12 @@ INS_DIR = os.path.join(TOP_DIR, LOCAL_INSTALL)
 
 def build_it():
     # Check the system for all required dependent packages.
-    check_dependencies()
+    if len(sys.argv) > 1 and not '-s' in sys.argv[1:]:
+        check_dependencies()
 
     # Checkout code from repository.
-    checkout_code()
+    if len(sys.argv) > 1 and not '-c' in sys.argv[1:]:
+        checkout_code()
 
     # Get the version string for the application so use later.
     # This has to be done after we have checked out the repository.
@@ -108,27 +110,36 @@ def build_it():
         from version import version as version
 
     # Create an archive of the source code.
-    create_archive(version)
+    if len(sys.argv) > 1 and not '-a' in sys.argv[1:]:
+        create_archive(version)
 
     # Install the application in a local directory tree.
-    install_app()
+    if len(sys.argv) > 1 and not '-i' in sys.argv[1:]:
+        install_package()
 
     # Create a Windows executable file using py2exe.
-    if os.name == 'nt':
-        create_windows_exe()
+    if len(sys.argv) > 1 and not '-e' in sys.argv[1:]:
+        if os.name == 'nt':
+            create_windows_exe()
 
     # create a Windows installer/uninstaller exe using the Inno Setup Compiler.
-    if os.name == 'nt':
-        create_windows_installer(version)
+    if len(sys.argv) > 1 and not '-w' in sys.argv[1:]:
+        if os.name == 'nt':
+            create_windows_installer(version)
 
     # Build HTML and PDF documentaton using sphinx.
-    build_documentation()
+    if len(sys.argv) > 1 and not '-b' in sys.argv[1:]:
+        build_documentation()
 
     # Run unittests using nose.
-    run_unittests()
+    if len(sys.argv) > 1 and not '-u' in sys.argv[1:] \
+                         and not '-t' in sys.argv[1:]:
+        run_unittests()
 
-    # Run doctests.
-    run_doc_tests()
+    # Run doctests using nose.
+    if len(sys.argv) > 1 and not '-d' in sys.argv[1:] \
+                         and not '-t' in sys.argv[1:]:
+        run_doctests()
 
 
 def checkout_code():
@@ -165,7 +176,7 @@ def create_archive(version=None):
                     os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source-manifest.txt"))
 
 
-def install_app():
+def install_package():
     # Install the application package in a private directory tree.
     # If the INS_DIR directory already exists, warn the user.
     # Intermediate work files are stored in the <SRC_DIR>/build directory tree.
@@ -383,29 +394,26 @@ def exec_cmd(command):
 
 
 if __name__ == "__main__":
-    print "\nBuilding the %s application from the %s repository ..." \
-        % (APP_NAME, PKG_NAME)
-    if len(sys.argv)==1:
-        # If there is no argument, build the installer
-        sys.argv.append("-i")
-
     if len(sys.argv)>1:
-        # Help
-        if sys.argv[1]=="-h":
-            print "Usage:"
-            print "    python build_%s.py [command]\n" % APP_NAME
-            print "[command] can be any of the following:"
-            print "    -h: Lists the command line options"
-            print "    -t: Builds application from the trunk"
+        # Display help if requested.
+        if len(sys.argv) > 1 and '-h' in sys.argv[1:]:
+            print "\nUsage: python master_builder.py [options]\n"
+            print "Options:"
+            print "  -a  Skip build of source archive"
+            print "  -b  Skip build of books (documentation)"
+            print "  -c  Skip checkout from repository"
+            print "  -d  Skip doctests"
+            print "  -e  Skip build of Windows executable"
+            print "  -h  Show help text"
+            print "  -i  Skip install of package in local directory tree"
+            print "  -s  Skip software dependency checks"
+            print "  -t  Skip all tests (unittests and doctests)"
+            print "  -u  Skip unittests"
+            print "  -w  Skip build of Windows installar/uninstaller"
+            sys.exit()
 
-        else:
-            # Check the command line argument
-            if sys.argv[1]=="-t":
-                print("Building from reflectometry/trunk")
-            elif sys.argv[1]=="-i":
-                print("Building from reflectometry/trunk")
-
-    print ""
+    print "\nBuilding the %s application from the %s repository ...\n" \
+        % (APP_NAME, PKG_NAME)
     print "Current working directory  =", RUN_DIR
     print "Top-level (root) directory =", TOP_DIR
     print "Package (source) directory =", SRC_DIR
