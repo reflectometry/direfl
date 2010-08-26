@@ -111,34 +111,34 @@ def build_it():
         from version import version as version
 
     # Create an archive of the source code.
-    if not (len(sys.argv) > 1 and not '-a' in sys.argv[1:]):
+    if not (len(sys.argv) > 1 and '-a' in sys.argv[1:]):
         create_archive(version)
 
     # Install the application in a local directory tree.
     install_package()
 
     # Create a Windows executable file using py2exe.
-    if not (len(sys.argv) > 1 and not '-w' in sys.argv[1:]):
+    if not (len(sys.argv) > 1 and '-w' in sys.argv[1:]):
         if os.name == 'nt':
             create_windows_exe()
 
     # Create a Windows installer/uninstaller exe using the Inno Setup Compiler.
-    if not (len(sys.argv) > 1 and not '-w' in sys.argv[1:]):
+    if not (len(sys.argv) > 1 and '-w' in sys.argv[1:]):
         if os.name == 'nt':
             create_windows_installer(version)
 
     # Build HTML and PDF documentaton using sphinx.
-    if not (len(sys.argv) > 1 and not '-b' in sys.argv[1:]):
+    if not (len(sys.argv) > 1 and '-b' in sys.argv[1:]):
         build_documentation()
 
     # Run unittests using nose.
-    if not (len(sys.argv) > 1 and not '-t' in sys.argv[1:] and
-                                  not '-u' in sys.argv[1:]):
+    if not (len(sys.argv) > 1 and ('-t' in sys.argv[1:] or
+                                   '-u' in sys.argv[1:])):
         run_unittests()
 
     # Run doctests using nose.
-    if not (len(sys.argv) > 1 and not '-t' in sys.argv[1:] and
-                                  not '-d' in sys.argv[1:]):
+    if not (len(sys.argv) > 1 and ('-t' in sys.argv[1:] or
+                                   '-d' in sys.argv[1:])):
         run_doctests()
 
 
@@ -418,10 +418,9 @@ if __name__ == "__main__":
             print "  -a  Skip build of source archive"
             print "  -b  Skip build of books (documentation)"
             print "  -d  Skip doctests"
-            print "  -e  Skip build of Windows executable"
-            print "  -h  Show help text"
+            print "  -h  Show this help text"
             print "  -s  Skip software dependency checks"
-            print "  -t  Skip all tests (unittests and doctests)"
+            print "  -t  Skip all tests (unittests and doctests); same as -u -d"
             print "  -u  Skip unittests"
             print "  -w  Skip build of Windows executable and installer"
             sys.exit()
