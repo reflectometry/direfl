@@ -53,7 +53,7 @@ import subprocess
 # Windows commands to run utilities
 SVN    = "svn"
 PYTHON = "python"
-INNO   = r'"C:\Program Files\Inno Setup 5\ISCC"'  # command line Inno compiler
+INNO   = r"C:\Program Files\Inno Setup 5\ISCC.exe"  # command line operation
 
 # URL of the Subversion repository where the source code lives
 SVN_REPO_URL = "svn://svn@danse.us/reflectometry/trunk/reflectometry/inversion"
@@ -76,6 +76,8 @@ MIN_DOCUTILS = "0.5"
 MIN_PYGMENTS = "1.0"
 MIN_NOSE = "0.11.3"
 MIN_GCC = "3.4.4"
+MIN_PY2EXE = "0.6.9"
+MIN_INNO = "5.3.10"
 
 # Create a line separator string for printing
 SEPARATOR = "\n" + "/"*79
@@ -361,12 +363,28 @@ def check_dependencies():
     finally:
         req_pkg["gcc"] = (gcc_ver, MIN_GCC)
 
+    if os.name == 'nt':
+        try:
+            from py2exe import __version__ as py2exe_ver
+        except:
+            py2exe_ver = "0"
+        finally:
+            req_pkg["py2exe"] = (py2exe_ver, MIN_PY2EXE)
+
+        if os.path.isfile(INNO):
+            req_pkg["Inno Setup Compiler"] = ("?", MIN_INNO)
+        else:
+            req_pkg["Inno Setup Compiler"] = ("0", MIN_INNO)
+
+
     error = False
     for key, values in req_pkg.items():
         if req_pkg[key][0] == "0":
             print "====> %s not found; version %s or later is required - ERROR" \
                 %(key, req_pkg[key][1])
             error = True
+        elif req_pkg[key][0] == "?":
+            print "Found %s" %(key)  # version is unknown
         elif PV(req_pkg[key][0]) >= PV(req_pkg[key][1]):
             print "Found %s %s" %(key, req_pkg[key][0])
         else:
