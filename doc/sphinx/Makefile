@@ -24,6 +24,7 @@ help:
 	@echo "  qthelp    to make HTML files and a qthelp project"
 	@echo "  latex     to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
 	@echo "  pdf       to make PDF documentation, implicitly performs latex command"
+	@echo "  pdfrst    to make PDF documentation using rst2pdf"
 	@echo "  changes   to make an overview of all changed/added/deprecated items"
 	@echo "  linkcheck to check all external links for integrity"
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
@@ -76,6 +77,13 @@ latex:
 
 pdf: latex
 	$(MAKE) -C _build/latex all-pdf
+	@echo
+	@echo "Build finished; the PDF files are in _build/latex."
+
+pdfrst:
+	$(SPHINXBUILD) -b pdf $(ALLSPHINXOPTS) _build/pdf
+	@echo
+	@echo "Build finished; the PDF files are in _build/pdf."
 
 changes:
 	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) _build/changes

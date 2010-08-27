@@ -22,6 +22,7 @@ if "%1" == "help" (
 	echo.  qthelp    to make HTML files and a qthelp project
 	echo.  latex     to make LaTeX files, you can set PAPER=a4 or PAPER=letter
 	echo.  pdf       to make PDF documentation, implicitly performs latex command
+	echo.  pdfrst    to make PDF documentation using rst2pdf
 	echo.  changes   to make an overview over all changed/added/deprecated items
 	echo.  linkcheck to check all external links for integrity
 	echo.  doctest   to run all doctests embedded in the documentation if enabled
@@ -92,7 +93,15 @@ if "%1" == "latex" (
 if "%1" == "pdf" (
 	%SPHINXBUILD% -b latex %ALLSPHINXOPTS% _build/latex
 	make _build/latex all-pdf
-	echo.Build finished; the PDF file is in _build/latex.
+	echo.
+	echo.Build finished; the PDF files are in _build/latex.
+	goto end
+)
+
+if "%1" == "pdfrst" (
+	%SPHINXBUILD% -b pdf %ALLSPHINXOPTS% _build/pdf
+	echo.
+	echo.Build finished; the PDF files are in _build/pdf.
 	goto end
 )
 
