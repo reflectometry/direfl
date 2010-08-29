@@ -59,23 +59,8 @@ import time
 
 import wx
 
-# Add a path to sys.path that is the parent directory of the application
-# directory from which the app (i.e. this file) is being run.  This addition
-# allows the app to run even when the application package is not installed in
-# 'site-packages' AND the current  working directory is not the directory where
-# the application resides.  When the application is installed (e.g. on Windows
-# in 'c:\Pythonxx\Lib\site-packages'), this action adds a redundant list entry.
-#
-# The parent directory of the application must be in sys.path so that a module
-# in 'appdir.a' can import from a sibling directory 'appdir.b' using a statement
-# of the form 'from appdir.b import foo' when 'appdir' is otherwise not known.
-# Thus, sys.path is augmented now before importing modules that may do sibling
-# imports.  Note that the relative import syntax 'from ..b import foo' does not
-# work as it traverses outside of the imported module chain through 'appdir'.
-# Note also that this technique works when running the py2exe image of the app.
-
 from common.utilities import get_appdir, log_time
-sys.path.append(os.path.dirname(get_appdir()))
+
 
 if len(sys.argv) > 1 and '-syspath' in sys.argv[1:]:
     print "*** App root dir is", get_appdir(),

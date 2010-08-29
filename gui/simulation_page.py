@@ -59,9 +59,9 @@ import pylab
 import numpy
 from numpy import linspace, inf
 
-from inversion.common.utilities import get_appdir
-from inversion.api.resolution import bins, binwidths
-from inversion.api.simulate import Simulation
+from common.utilities import get_appdir
+from api.resolution import bins, binwidths
+from api.simulate import Simulation
 
 from .input_list import InputListPanel
 from .instrument_params import InstrumentParameters

@@ -1,14 +1,13 @@
 import os
 import sys
 
-# Add a path one level above 'inversion...' to sys.path so that this app can be
-# run even if the inversion package is not installed and the current working
-# directory is in a diffferent location.  Note that relative imports cannot be
-# done because this module is run as a python script.
-sys.path.append(os.path.dirname(os.path.dirname(
-                os.path.dirname(os.path.abspath(sys.argv[0])))))
+# Add a path to sys.path of the parent of this directory (i.e., 'inversion') so
+# that this script can be run even if the inversion package is not installed.
+# Note that relative imports of modules in a sibling directory cannot be done
+# because this module is run in script mode and not in the context of a package.
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0]))))
 
-from inversion.api.simulate import Simulation
+from api.simulate import Simulation
 from numpy import linspace
 
 def test():
