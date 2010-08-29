@@ -91,9 +91,9 @@ class AuxiliaryPage(wx.Panel):
         sizer.Fit(self)
 
         # Execute tests associated with the test tabs.
-        if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
-            if (self.fignum == 10 and '-test1' in sys.argv[1:]): test1()
-            if (self.fignum == 11 and '-test2' in sys.argv[1:]): test2()
+        if len(sys.argv) > 1 and '--xtabs' in sys.argv[1:]:
+            if (self.fignum == 10 and '--test1' in sys.argv[1:]): test1()
+            if (self.fignum == 11 and '--test2' in sys.argv[1:]): test2()
         if self.fignum == 12: test3()
         if self.fignum == 13: test4(self.figure)
 

@@ -456,7 +456,7 @@ class InversionPage(wx.Panel):
 
         # Get the validated inversion parameters.
         params = self.inver_param.GetResults()
-        if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+        if len(sys.argv) > 1 and '--tracep' in sys.argv[1:]:
             print "*** Inversion parameters:"; print params
 
         #--------------------------------------
@@ -969,7 +969,7 @@ def perform_inversion(files, params):
     data sets to generate a scattering length depth profile of the sample.
     """
 
-    if len(sys.argv) > 1 and '-debug' in sys.argv[1:]:
+    if len(sys.argv) > 1 and '--debug' in sys.argv[1:]:
         print "*** Inputs to perform_inversion()"
         print "*** files =", files
         print "*** params =", params

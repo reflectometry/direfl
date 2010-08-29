@@ -103,21 +103,21 @@ class AppFrame(wx.Frame):
         # - Arial tends to be narrower and taller than Tahoma.
         # - Verdana tends to be wider and shorter than Tahoma.
         if len(sys.argv) > 1:
-            if '-tahoma' in sys.argv[1:]: fontname = "Tahoma"
-            if '-arial' in sys.argv[1:]: fontname = "Arial"
-            if '-verdana' in sys.argv[1:]: fontname = "Verdana"
+            if '--tahoma' in sys.argv[1:]: fontname = "Tahoma"
+            if '--arial' in sys.argv[1:]: fontname = "Arial"
+            if '--verdana' in sys.argv[1:]: fontname = "Verdana"
 
         fontsize = choose_fontsize(fontname=fontname)
 
         # If requested, override the font point size to use.
         if len(sys.argv) > 1:
-            if '-12pt' in sys.argv[1:]: fontsize = 12
-            if '-11pt' in sys.argv[1:]: fontsize = 11
-            if '-10pt' in sys.argv[1:]: fontsize = 10
-            if '-9pt' in sys.argv[1:]: fontsize = 9
-            if '-8pt' in sys.argv[1:]: fontsize = 8
-            if '-7pt' in sys.argv[1:]: fontsize = 7
-            if '-6pt' in sys.argv[1:]: fontsize = 6
+            if '--12pt' in sys.argv[1:]: fontsize = 12
+            if '--11pt' in sys.argv[1:]: fontsize = 11
+            if '--10pt' in sys.argv[1:]: fontsize = 10
+            if '--9pt' in sys.argv[1:]: fontsize = 9
+            if '--8pt' in sys.argv[1:]: fontsize = 8
+            if '--7pt' in sys.argv[1:]: fontsize = 7
+            if '--6pt' in sys.argv[1:]: fontsize = 6
 
         # Set the default font for this and all child windows.  The font of the
         # frame's title bar is not affected (which is a good thing).  However,
@@ -129,7 +129,7 @@ class AppFrame(wx.Frame):
                              fontname))
 
         # If requested, display font and miscellaneous platform information.
-        if len(sys.argv) > 1 and '-platform' in sys.argv[1:]:
+        if len(sys.argv) > 1 and '--platform' in sys.argv[1:]:
             print "*** Platform =", wx.PlatformInfo
             print "*** Default font is %s  Chosen font is %s"\
                   %(default_fontname, self.GetFont().GetFaceName())

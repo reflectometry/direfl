@@ -218,7 +218,7 @@ class InstrumentParameters():
                               align=True)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
-            if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+            if len(sys.argv) > 1 and '--tracep' in sys.argv[1:]:
                 print "*** Instrument (resolution) parameters:"; print results
 
             # Skip results[0], the radiation value that is not editable
@@ -287,7 +287,7 @@ class InstrumentParameters():
                               align=True)
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
-            if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+            if len(sys.argv) > 1 and '--tracep' in sys.argv[1:]:
                 print "*** Instrument (resolution) parameters:"; print results
 
             # Skip results[0], the radiation value that is not editable

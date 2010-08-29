@@ -479,13 +479,13 @@ class SimulationPage(wx.Panel):
 
         # Get the validated inversion parameters.
         params = self.inver_param.GetResults()
-        if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+        if len(sys.argv) > 1 and '--tracep' in sys.argv[1:]:
             print "*** Simulation parameters:"; print params
 
         sample = layers[1:-1]
         params.append(layers[-1][0])  # add SLD of substrate to list
         params.append(layers[-1][2])  # add roughness of substrate to list
-        if len(sys.argv) > 1 and '-tracep' in sys.argv[1:]:
+        if len(sys.argv) > 1 and '--tracep' in sys.argv[1:]:
             print "*** Model parameters (all layers):"; print layers
             print "*** Sample layers excluding Surround:"; print sample
 
@@ -923,7 +923,7 @@ def perform_simulation(sample, params, Q=None, dQ=None):
     scattering length density profile.
     """
 
-    if len(sys.argv) > 1 and '-debug' in sys.argv[1:]:
+    if len(sys.argv) > 1 and '--debug' in sys.argv[1:]:
         print "*** Inputs to perform_simulation()"
         print "*** sample =", sample
         print "*** params =", params

@@ -33,22 +33,22 @@ The following is a list of command line parameters for development and
 debugging purposes.  None are documented and they may change at any time.
 
 Options for showing diagnostic info:
-    -platform       Display platform specific info, especially about fonts
-    -tracep         Display values from user input fields
-    -debug          Display info for debugging purposes (changes frequently)
-    -time           Display diagnostic timing information
-    -syspath        Display the contents of sys.path
+    --platform      Display platform specific info, especially about fonts
+    --tracep        Display values from user input fields
+    --debug         Display info for debugging purposes (changes frequently)
+    --time          Display diagnostic timing information
+    --syspath       Display the contents of sys.path
 
 Options for overriding the default font and point size attributes where
 parameters within each set are mutually exclusive (last one takes precedence):
-    -tahoma, -arial, -verdana
-    -6pt, -7pt, -8pt, -9pt, -10pt, -11pt, -12pt
+    --tahoma, --arial, --verdana
+    --6pt, --7pt, --8pt, --9pt, --10pt, --11pt, --12pt
 
 Options for controlling the development and testing environment:
-    -xtabs          Add extra notebook pages for test purposes
-        -test1      Execute test1() in a test page
-        -test2      Execute test2() in a test page
-    -inspect        Run the wxPython Widget Inspection Tool in a debug window
+    --xtabs         Add extra notebook pages for test purposes
+        --test1     Execute test1() in a test page
+        --test2     Execute test2() in a test page
+    --inspect       Run the wxPython Widget Inspection Tool in a debug window
 """
 
 #==============================================================================
@@ -62,7 +62,7 @@ import wx
 from common.utilities import get_appdir, log_time
 
 
-if len(sys.argv) > 1 and '-syspath' in sys.argv[1:]:
+if len(sys.argv) > 1 and '--syspath' in sys.argv[1:]:
     print "*** App root dir is", get_appdir(),
     print "*** __file__ is" , __file__
     print "*** Python path is:"
@@ -102,12 +102,12 @@ class DiReflApp(wx.App):
         frame = AppFrame(parent=None, title=APP_TITLE, pos=pos, size=size)
 
         # Display a splash screen on top of the frame.
-        if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+        if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
             log_time("Starting to display the splash screen")
         self.display_splash_screen(frame)
 
         # Create the graphical user interface for the application on the frame.
-        if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+        if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
             log_time("Starting to build the GUI on the frame")
         frame.init_GUI()
 
@@ -141,7 +141,7 @@ class DiReflApp(wx.App):
         # application will be placed towards the left hand side of the screen.
 
         j, k, x, y = wx.Display().GetClientArea() # size excludes task bar
-        if len(sys.argv) > 1 and '-platform' in sys.argv[1:]:
+        if len(sys.argv) > 1 and '--platform' in sys.argv[1:]:
             w, h = wx.DisplaySize()  # size includes task bar area
             print "*** Reported screen size including taskbar is %d x %d"%(w, h)
             print "*** Reported screen size excluding taskbar is %d x %d"%(x, y)
@@ -185,7 +185,7 @@ class DiReflApp(wx.App):
         # systems.  This is a workaround for Linux and possibly MacOS that
         # appear to ignore the splash screen timeout option.
         if '__WXMSW__' not in wx.PlatformInfo:
-            if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+            if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
                 log_time("Starting sleep of 2 secs")
             time.sleep(2)
 
@@ -198,7 +198,7 @@ class DiReflApp(wx.App):
 #==============================================================================
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+    if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
         log_time("Starting DiRefl")
 
     # Instantiate the application class and give control to wxPython.
@@ -206,11 +206,11 @@ if __name__ == '__main__':
 
     # For wx debugging, load the wxPython Widget Inspection Tool if requested.
     # It will cause a separate interactive debugger window to be displayed.
-    if len(sys.argv) > 1 and '-inspect' in sys.argv[1:]:
+    if len(sys.argv) > 1 and '--inspect' in sys.argv[1:]:
         import wx.lib.inspection
         wx.lib.inspection.InspectionTool().Show()
 
-    if len(sys.argv) > 1 and '-time' in sys.argv[1:]:
+    if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
         log_time("Done initializing - entering the event loop")
 
     app.MainLoop()
