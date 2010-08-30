@@ -37,17 +37,12 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
              ]
 
 # ====== start =================================================================
-# Add rst2pdf.pdfbuilder to list.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.doctest',
-              'sphinx.ext.coverage',
-              'sphinx.ext.pngmath',
-              'matplotlib.sphinxext.mathmpl',
-              'matplotlib.sphinxext.only_directives',
-              'matplotlib.sphinxext.plot_directive',
-              #'inheritance_diagram',
-              'rst2pdf.pdfbuilder',
-             ]
+# Add rst2pdf.pdfbuilder to list if it is installed.
+try:
+    import rst2pdf.pdfbuilder
+    extensions.append('rst2pdf.pdfbuilder')
+except:
+    pass
 # ====== end ===================================================================
 
 # Add any paths that contain templates here, relative to this directory.
