@@ -59,9 +59,12 @@ import pylab
 import numpy
 from numpy import linspace, inf
 
-from common.utilities import get_appdir
-from api.resolution import bins, binwidths
+# For reasons unknown, py2exe does not include reflmodule.pyd in the executable
+# unless the following line is changed to import explicitly from inversion.
+#from api.resolution import bins, binwidths
+from inversion.api.resolution import bins, binwidths
 from api.simulate import Simulation
+from common.utilities import get_appdir
 
 from .input_list import InputListPanel
 from .instrument_params import InstrumentParameters
