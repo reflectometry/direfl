@@ -3,7 +3,6 @@
 ******************************************************************************
 Inversion
 ******************************************************************************
-Phase reconstruction and inversion for reflectometry data.
 
 :mod:`api.invert`
 ==============================================================================
@@ -13,4 +12,3 @@ Phase reconstruction and inversion for reflectometry data.
    :undoc-members:
    :inherited-members:
    :show-inheritance:
-
