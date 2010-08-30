@@ -1,8 +1,8 @@
 .. _users-guide-index:
 
-############
-User's Guide
-############
+##########################
+User's Guide to DiRefl
+##########################
 
 This section gives an overview and introduction to Direct Inversion.
 Read this to have an idea about what Direct Inversion can do for you (and how) 
@@ -18,4 +18,9 @@ and if you want to know in detail about Direct Inversion, refer to the
    :maxdepth: 2
 
    intro.rst
+   simple_eg.rst
+   tutorial.rst
+   
+   
+   
    

@@ -426,12 +426,14 @@ class Monochromatic:
                 Angle for measurement.
             *Tguide:* float
                 Guide field angle for the measurement.
+                
             *shared_beam:* boolean
 
         **Returns:**
             *Associated probe*
                 Returns a probe with Q, angle, wavelength and the associated
                 uncertainties, but not any data.
+        
         """
 
         from .probe import PolarizedNeutronProbe
@@ -667,6 +669,7 @@ class Polychromatic:
         **Parameters:**
             *Tguide:* float
                 Guide field angle for the measurement.
+                
             *shared_beam:* boolean
 
         **Returns:**
