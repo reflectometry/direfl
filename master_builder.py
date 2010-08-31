@@ -106,9 +106,9 @@ def build_it():
     # Get the version string for the application so use later.
     # This has to be done after we have checked out the repository.
     if RUN_DIR == TOP_DIR:
-        from inversion.version import version as version
+        from inversion.version import version
     else:
-        from version import version as version
+        from version import version
 
     # Create an archive of the source code.
     if not (len(sys.argv) > 1 and '-a' in sys.argv[1:]):

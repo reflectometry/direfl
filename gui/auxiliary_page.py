@@ -55,9 +55,14 @@ import numpy
 from numpy import linspace
 
 from common.utilities import get_appdir, log_time
-from api.invert import SurroundVariation, Inversion
-from api.simulate import Simulation
+# As a workaround, explicitly import from inversion, otherwise running the
+# py2exe executable may result in a 'cannot import name reflmodule' error.
+#from api.invert import SurroundVariation, Inversion
+#from api.simulate import Simulation
+from inversion.api.invert import SurroundVariation, Inversion
+from inversion.api.simulate import Simulation
 
+from common.utilities import get_appdir, log_time
 from .wx_utils import StatusBarInfo
 
 # Resource files.

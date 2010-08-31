@@ -55,7 +55,7 @@ if len(sys.argv) == 1:
 import matplotlib
 
 # Retrieve the application version string.
-from version import version as version
+from version import version
 
 # Create a manifest for use with Python 2.5 on Windows XP.  This manifest is
 # required to be included in a py2exe image (or accessible as a file in the

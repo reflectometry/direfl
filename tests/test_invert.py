@@ -1,15 +1,14 @@
 import os
 import sys
 
-# Normally the inversion package is installed and this test script can be
-# located anywhere.  However, if inversion is not installed and this script is
+# Normally the inversion package will be installed and this test script can be
+# run from anywhere.  However, if inversion is not installed and this script is
 # not located in a directory above the inversion source directory tree (i.e,
 # 'import inversion' fails), then see if we're running this script directly
 # from the source tree.  If this appears to be the case, then augment sys.path
 # to include the parent directory of the package so that the import can succeed.
 try:
     import inversion
-    print "*** import succeeded"
 except:
     this_dir_path = os.path.dirname(os.path.abspath(__file__))
     parent_dir_path = os.path.dirname(this_dir_path)

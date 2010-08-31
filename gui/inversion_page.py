@@ -59,7 +59,10 @@ import numpy
 from numpy import linspace, inf
 
 from common.utilities import get_appdir
-from api.invert import SurroundVariation, Inversion
+# As a workaround, explicitly import from inversion, otherwise running the
+# py2exe executable may result in a 'cannot import name reflmodule' error.
+#from api.invert import SurroundVariation, Inversion
+from inversion.api.invert import SurroundVariation, Inversion
 
 from .input_list import InputListPanel
 from .instrument_params import InstrumentParameters

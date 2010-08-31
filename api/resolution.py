@@ -262,7 +262,7 @@ import numpy
 from numpy import pi, inf, sqrt, log, degrees, radians, cos, sin, tan
 from numpy import arcsin as asin, ceil
 from numpy import ones_like, arange, isscalar, asarray
-from util import TL2Q, QL2T, dTdL2dQ, dQdT2dLoL, FWHM2sigma, sigma2FWHM
+from .util import TL2Q, QL2T, dTdL2dQ, dQdT2dLoL, FWHM2sigma, sigma2FWHM
 
 PROBE_KW = ('intensity', 'background', 'back_absorption',
             'theta_offset', 'back_reflectivity', 'data')
@@ -426,14 +426,14 @@ class Monochromatic:
                 Angle for measurement.
             *Tguide:* float
                 Guide field angle for the measurement.
-                
+
             *shared_beam:* boolean
 
         **Returns:**
             *Associated probe*
                 Returns a probe with Q, angle, wavelength and the associated
                 uncertainties, but not any data.
-        
+
         """
 
         from .probe import PolarizedNeutronProbe
@@ -486,16 +486,16 @@ class Monochromatic:
         *d_s1*, *d_s2*  slit distances
         *sample_width*  size of sample
         *sample_broadening* resolution changes from sample warping
-        
+
         **Parameters:**
             *T:* angle | A
                 Angle for measurement.
             *slits:* float
                 slits openings.
-                    
+
         **Returns:**
             object of FWHM divergence
-            
+
         """
 
         d_s1 = kw.get('d_s1',self.d_s1)
@@ -669,7 +669,7 @@ class Polychromatic:
         **Parameters:**
             *Tguide:* float
                 Guide field angle for the measurement.
-                
+
             *shared_beam:* boolean
 
         **Returns:**
@@ -706,14 +706,14 @@ class Polychromatic:
         **Parameters:**
             *L:* float
                 Value for the measurement.
-                
+
             *dL:* float
 
         **Returns:**
             *object*
                 Return the resolution for a given Q. Resolution is an object
                 with fields T, dT, L, dL, Q, dQ
-                
+
         """
 
         radiation = kw.get('radiation',self.radiation)

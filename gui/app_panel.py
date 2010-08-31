@@ -171,7 +171,7 @@ class AppPanel(wx.Panel):
         nb.AddPage(self.page1, "Inversion")
 
         # Create test page windows and add them to notebook if requested.
-        if len(sys.argv) > 1 and '-xtabs' in sys.argv[1:]:
+        if len(sys.argv) > 1 and '--xtabs' in sys.argv[1:]:
             self.page10 = AuxiliaryPage(nb, colour="FIREBRICK", fignum=10)
             self.page11 = AuxiliaryPage(nb, colour="BLUE", fignum=11)
             self.page12 = AuxiliaryPage(nb, colour="GREEN", fignum=12)

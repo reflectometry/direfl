@@ -22,5 +22,3 @@ measurements, which if all goes well, should agree prefectly.
 See :class:`invert.Inversion`, :func:`invert.reconstruct` and
 :class:`simulate.Simulation` for details.
 """
-from invert import invert, reconstruct, Inversion, SurroundVariation
-from simulate import Simulation
