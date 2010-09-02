@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2006-2010, University of Maryland
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy

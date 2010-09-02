@@ -66,15 +66,18 @@ APP_NAME = "direfl"
 LOCAL_INSTALL = "local-site-packages"
 
 # Required Python packages and utilities and their minimum versions
+MIN_PYTHON = "2.5"
+MAX_PYTHON = "3.0"
 MIN_MATPLOTLIB = "0.99.0"
 MIN_NUMPY = "1.2.1"
 MIN_SCIPY = "0.7.0"
-MIN_WXPYTHON = "2.8.11.0"
+MIN_WXPYTHON = "2.8.10.0"
 MIN_SETUPTOOLS = "0.6c9"
 MIN_SPHINX = "1.0"
 MIN_DOCUTILS = "0.5"
 MIN_PYGMENTS = "1.0"
-MIN_NOSE = "0.11.3"
+MIN_JINJA2 = "2.2"
+MIN_NOSE = "0.11"
 MIN_GCC = "3.4.4"
 MIN_PY2EXE = "0.6.9"
 MIN_INNO = "5.3.10"
@@ -185,16 +188,15 @@ def install_package():
     os.chdir(SRC_DIR)
 
     if os.path.isdir(INS_DIR):
-        print "WARNING!\n"
-        print "In order to build "+APP_NAME+" cleanly, the local build directory"
-        print INS_DIR+" needs to be deleted."
-        print "Do you want to delete this directory and continue (Y)"
-        print "            or continue with a dirty installation (N)"
+        print "WARNING: In order to build", APP_NAME, "cleanly, the local build"
+        print "directory", INS_DIR, "needs to be deleted."
+        print "Do you want to delete this directory and continue (D)"
+        print "            or leave contents intact and continue (C)"
         print "            or exit the build script (E)"
-        answer = raw_input("Please choose either (Y|N|E)? [E]: ")
-        if answer.upper() == "Y":
+        answer = raw_input("Please choose either (D|C|E)? [E]: ")
+        if answer.upper() == "D":
             shutil.rmtree(INS_DIR, ignore_errors=True)
-        elif answer.upper() == "N":
+        elif answer.upper() == "C":
             pass
         else:
             sys.exit()
@@ -270,9 +272,12 @@ def run_doctests():
     print "\nStep 8 - Running Nose doctests ...\n"
     os.chdir(INS_DIR)
 
-    exec_cmd("nosetests -v --with-doctest %s" % os.path.join(PKG_NAME, "api/invert.py"))
-    #exec_cmd("nosetests -v --with-doctest %s" % os.path.join(PKG_NAME, "api/resolution.py"))
-    #exec_cmd("nosetests -v --with-doctest %s" % os.path.join(PKG_NAME, "api/simulate.py"))
+    exec_cmd("nosetests -v --with-doctest %s"
+                 % os.path.join(PKG_NAME, "api/invert.py"))
+    #exec_cmd("nosetests -v --with-doctest %s"
+    #             % os.path.join(PKG_NAME, "api/resolution.py"))
+    #exec_cmd("nosetests -v --with-doctest %s"
+    #             % os.path.join(PKG_NAME, "api/simulate.py"))
 
 
 def check_dependencies():
@@ -280,15 +285,17 @@ def check_dependencies():
     Checks that the system has the necessary Python packages installed.
     """
 
+    import platform
     from pkg_resources import parse_version as PV
 
-    # Python appears to write directly to the console, not to stdout, so the
-    # following code does not work as expected:
-    # p = subprocess.Popen("%s -V" % PYTHON, stdout=subprocess.PIPE)
-    # print "Using ", p.stdout.read().strip()
-    print "Using ",
-    exec_cmd("%s -V" % PYTHON)  # displays python name and version string
+    python_ver = platform.python_version()
+    print "Using Python", python_ver
     print ""
+    if PV(python_ver) < PV(MIN_PYTHON) or PV(python_ver) >= PV(MAX_PYTHON):
+        print "ERROR - build requires Python >= %s, but < %s" %(MIN_PYTHON,
+                                                                MAX_PYTHON)
+        sys.exit()
+
 
     req_pkg = {}
 
@@ -321,42 +328,52 @@ def check_dependencies():
         req_pkg["wxpython"] = (wx_ver, MIN_WXPYTHON)
 
     try:
-        from setuptools import __version__ as sut_ver
+        from setuptools import __version__ as setup_ver
     except:
-        sut_ver = "0"
+        setup_ver = "0"
     finally:
-        req_pkg["setuptools"] = (sut_ver, MIN_SETUPTOOLS)
+        req_pkg["setuptools"] = (setup_ver, MIN_SETUPTOOLS)
 
     try:
-        from sphinx import __version__ as sph_ver
+        from sphinx import __version__ as sphinx_ver
     except:
-        sph_ver = "0"
+        sphinx_ver = "0"
     finally:
-        req_pkg["sphinx"] = (sph_ver, MIN_SPHINX)
+        req_pkg["sphinx"] = (sphinx_ver, MIN_SPHINX)
 
     try:
-        from docutils import __version__ as du_ver
+        from docutils import __version__ as docutils_ver
     except:
-        du_ver = "0"
+        docutils_ver = "0"
     finally:
-        req_pkg["docutils"] = (du_ver, MIN_DOCUTILS)
+        req_pkg["docutils"] = (docutils_ver, MIN_DOCUTILS)
 
     try:
-        from pygments import __version__ as pyg_ver
+        from pygments import __version__ as pygments_ver
     except:
-        pyg_ver = "0"
+        pygments_ver = "0"
     finally:
-        req_pkg["pygments"] = (pyg_ver, MIN_PYGMENTS)
+        req_pkg["pygments"] = (pygments_ver, MIN_PYGMENTS)
+
+    try:
+        from jinja2 import __version__ as jinja2_ver
+    except:
+        jinja2_ver = "0"
+    finally:
+        req_pkg["jinja2"] = (jinja2_ver, MIN_JINJA2)
 
     try:
         from nose import __version__ as nose_ver
     except:
         nose_ver = "0"
     finally:
-        req_pkg["nose"] = (pyg_ver, MIN_NOSE)
+        req_pkg["nose"] = (nose_ver, MIN_NOSE)
 
     try:
-        p = subprocess.Popen("gcc -dumpversion", stdout=subprocess.PIPE)
+        if os.name == 'nt': flag = False
+        else:               flag = True
+        p = subprocess.Popen("gcc -dumpversion", stdout=subprocess.PIPE,
+                             shell=flag)
         gcc_ver = p.stdout.read().strip()
     except:
         gcc_ver = "0"
