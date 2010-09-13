@@ -1,21 +1,30 @@
 #!/usr/bin/env python
 
-import os
-import sys
-
-# Normally the inversion package will be installed and this test script can be
-# run from anywhere.  However, if inversion is not installed and this script is
-# not located in a directory above the inversion source directory tree (i.e,
-# 'import inversion' fails), then see if we're running this script directly
-# from the source tree.  If this appears to be the case, then augment sys.path
-# to include the parent directory of the package so that the import can succeed.
+# Normally the inversion package will be installed and you can run this test
+# script from anywhere.  However, if inversion is not installed and this script
+# is not located in a directory above the inversion source directory tree
+# (i.e, 'import inversion' fails), then see if we are running this script from
+# within the package.  If this appears to be the case, then augment sys.path to
+# include the parent directory of the package so that the import can succeed.
 try:
     import inversion
 except:
+    import os
+    import sys
+
     this_dir_path = os.path.dirname(os.path.abspath(__file__))
     parent_dir_path = os.path.dirname(this_dir_path)
-    if os.path.basename(parent_dir_path) == 'inversion':
+    grandparent_dir_path = os.path.dirname(parent_dir_path)
+    if os.path.basename(this_dir_path) == 'inversion':
+        sys.path.insert(1, (os.path.dirname(this_dir_path)))
+    elif os.path.basename(parent_dir_path) == 'inversion':
         sys.path.insert(1, (os.path.dirname(parent_dir_path)))
+    elif os.path.basename(grandparent_dir_path) == 'inversion':
+        sys.path.insert(1, (os.path.dirname(grandparent_dir_path)))
+    else:
+        print """\
+        *** To run this test script, either install the inversion package or
+        *** place this module inside the package no more than 2 levels deep."""
 
 from inversion.api.simulate import Simulation
 from numpy import linspace

@@ -59,13 +59,9 @@ import pylab
 import numpy
 from numpy import linspace, inf
 
-from common.utilities import get_appdir
-# As a workaround, explicitly import from inversion, otherwise running the
-# py2exe executable may result in a 'cannot import name reflmodule' error.
-#from api.resolution import bins, binwidths
-#from api.simulate import Simulation
 from inversion.api.resolution import bins, binwidths
 from inversion.api.simulate import Simulation
+from inversion.common.utilities import get_appdir
 
 from .input_list import InputListPanel
 from .instrument_params import InstrumentParameters

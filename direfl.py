@@ -66,9 +66,9 @@ from common.utilities import get_appdir, log_time
 # Normally the inversion package will be installed, but if it is not installed,
 # augment sys.path to include the parent directory of the package.  This allows
 # any module of this application to specify an import path that explicity uses
-# the package name as in 'from inversion.mod1.mod2 import blah'.  Thus when the
+# the package name as in 'from inversion.dir1.dir2 import foo'.  Thus when the
 # application is run directly from the source tree, the package name will be
-# recognized even if the package has not been installed.
+# found in the module search path even if the package has not been installed.
 try:
     import inversion
 except:

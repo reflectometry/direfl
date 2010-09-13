@@ -86,7 +86,8 @@ MIN_INNO = "5.3.10"
 SEPARATOR = "\n" + "/"*79
 
 # Determine the full directory paths of the top-level, source, and installation
-# directories based on the directory where the script is running.
+# directories based on the directory where the script is running.  Here the
+# top-level directory refers to the parent directory of the package.
 RUN_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 head, tail = os.path.split(RUN_DIR)
 if tail == PKG_NAME:
@@ -106,7 +107,7 @@ def build_it():
     # Checkout code from repository.
     checkout_code()
 
-    # Get the version string for the application so use later.
+    # Get the version string for the application to use later.
     # This has to be done after we have checked out the repository.
     if RUN_DIR == TOP_DIR:
         from inversion.version import version

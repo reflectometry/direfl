@@ -33,10 +33,6 @@ import wx
 
 from numpy import inf
 
-# As a workaround, explicitly import from inversion, otherwise running the
-# py2exe executable may result in a 'cannot import name reflmodule' error.
-#from api.ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
-#from api.snsdata import Liquids, Magnetic, SNSLoader
 from inversion.api.ncnrdata import ANDR, NG1, NG7, XRay, NCNRLoader
 from inversion.api.snsdata import Liquids, Magnetic, SNSLoader
 

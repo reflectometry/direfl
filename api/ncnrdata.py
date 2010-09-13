@@ -59,7 +59,7 @@ from . import util
 
 ### The following line from the pak2010 version of the file is commented out
 ### because it pulls in modules not needed by the inversion package.
-#from probe import PolarizedNeutronProbe
+#from .probe import PolarizedNeutronProbe
 
 def load(filename, instrument=None, **kw):
     """

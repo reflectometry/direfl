@@ -77,7 +77,7 @@ release = '1.0.0'
 # and release strings defined above.
 
 try:
-    from ...version import version as release
+    from inversion.version import version as release
     major, minor = release.split(".", 1)
     version = major + "." + minor
 except:
