@@ -24,8 +24,8 @@
 
 """
 This module is used to start the GUI for the Direct Inversion Reflectometry
-application.  It creates the initial wxPython frame, presents a splash screen
-to the user, and then constructs the rest of the GUI.
+application.  It creates the initial wxPython frame, presents a splash
+screen to the user, and then constructs the rest of the GUI.
 
 From the command line, the application can be run as follows:
 
@@ -42,7 +42,7 @@ Options for showing diagnostic info:
     --syspath       Display the contents of sys.path
 
 Options for overriding the default font and point size attributes where
-parameters within each set are mutually exclusive (last one takes precedence):
+parameters in each set are mutually exclusive (last one takes precedence):
     --tahoma, --arial, --verdana
     --6pt, --7pt, --8pt, --9pt, --10pt, --11pt, --12pt
 
@@ -50,7 +50,7 @@ Options for controlling the development and testing environment:
     --xtabs         Add extra notebook pages for test purposes
         --test1     Execute test1() in a test page
         --test2     Execute test2() in a test page
-    --inspect       Run the wxPython Widget Inspection Tool in a debug window
+    --inspect       Run the wxPython Widget Inspection Tool in a window
 """
 
 #==============================================================================
@@ -61,28 +61,28 @@ import time
 
 import wx
 
-from common.utilities import get_appdir, log_time
-
 # Normally the inversion package will be installed, but if it is not installed,
-# augment sys.path to include the parent directory of the package.  This allows
-# any module of this application to specify an import path that explicity uses
-# the package name as in 'from inversion.dir1.dir2 import foo'.  Thus when the
-# application is run directly from the source tree, the package name will be
-# found in the module search path even if the package has not been installed.
+# augment sys.path to include the parent directory of the package.  This
+# assures that the module search path will include the package namespace and
+# allows the application to be run directly from the source tree, even if the
+# package has not been installed.
 try:
     import inversion
 except:
-    sys.path.insert(1, (os.path.dirname(get_appdir())))
+    this_dir_path = os.path.dirname(os.path.abspath(__file__))
+    if os.path.basename(this_dir_path) == 'inversion':
+        sys.path.insert(1, (os.path.dirname(this_dir_path)))
+    else:
+        print """\
+        *** To run this test script, either install the inversion package or
+        *** place this module in the top-level directory of the package."""
 
-if len(sys.argv) > 1 and '--syspath' in sys.argv[1:]:
-    print "*** App root dir is", get_appdir(),
-    print "*** __file__ is" , __file__
-    print "*** Python path is:"
-    for i, p in enumerate(sys.path):
-        print "%5d  %s" %(i, p)
-
-from gui.app_frame import AppFrame
-from gui.about import APP_TITLE
+# Explicitly import from the package so that modules of this application can
+# use a relative import that traverses the package namespace - such as use of
+# 'from ..dir1.foo import bar' to access a module in a sibling directory.
+from inversion.common.utilities import get_appdir, log_time
+from inversion.gui.app_frame import AppFrame
+from inversion.gui.about import APP_TITLE
 
 # Desired initial window size (if physical screen size permits).
 DISPLAY_WIDTH = 1200
@@ -95,8 +95,8 @@ PROG_SPLASH_SCREEN = "splash.png"
 
 class DiReflApp(wx.App):
     """
-    This class implements the wxPyton based GUI for the Direct Inversion
-    Reflectometry application.
+    This class builds the wxPython GUI for the Direct Inversion Reflectometry
+    application.
     """
 
     # Design note: The basic application frame is created, the splash screen is
@@ -210,6 +210,14 @@ class DiReflApp(wx.App):
 #==============================================================================
 
 if __name__ == '__main__':
+
+    if len(sys.argv) > 1 and '--syspath' in sys.argv[1:]:
+        print "*** __file__ is" , __file__
+        print "*** App root dir is", get_appdir()
+        print "*** Python path is:"
+        for i, p in enumerate(sys.path):
+            print "%5d  %s" %(i, p)
+
     if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
         log_time("Starting DiRefl")
 

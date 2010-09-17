@@ -273,12 +273,12 @@ def run_doctests():
     print "\nStep 8 - Running Nose doctests ...\n"
     os.chdir(INS_DIR)
 
-    exec_cmd("nosetests -v --with-doctest %s"
-                 % os.path.join(PKG_NAME, "api/invert.py"))
-    #exec_cmd("nosetests -v --with-doctest %s"
-    #             % os.path.join(PKG_NAME, "api/resolution.py"))
-    #exec_cmd("nosetests -v --with-doctest %s"
-    #             % os.path.join(PKG_NAME, "api/simulate.py"))
+    exec_cmd("nosetests -v --with-doctest %s" %
+                 os.path.join(PKG_NAME, "api/invert.py"))
+    #exec_cmd("nosetests -v --with-doctest %s" %
+    #             os.path.join(PKG_NAME, "api/resolution.py"))
+    #exec_cmd("nosetests -v --with-doctest %s" %
+    #             os.path.join(PKG_NAME, "api/simulate.py"))
 
 
 def check_dependencies():

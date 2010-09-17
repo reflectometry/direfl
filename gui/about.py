@@ -36,21 +36,24 @@ except ImportError: # if it's not there, try the older location.
 
 from wx.lib.wordwrap import wordwrap
 
-from inversion.version import version as APP_VERSION
-from inversion.common.utilities import get_appdir
+from ..version import version as APP_VERSION
+from ..common.utilities import get_appdir
 
 # Resource files.
 PROG_ICON = "direfl.ico"
 
 # Text strings used in About Dialog boxes and for other project identification
 # purposes.
+#
+# Note that paragraphs intended to be processed by wordwrap are formatted as
+# one string without newline characters.
 APP_NAME = "DiRefl"
 
 APP_TITLE = "DiRefl - Direct Inversion Reflectometry"
 
 APP_COPYRIGHT = "(C) 2010 University of Maryland"
 
-APP_DESCRIPTION = """\
+APP_DESCRIPTION = """\  # formatted for use by wordwrap
 The Direct Inversion Reflectometry (DiRefl) application generates a scattering \
 length density (SLD) profile of a thin film or free form sample using two \
 neutron scattering datasets without the need to perform a fit of the data.  \
@@ -68,7 +71,7 @@ can load, edit, and save model information, load reflectometry datasets, and \
 adjust several parameters that affect the qualitative results of the analysis.
 """
 
-APP_LICENSE = """\
+APP_LICENSE = """\  # formatted for use by wordwrap
 Permission is hereby granted, free of charge, to any person obtaining a copy \
 of this software and associated documentation files (the "Software"), to deal \
 in the Software without restriction, including without limitation the rights \
@@ -88,9 +91,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN \
 THE SOFTWARE.
 """
 
-APP_CREDITS = """\
-This program was developed jointly by the University of Maryland (UMD) and the \
-National Institute of Standards and Technology (NIST).  The research and  \
+APP_CREDITS = """\  # formatted for use by wordwrap
+This program was developed jointly by the University of Maryland (UMD) and \
+the National Institute of Standards and Technology (NIST).  The research and \
 development of the phase reconstruction and inversion algorithms was performed \
 by scientists at NIST and initially coded in Fortran.  The port of this code \
 to Python and the design and development of the DiRefl application was a joint \

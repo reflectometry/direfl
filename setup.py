@@ -50,8 +50,8 @@ if __name__ == '__main__':
 The Direct Inversion Reflectometry GUI application generates a
 scattering length density (SLD) profile of a thin film or free form
 sample using two neutron scattering datasets without the need to
-perform a fit of the data.  It also has a simulation capability for
-creating datasets from a simple model description of the sample."""
+perform a fit of the data.  DiRefl also has a simulation capability
+for creating datasets from a simple model description of the sample."""
 
     if len(sys.argv) == 1: sys.argv.append('install')
 
