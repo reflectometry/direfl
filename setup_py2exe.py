@@ -101,9 +101,9 @@ data_files = matplotlib.get_py2exe_datafiles()
 
 # Add resource files that need to reside in the same directory as the image.
 data_files.append( ('.', [os.path.join('.', 'direfl.ico')]) )
+data_files.append( ('.', [os.path.join('.', 'direfl_splash.png')]) )
 data_files.append( ('.', [os.path.join('.', 'LICENSE.txt')]) )
 data_files.append( ('.', [os.path.join('.', 'README.txt')]) )
-data_files.append( ('.', [os.path.join('.', 'splash.png')]) )
 data_files.append( ('data', [os.path.join('data', 'demo_model_1.dat')]) )
 data_files.append( ('data', [os.path.join('data', 'demo_model_2.dat')]) )
 data_files.append( ('data', [os.path.join('data', 'demo_model_3.dat')]) )

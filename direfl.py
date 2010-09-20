@@ -89,7 +89,7 @@ DISPLAY_WIDTH = 1200
 DISPLAY_HEIGHT = 900
 
 # Resource files.
-PROG_SPLASH_SCREEN = "splash.png"
+PROG_SPLASH_SCREEN = "direfl_splash.png"
 
 #==============================================================================
 
