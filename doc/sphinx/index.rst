@@ -4,15 +4,15 @@
    contain the root `toctree` directive.
 
 The Direct Inversion Reflectometry (DiRefl) application generates a scattering length density (SLD) profile
-of a thin film or free form sample using two neutron scattering datasets without the need to perform a fit 
+of a thin film or free form sample using two neutron scattering datasets without the need to perform a fit
 of the data. DiRefl also has a simulation capability for creating datasets from a simple model description
-of the sample material. 
+of the sample material.
 
 .. htmlonly::
    :Release: |version|
    :Date:    |today|
 
-   Download pdf version `here <Inversion.pdf>`_
+   Download pdf version `here <DirectInversion.pdf>`_
 
 .. toctree::
    :maxdepth: 2

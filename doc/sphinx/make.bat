@@ -130,7 +130,7 @@ results in _build/doctest/output.txt.
 
 if "%1" == "upload" (
 	scp -r _build/html/* reflectometry.org:web/danse/docs/inversion
-	scp _build/latex/Inversion.pdf reflectometry.org:web/danse/download
+	scp _build/latex/DirectInversion.pdf reflectometry.org:web/danse/download
 	echo.
 	echo.Upload of HTML and PDF files to website complete.
 	goto end

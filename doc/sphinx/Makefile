@@ -104,6 +104,6 @@ doctest:
 
 upload:
 	scp -r _build/html/* reflectometry.org:web/danse/docs/inversion
-	scp _build/latex/Inversion.pdf reflectometry.org:web/danse/download
+	scp _build/latex/DirectInversion.pdf reflectometry.org:web/danse/download
 	@echo
 	@echo "Upload of HTML and PDF files to website complete."
