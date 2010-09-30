@@ -53,7 +53,7 @@ APP_TITLE = "DiRefl - Direct Inversion Reflectometry"
 
 APP_COPYRIGHT = "(C) 2010 University of Maryland"
 
-APP_DESCRIPTION = """\  # formatted for use by wordwrap
+APP_DESCRIPTION = """\
 The Direct Inversion Reflectometry (DiRefl) application generates a scattering \
 length density (SLD) profile of a thin film or free form sample using two \
 neutron scattering datasets without the need to perform a fit of the data.  \
@@ -71,7 +71,7 @@ can load, edit, and save model information, load reflectometry datasets, and \
 adjust several parameters that affect the qualitative results of the analysis.
 """
 
-APP_LICENSE = """\  # formatted for use by wordwrap
+APP_LICENSE = """\
 Permission is hereby granted, free of charge, to any person obtaining a copy \
 of this software and associated documentation files (the "Software"), to deal \
 in the Software without restriction, including without limitation the rights \
@@ -91,7 +91,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN \
 THE SOFTWARE.
 """
 
-APP_CREDITS = """\  # formatted for use by wordwrap
+APP_CREDITS = """\
 This program was developed jointly by the University of Maryland (UMD) and \
 the National Institute of Standards and Technology (NIST).  The research and \
 development of the phase reconstruction and inversion algorithms was performed \
@@ -102,9 +102,8 @@ Scattering Experiments (DANSE) project funded by the US National Science \
 Foundation under grant DMR-0520547.
 
 Paul Kienzle, NIST
-    - Application concept
-    - Dataset simulation
-    - Reflectivity and resolution calculation
+    - API development
+    - Reflectivity and resolution calculations
 Charles Majkrzak, NIST
     - Phase reconstruction algorithm
 Norm Berk, NIST
@@ -119,9 +118,7 @@ APP_PROJECT_TAG = "DANSE/Reflectometry home page"
 APP_TUTORIAL_URL = "http://www.reflectometry.org/danse/packages.html"
 APP_TUTORIAL_TAG = "DANSE/Reflectometry documentation"
 APP_TUTORIAL = """\
-Note: the tutorial is not currently available.
-
-For a tutorial and other documentation on DiRefl, please visit:\
+For the DiRefl User's Guide and related information, please visit:\
 """
 
 #==============================================================================
