@@ -154,28 +154,30 @@ def checkout_code():
     os.chdir(TOP_DIR)
 
     if RUN_DIR == TOP_DIR:
-        exec_cmd("%s checkout %s %s" % (SVN, SVN_REPO_URL, PKG_NAME))
+        exec_cmd("%s checkout %s %s" %(SVN, SVN_REPO_URL, PKG_NAME))
     else:
         print "*** Skipping checkout of repository because the executing script"
         print "*** is within the repository, not in the top-level directory."
 
 
 def create_archive(version=None):
-    # Create a zip or tar file to archive the source code.
+    # Create zip and tar archives of the source code and a manifest file
+    # containing the names of all files.
     print SEPARATOR
     print "\nStep 2 - Creating an archive of the source code ...\n"
     os.chdir(SRC_DIR)
 
     try:
-        exec_cmd("%s setup.py sdist --dist-dir=%s" %(PYTHON, TOP_DIR))
+        # Create zip and tar archives in the dist subdirectory.
+        exec_cmd("%s setup.py sdist --formats=zip,gztar" %(PYTHON))
     except:
-        print "*** Failed to create the archive ***"
+        print "*** Failed to create source archive ***"
     else:
-        print "Archive created"
-        if os.name == 'nt': ext = ".zip"
-        else:               ext = ".tar.gz"
-        shutil.move(os.path.join(TOP_DIR, PKG_NAME+"-"+str(version)+ext),
-                    os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source"+ext))
+        # Copy the archives and its manifest to the top-level directory.
+        shutil.move(os.path.join("dist", PKG_NAME+"-"+str(version)+".zip"),
+                    os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source.zip"))
+        shutil.move(os.path.join("dist", PKG_NAME+"-"+str(version)+".tar.gz"),
+                    os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source.tar.gz"))
         shutil.copy(os.path.join(SRC_DIR, "MANIFEST"),
                     os.path.join(TOP_DIR, APP_NAME+"-"+str(version)+"-source-manifest.txt"))
 
@@ -230,14 +232,14 @@ def create_windows_installer(version=None):
     # First create an include file to convey the application's version
     # information to the Inno Setup compiler.  If the include file exists, then
     # append the directive at the end.
-    f = open("%s.iss-include" % APP_NAME, "a")
-    f.write('#define MyAppVersion "%s"\n' % version)  # version must be quoted
+    f = open("%s.iss-include" %APP_NAME, "a")
+    f.write('#define MyAppVersion "%s"\n' %version)  # version must be quoted
     f.close()
 
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller.
     # Override the output specification in <APP_NAME>.iss to put the executable
     # and the manifest file in the top-level directory.
-    exec_cmd("%s /Q /O%s %s.iss" % (INNO, TOP_DIR, APP_NAME))
+    exec_cmd("%s /Q /O%s %s.iss" %(INNO, TOP_DIR, APP_NAME))
 
 
 def build_documentation():
@@ -264,7 +266,7 @@ def run_unittests():
     print "\nStep 7 - Running Nose unittests ...\n"
     os.chdir(INS_DIR)
 
-    exec_cmd("nosetests -v %s" % PKG_NAME)
+    exec_cmd("nosetests -v %s" %PKG_NAME)
 
 
 def run_doctests():
@@ -273,12 +275,12 @@ def run_doctests():
     print "\nStep 8 - Running Nose doctests ...\n"
     os.chdir(INS_DIR)
 
-    exec_cmd("nosetests -v --with-doctest %s" %
-                 os.path.join(PKG_NAME, "api/invert.py"))
-    #exec_cmd("nosetests -v --with-doctest %s" %
-    #             os.path.join(PKG_NAME, "api/resolution.py"))
-    #exec_cmd("nosetests -v --with-doctest %s" %
-    #             os.path.join(PKG_NAME, "api/simulate.py"))
+    exec_cmd("nosetests -v --with-doctest %s"
+                 %os.path.join(PKG_NAME, "api/invert.py"))
+    #exec_cmd("nosetests -v --with-doctest %s"
+    #             %os.path.join(PKG_NAME, "api/resolution.py"))
+    #exec_cmd("nosetests -v --with-doctest %s"
+    #             %os.path.join(PKG_NAME, "api/simulate.py"))
 
 
 def check_dependencies():
@@ -444,7 +446,7 @@ if __name__ == "__main__":
             sys.exit()
 
     print "\nBuilding the %s application from the %s repository ...\n" \
-        % (APP_NAME, PKG_NAME)
+        %(APP_NAME, PKG_NAME)
     print "Current working directory  =", RUN_DIR
     print "Top-level (root) directory =", TOP_DIR
     print "Package (source) directory =", SRC_DIR
