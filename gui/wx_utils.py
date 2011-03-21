@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2010, University of Maryland
+# Copyright (C) 2006-2011, University of Maryland
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -81,7 +81,6 @@ def choose_fontsize(fontname=None):
     frame.Destroy()
     return fontsize
 
-
 def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
                                     benchmark_width=BENCHMARK_WIDTH,
                                     benchmark_height=BENCHMARK_HEIGHT):
@@ -120,6 +119,16 @@ def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
 
     frame.Destroy()
 
+def get_bitmap(filename, type=wx.BITMAP_TYPE_PNG, scale_factor=16):
+    """
+    Returns the scaled bitmap from an image file (bmp, jpg, png) stored in
+    the data directory of the package.
+    """
+
+    fullname = os.path.join(get_datadir(), filename)
+
+    return wx.BitmapFromImage(wx.Image(name=fullname, type=type)
+                                      .Scale(scale_factor, scale_factor))
 
 def popup_error_message(caption, message):
     """Displays an error message in a pop-up dialog box with an OK button."""
@@ -128,14 +137,12 @@ def popup_error_message(caption, message):
     msg.ShowModal()
     msg.Destroy()
 
-
 def popup_warning_message(caption, message):
     """Displays a warning message in a pop-up dialog box with an OK button."""
 
     msg = wx.MessageDialog(None, message, caption, style=wx.ICON_WARNING|wx.OK)
     msg.ShowModal()
     msg.Destroy()
-
 
 def popup_information_message(caption, message):
     """Displays an informational message in a pop-up with an OK button."""
@@ -144,7 +151,6 @@ def popup_information_message(caption, message):
                            style=wx.ICON_INFORMATION|wx.OK)
     msg.ShowModal()
     msg.Destroy()
-
 
 def popup_question(caption, message):
     """Displays a question in a pop-up dialog box with YES and NO buttons."""
@@ -167,7 +173,6 @@ class StatusBarInfo():
         for index in range(self.cnt):
             self.field.append("")
 
-
     def write(self, index=0, text=""):
         # Write text to the specified slot and save text locally.
         # Beware that if you use field 0, wxPython will likely overwite it.
@@ -175,7 +180,6 @@ class StatusBarInfo():
             return
         self.sb.SetStatusText(text, index)
         self.field[index] = text
-
 
     def restore(self):
         # Restore saved text from fields 1 to n.

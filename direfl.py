@@ -80,149 +80,161 @@ except:
 # Explicitly import from the package so that modules of this application can
 # use a relative import that traverses the package namespace - such as use of
 # 'from ..dir1.foo import bar' to access a module in a sibling directory.
-from inversion.common.utilities import get_appdir, log_time
+from inversion.common.utilities import (get_appdir, get_datadir, get_rootdir,
+                                        get_rootdir_parent, log_time)
 from inversion.gui.app_frame import AppFrame
 from inversion.gui.about import APP_TITLE
 
-# Desired initial window size (if physical screen size permits).
-DISPLAY_WIDTH = 1200
-DISPLAY_HEIGHT = 900
+# Desired initial application frame size (if physical screen size permits).
+FRAME_WIDTH = 1200
+FRAME_HEIGHT = 900
 
-# Resource files.
-PROG_SPLASH_SCREEN = "direfl_splash.png"
+# Desired plash screen size and other information.
+# Note that it is best to start with an image having the desired dimensions or
+# larger.  If image is smaller the image conversion time may be noticeable.
+SPLASH_FILE = "direfl_splash.png"
+SPLASH_TIMEOUT = 3000  # in miliseconds
+SPLASH_WIDTH = 720
+SPLASH_HEIGHT = 540
+
+# Diagnostic timing information.
+LOGTIM = True if (len(sys.argv) > 1 and '--time' in sys.argv[1:]) else False
 
 #==============================================================================
 
-class DiReflApp(wx.App):
+class DiReflGUIApp(wx.App):
     """
     This class builds the wxPython GUI for the Direct Inversion Reflectometry
     application.
+
+    First a splash screen is displayed, then the application frame is created
+    but not shown until the splash screen exits.  The splash screen remains
+    active while the application frame is busy initializing itself (which may
+    be time consuming if many imports are performed and the data is not in the
+    system cache, e.g., on running the application for the first time).  Only
+    when initialization of the application is complete and control drops into
+    the wx event loop, can the splash screen terminate (via timeout or a mouse
+    click on the splash screen) which causes the frame to be made visible.
     """
 
-    # Design note: The basic application frame is created, the splash screen is
-    # displayed, and finally the frame is populated.  The frame initialization
-    # is performed in two parts so that the splash screen is visible while the
-    # application specific packages are imported and the application is set up.
-
     def OnInit(self):
-        # Determine the position and size of the application frame and likewise
-        # for the splash window that will cover it.
-        pos, size = self.window_placement()
-        #print "window pos and size =", pos, size
+        # Determine the position and size of the splash screen based on the
+        # desired size and screen real estate that we have to work with.
+        pos, size = self.window_placement(SPLASH_WIDTH, SPLASH_HEIGHT)
+        #print "splash pos and size =", pos, size
 
-        # Create a basic application frame without any child panels.
-        frame = AppFrame(parent=None, title=APP_TITLE, pos=pos, size=size)
+        # Display the splash screen.  It will remain visible until the caller
+        # executes app.MainLoop() AND either the splash screen timeout expires
+        # or the user left clicks over the splash screen.
+        if LOGTIM: log_time("Starting to display the splash screen")
+        pic = os.path.join(get_datadir(0), SPLASH_FILE)
+        self.display_splash_screen(img_name=pic, pos=pos, size=size)
 
-        # Display a splash screen on top of the frame.
-        if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
-            log_time("Starting to display the splash screen")
-        self.display_splash_screen(frame)
+        # Determine the position and size of the application frame based on the
+        # desired size and screen real estate that we have to work with.
+        pos, size = self.window_placement(FRAME_WIDTH, FRAME_HEIGHT)
+        #print "frame pos and size =", pos, size
 
-        # Create the graphical user interface for the application on the frame.
-        if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
-            log_time("Starting to build the GUI on the frame")
-        frame.init_GUI()
+        # Create the application frame, but it will not be shown until the
+        # splash screen terminates.
+        if LOGTIM: log_time("Starting to build the GUI application")
+        self.frame = AppFrame(parent=None, title=APP_TITLE, pos=pos, size=size)
 
-        frame.Show(True)
-        self.SetTopWindow(frame)
+        # Declare the application frame to be the top window.
+        self.SetTopWindow(self.frame)
 
-        # The splash screen can be dismissed by the user via a left mouse click
-        # as soon as the wxPython event loop is entered (i.e. when the caller
-        # executes app.MainLoop()).  Otherwise, the splash screen will stop
-        # itself when its timeout expires.
+        # To have the frame visible behind the spash screen, comment out the
+        # line below.
+        #self.frame.Show(True)
+
+        # To test that the splash screen will not go away until the frame
+        # initialization is complete, simulate an increase in startup time
+        # by taking a nap.
+        #time.sleep(6)
+
         return True
 
-
-    def window_placement(self):
+    def window_placement(self, desired_width, desired_height):
         """
-        Determines the position and size of the application frame such that it
-        fits on the user's screen without obstructing (or being obstructed by)
-        the Windows task bar.  The maximum initial size in pixels is bounded by
-        DISPLAY_WIDTH x DISPLAY_HEIGHT.  For most monitors, the application
-        will be centered on the screen; for very large monitors it will be
-        placed on the left side of the screen.
+        Determines the position and size of a window such that it fits on the
+        user's screen without obstructing (or being obstructed by) the task bar.
+        The returned size is bounded by the desired width and height passed in,
+        but it may be smaller if the screen is too small.  Usually the returned
+        position (upper left coordinates) will result in centering the window
+        on the screen excluding the task bar area.  However, for very large
+        monitors it will be placed on the left side of the screen.
         """
 
         xpos = ypos = 0
 
-        # Note that when running Linux and using an Xming (X11) server on a PC
-        # with a dual  monitor configuration, the reported display size may be
-        # that of both monitors combined with an incorrect display count of 1.
-        # To avoid displaying this app across both monitors, we check for
+        # WORKAROUND: When running Linux and using an Xming (X11) server on a
+        # PC with a dual monitor configuration, the reported display count may
+        # be 1 (instead of 2) with a display size of both monitors combined.
+        # (For example, on a target PC with an extended desktop consisting of
+        # two 1280x1024 monitors, the reported monitor size was 2560x1045.)
+        # To avoid displaying the window across both monitors, we check for
         # screen 'too big'.  If so, we assume a smaller width which means the
         # application will be placed towards the left hand side of the screen.
 
-        j, k, x, y = wx.Display().GetClientArea() # size excludes task bar
+        x, y, w, h = wx.Display().GetClientArea() # size excludes task bar
         if len(sys.argv) > 1 and '--platform' in sys.argv[1:]:
-            w, h = wx.DisplaySize()  # size includes task bar area
-            print "*** Reported screen size including taskbar is %d x %d"%(w, h)
-            print "*** Reported screen size excluding taskbar is %d x %d"%(x, y)
+            j, k = wx.DisplaySize()  # size includes task bar area
+            print "*** Reported screen size including taskbar is %d x %d"%(j, k)
+            print "*** Reported screen size excluding taskbar is %d x %d"%(w, h)
 
-        if x > 1920: x = 1280  # display on left side, not centered on screen
-        if x > DISPLAY_WIDTH:  xpos = (x - DISPLAY_WIDTH)/2
-        if y > DISPLAY_HEIGHT: ypos = (y - DISPLAY_HEIGHT)/2
+        if w > 1920: w = 1280  # display on left side, not centered on screen
+        if w > desired_width:  xpos = (w - desired_width)/2
+        if h > desired_height: ypos = (h - desired_height)/2
 
         # Return the suggested position and size for the application frame.
-        return (xpos, ypos), (min(x, DISPLAY_WIDTH), min(y, DISPLAY_HEIGHT))
+        return (xpos, ypos), (min(w, desired_width), min(h, desired_height))
 
+    def display_splash_screen(self, img_name=None, pos=None, size=(320, 240)):
+        """Displays a splash screen and the specified position and size."""
 
-    def display_splash_screen(self, parent):
-        """Displays the splash screen.  It will exactly cover the main frame."""
-
-        # Prepare the picture.  On a 2GHz intel cpu, this takes about a second.
-        x, y = parent.GetSizeTuple()
-        image = wx.Image(os.path.join(get_appdir(), PROG_SPLASH_SCREEN),
-                         wx.BITMAP_TYPE_PNG)
-        image.Rescale(x, y, wx.IMAGE_QUALITY_HIGH)
+        # Prepare the picture.
+        w, h = size
+        image = wx.Image(img_name, wx.BITMAP_TYPE_PNG)
+        image.Rescale(w, h, wx.IMAGE_QUALITY_HIGH)
         bm = image.ConvertToBitmap()
 
         # Create and show the splash screen.  It will disappear only when the
         # program has entered the event loop AND either the timeout has expired
         # or the user has left clicked on the screen.  Thus any processing
-        # performed in this routine (including sleeping) or processing in the
-        # calling routine (including doing imports) will prevent the splash
-        # screen from disappearing.
-        #
-        # Note that on Linux, the timeout appears to occur immediately in which
-        # case the splash screen disappears upon entering the event loop.
-        wx.SplashScreen(bitmap=bm,
-                        splashStyle=(wx.SPLASH_CENTRE_ON_PARENT|
-                                     wx.SPLASH_TIMEOUT|
-                                     wx.STAY_ON_TOP),
-                        milliseconds=4000,
-                        parent=parent,
-                        id=wx.ID_ANY)
+        # performed by the calling routine (including doing imports) will
+        # prevent the splash screen from disappearing.
+        splash = wx.SplashScreen(bitmap=bm,
+                                 splashStyle=(wx.SPLASH_TIMEOUT|
+                                              wx.SPLASH_CENTRE_ON_SCREEN),
+                                 style=(wx.SIMPLE_BORDER|
+                                        wx.FRAME_NO_TASKBAR|
+                                        wx.STAY_ON_TOP),
+                                 milliseconds=SPLASH_TIMEOUT,
+                                 parent=None, id=wx.ID_ANY)
+        splash.Bind(wx.EVT_CLOSE, self.OnCloseSplashScreen)
 
-        # Keep the splash screen up a minimum amount of time for non-Windows
-        # systems.  This is a workaround for Linux and possibly MacOS that
-        # appear to ignore the splash screen timeout option.
-        if '__WXMSW__' not in wx.PlatformInfo:
-            if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
-                log_time("Starting sleep of 2 secs")
-            time.sleep(2)
+        # Repositon if center of screen placement is overridden by caller.
+        if pos is not None:
+            splash.SetPosition(pos)
+        splash.Show()
 
-        # A call to wx.Yield does not appear to be required.  If used on
-        # Windows, the cursor changes from 'busy' to 'ready' before the event
-        # loop is reached which is not desirable.  On Linux it seems to have
-        # no effect.
-        #wx.Yield()
+    def OnCloseSplashScreen(self, event):
+        """
+        Make the application frame visible when the splash screen is closed.
+        """
+
+        # To show the frame earlier, uncomment Show() code in OnInit.
+        if LOGTIM: log_time("Terminating the splash screen and showing the GUI")
+        self.frame.Show(True)
+        event.Skip()
 
 #==============================================================================
 
 if __name__ == '__main__':
-
-    if len(sys.argv) > 1 and '--syspath' in sys.argv[1:]:
-        print "*** __file__ is" , __file__
-        print "*** App root dir is", get_appdir()
-        print "*** Python path is:"
-        for i, p in enumerate(sys.path):
-            print "%5d  %s" %(i, p)
-
-    if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
-        log_time("Starting DiRefl")
+    if LOGTIM: log_time("Starting DiRefl")
 
     # Instantiate the application class and give control to wxPython.
-    app = DiReflApp(redirect=False, filename=None)
+    app = DiReflGUIApp(redirect=False, filename=None)
 
     # For wx debugging, load the wxPython Widget Inspection Tool if requested.
     # It will cause a separate interactive debugger window to be displayed.
@@ -230,7 +242,15 @@ if __name__ == '__main__':
         import wx.lib.inspection
         wx.lib.inspection.InspectionTool().Show()
 
-    if len(sys.argv) > 1 and '--time' in sys.argv[1:]:
-        log_time("Done initializing - entering the event loop")
+    if len(sys.argv) > 1 and '--syspath' in sys.argv[1:]:
+        print "*** Application directory is:   ", get_appdir()
+        print "*** Data directory is:          ", get_datadir(0)
+        print "*** Package root directory is:  ", get_rootdir(0)
+        print "*** Parent of root directory is:", get_rootdir_parent(0)
+        print "*** Python path is:"
+        for i, p in enumerate(sys.path):
+            print "%5d  %s" %(i, p)
 
+    # Allow the user to interact with the application.
+    if LOGTIM: log_time("Entering the event loop")
     app.MainLoop()

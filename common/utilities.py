@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2010, University of Maryland
+# Copyright (C) 2006-2011, University of Maryland
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -34,16 +34,60 @@ import time
 
 def get_appdir():
     """
-    Returns the directory path of the main module of the application, i.e, the
-    root directory from which the application was started.  Note that this may
-    be different than the current working directory.
+    Returns the path of the directory that contains the application being run
+    (i.e., the directory path of the executing python script or frozen image).
+    Note that this path may be different than the current working directory.
     """
 
     if hasattr(sys, "frozen"):  # check for py2exe image
         path = sys.executable
     else:
         path = sys.argv[0]
-    return os.path.dirname(os.path.abspath(path))
+    return os.path.dirname(os.path.realpath(path))
+
+
+def get_rootdir(subdirlevel=1):
+    """
+    Returns the path of the root directory of the package from which the
+    application is running (i.e., the path of the top-level directory of the
+    python package or the directory containing the frozen image being run).
+
+    The path returned is relative to where the application was started.
+    If subdirlevel = 0 then the script being run is assumed to be located
+    in the top-level directory of the package, otherwise n levels down.
+    For example, if the script is in <package>/bin, subdirlevel should be 1.
+    """
+
+    path = get_appdir()
+    if hasattr(sys, "frozen"):  # check for py2exe image
+        return path
+    if subdirlevel > 0:
+        for x in range(subdirlevel):
+            path = os.path.abspath(os.path.join(path, '..'))
+    return path
+
+def get_rootdir_parent(subdirlevel=1):
+    """
+    Returns the path of the parent directory of the package from which the
+    application is running (i.e., the path one level above the top-level
+    directory of the package or returns None if a frozen image is being run).
+
+    See description of get_rootdir for definition of the subdirlevel parameter.
+    """
+
+    if hasattr(sys, "frozen"):  # check for py2exe image
+        return None
+    return os.path.abspath(os.path.join(get_rootdir(subdirlevel), '..'))
+
+def get_datadir(subdirlevel=1):
+    """
+    Returns the path of the data directory of the package.
+
+    See description of get_rootdir for definition of the subdirlevel parameter.
+    """
+
+    #return os.path.abspath(os.path.join(get_rootdir(subdirlevel), 'refl1d-data'))
+    return os.path.abspath(get_rootdir(subdirlevel))
 
 #==============================================================================
 
@@ -80,11 +124,9 @@ class TimeStamp():
     def __init__(self):
         self.reset()
 
-
     def reset(self):
         # Starts new timing interval.
         self.t0 = self.t1 = time.time()
-
 
     def gettime3(self):
         # Gets current time in timestamp, delta time, and elapsed time format.
@@ -95,7 +137,6 @@ class TimeStamp():
         self.t1 = now
         return timestamp, delta, elapsed
 
-
     def gettime2(self):
         # Gets current time in delta time and elapsed time format.
         now = time.time()
@@ -104,18 +145,15 @@ class TimeStamp():
         self.t1 = now
         return delta, elapsed
 
-
     def log_time_info(self, text=""):
         # Prints timestamp, delta time, elapsed time, and optional comment.
         t, d, e = self.gettime3()
         print "==> %s%9.3fs%9.3fs  %s" %(t, d, e, text)
 
-
     def log_timestamp(self, text=""):
         # Prints timestamp and optional comment.
         t, d, e = self.gettime3()
         print "==> %s  %s" %(t, text)
-
 
     def log_interval(self, text=""):
         # Prints elapsed time, delta time, and optional comment.

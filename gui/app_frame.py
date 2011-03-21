@@ -52,8 +52,7 @@ class AppFrame(wx.Frame):
     """
 
     def __init__(self, parent=None, id=wx.ID_ANY, title=APP_TITLE,
-                 pos=wx.DefaultPosition, size=(800, 600), name="AppFrame"
-                ):
+                 pos=wx.DefaultPosition, size=wx.DefaultSize, name="AppFrame"):
         wx.Frame.__init__(self, parent, id, title, pos, size, name=name)
 
         # Display the application's icon in the title bar.
@@ -73,10 +72,11 @@ class AppFrame(wx.Frame):
         # Initialize the status bar.
         self.add_statusbar()
 
-        # Comment out the call to Fit() to keep the frame at its initial size,
-        # otherwise it will be reduced to its minimum size.
-        #self.Fit()
+        # Build the application panels for the GUI on the frame.
+        AppPanel(frame=self)
 
+        # Note: Do not call self.Fit() as this will reduce the frame to its
+        # bare minimum size; we want it to keep its default size.
 
     def init_GUI(self):
         """
@@ -86,7 +86,6 @@ class AppFrame(wx.Frame):
         viewing the splash screen.
         """
         AppPanel(frame=self)
-
 
     def set_default_font(self):
         """
@@ -137,7 +136,6 @@ class AppFrame(wx.Frame):
                   %(default_fontsize, self.GetFont().GetPointSize())
             display_fontsize(fontname=fontname)
 
-
     def add_menubar(self):
         """Creates a default menu bar, menus, and menu options."""
 
@@ -173,7 +171,6 @@ class AppFrame(wx.Frame):
         # Attach the menu bar to the frame.
         self.SetMenuBar(mb)
 
-
     def add_toolbar(self):
         """Creates a default tool bar."""
 
@@ -182,13 +179,11 @@ class AppFrame(wx.Frame):
         tb.Realize()
         self.SetToolBar(tb)
 
-
     def add_statusbar(self):
         """Creates a default status bar."""
 
         sb = self.statusbar = self.CreateStatusBar()
         sb.SetFieldsCount(1)
-
 
     def OnAbout(self, evt):
         """Shows the About dialog box."""
@@ -199,7 +194,6 @@ class AppFrame(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
 
-
     def OnCredits(self, evt):
         """Shows the Credits dialog box."""
 
@@ -209,11 +203,9 @@ class AppFrame(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
 
-
     def OnExit(self, event):
         """Terminates the program."""
         self.Close()
-
 
     def OnLicense(self, evt):
         """Shows the License dialog box."""
@@ -223,7 +215,6 @@ class AppFrame(wx.Frame):
                           show_link_docs=False)
         dlg.ShowModal()
         dlg.Destroy()
-
 
     def OnTutorial(self, event):
         """Shows the Tutorial dialog box."""
