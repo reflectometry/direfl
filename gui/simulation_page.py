@@ -987,4 +987,3 @@ def perform_simulation(sample, params, Q=None, dQ=None):
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right = 0.96,
                           top=0.95, bottom=0.08)
-

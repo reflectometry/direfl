@@ -18,6 +18,9 @@ Simulate classes and functions:
 #TODO: include resolution in the simulation
 
 from __future__ import division
+
+import sys
+
 import numpy
 from numpy import linspace, real
 
@@ -287,7 +290,7 @@ class Simulation():
         data2 = self.q, self.R2, self.dR2
         u, v1, v2 = self.u, self.v1, self.v2
 
-        import sys
+        # If the user requests, save the simulated data sets as files.
         if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
             outfile = 'sim_data1.refl'
             fid = open(outfile, "w")
@@ -308,11 +311,6 @@ class Simulation():
         self.phase = SurroundVariation(data1, data2, u=u, v1=v1, v2=v2,
                                        **self.phase_args)
 
-        if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
-            self.phase.save_q_r(outfile='sim_q_r.txt')
-            self.phase.save_q_i(outfile='sim_q_i.txt')
-            self.phase.save_q_r_dr(outfile='sim_q_r_dr.txt')
-
 
     def _invert(self):
         """Drive direct inversion."""
@@ -325,6 +323,22 @@ class Simulation():
         self.invert = Inversion(data=data, thickness=thickness,
                                 substrate=substrate, **self.invert_args)
         self.invert.run()
+
+        # If the user requests, create data files to capture the data used to
+        # generate the plots.
+        if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
+            outfile='sim_phase.dat'
+            self.phase.save(outfile=outfile, uncertainty=True)
+            print "*** Created", outfile
+
+            outfile='sim_refl.dat'
+            z, rho = self.sample_profile()
+            self.phase.save_inverted(profile=(z, rho), outfile=outfile)
+            print "*** Created", outfile
+
+            outfile='sim_profile.dat'
+            self.invert.save(outfile=outfile)
+            print "*** Created", outfile
 
 
     def _optimize(self):

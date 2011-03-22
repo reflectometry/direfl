@@ -1289,43 +1289,6 @@ class SurroundVariation():
         fid.close()
 
 
-    def save_q_r_dr(self, outfile=None):
-        """
-        Save Q, RealR, and dRealR to a file.
-        """
-
-        fid = open(outfile, "w")
-        fid.write("# %13s %15s %15s\n"%("Q", "RealR", "dRealR"))
-        numpy.savetxt(fid, array([self.Q, self.RealR, self.dRealR]).T)
-        fid.close()
-        print "*** Created", outfile
-
-
-    def save_q_r(self, outfile=None):
-        """
-        Save Q and Real R to a file.
-        """
-
-        fid = open(outfile, "w")
-        fid.write("# %9s %11s\n"%("Q", "RealR"))
-        for point in zip(self.Q, self.RealR):
-            fid.write("%11.6g %11.6g\n"%point)
-        fid.close()
-        print "*** Created", outfile
-
-
-    def save_q_i(self, outfile=None):
-        """
-        Save Q and Imaginary R to a file.
-        """
-
-        fid = open(outfile, "w")
-        fid.write("# %13s %15s\n"%("Q", "ImagR"))
-        numpy.savetxt(fid, array([self.Q, self.ImagR]).T)
-        fid.close()
-        print "*** Created", outfile
-
-
     def show(self):
         """Print Q, RealR, ImagR to the screen."""
         print "# %9s %11s %11s"%("Q","RealR", "ImagR")
