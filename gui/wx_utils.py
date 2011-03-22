@@ -189,6 +189,22 @@ class StatusBarInfo():
 
 #==============================================================================
 
+# This is a helper function for ExecuteInThread.  The purpose is to wrap the
+# call to delayedresult in a try-block so that exceptions are signaled,
+# otherwise exceptions generated in the thread will be eaten and not displayed
+# on the console making debugging a challenge.
+import traceback
+
+def startWorker(consumer=None, workerFn=None, wargs=None, wkwargs=None):
+    def catch(*args, **kwargs):
+        try:
+            workerFn(*args, **kwargs)
+        except:
+            print traceback.format_exc()
+            raise
+    return delayedresult.startWorker(consumer=consumer, workerFn=catch,
+                                     wargs=wargs, wkwargs=wkwargs)
+
 class ExecuteInThread():
     """
     This class executes the specified function in a separate thread and calls a
@@ -203,8 +219,9 @@ class ExecuteInThread():
     def __init__(self, callback, function, *args, **kwargs):
         if callback is None: callback = _callback
         #print "*** ExecuteInThread init:", callback, function, args, kwargs
-        delayedresult.startWorker(consumer=callback, workerFn=function,
-                                  wargs=args, wkwargs=kwargs)
+
+        startWorker(consumer=callback, workerFn=function,
+                    wargs=args, wkwargs=kwargs)
 
     def _callback(self, delayedResult):
         '''
@@ -213,7 +230,7 @@ class ExecuteInThread():
         try:
             result = delayedResult.get()
         except Exception, e:
-            popup_error_message(self, "job %s raised exception: %s"%(jobID, e)
+            popup_error_message(self, "job %s raised exception: %s"%(jobID, e))
             return
         '''
         return
