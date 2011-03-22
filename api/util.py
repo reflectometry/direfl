@@ -139,9 +139,9 @@ def indfloat(s):
 def dhsv(color, dh=0, ds=0, dv=0, da=0):
     """
     Modify color on hsv scale.
-    
+
     *dv* change intensity, e.g., +0.1 to brighten, -0.1 to darken.
-    *dh* change hue, e.g., 
+    *dh* change hue, e.g.,
     """
     from matplotlib.colors import colorConverter
     from colorsys import rgb_to_hsv, hsv_to_rgb

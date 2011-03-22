@@ -286,8 +286,30 @@ class Simulation():
         data1 = self.q, self.R1, self.dR1
         data2 = self.q, self.R2, self.dR2
         u, v1, v2 = self.u, self.v1, self.v2
+
+        import sys
+        if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
+            fid = open('sim_data1.refl', "w")
+            fid.write("# %10s %12s %12s\n"%("Q", "RealR", "dRealR"))
+            for point in zip(self.q, self.R1, self.dR1):
+                fid.write("%12.6g %12.6g %12.6g\n"%point)
+            fid.close()
+            print "*** Created sim_data1.refl"
+
+            fid = open('sim_data2.refl', "w")
+            fid.write("# %10s %12s %12s\n"%("Q", "RealR", "dRealR"))
+            for point in zip(self.q, self.R2, self.dR2):
+                fid.write("%12.6g %12.6g %12.6g\n"%point)
+            fid.close()
+            print "*** Created sim_data2.refl"
+
         self.phase = SurroundVariation(data1, data2, u=u, v1=v1, v2=v2,
                                        **self.phase_args)
+
+        if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
+            self.phase.save_q_r(outfile='sim_q_r.txt')
+            self.phase.save_q_i(outfile='sim_q_i.txt')
+            self.phase.save_q_r_dr(outfile='sim_q_r_dr.txt')
 
 
     def _invert(self):

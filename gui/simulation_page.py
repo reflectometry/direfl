@@ -254,7 +254,7 @@ class SimulationPage(wx.Panel):
                    ["SLD of Surface for Run 2:", None, "float", 'RE', None],
                 ###["SLD of Substrate:", 2.07, "float", 'RE', None],
                 ###["Sample Thickness:", 1000, "float", 'RE', None],
-                   ["Qmin:", 0.0, "float", 'RE', None],
+                   ["Qmin:", 0.01, "float", 'RE', None],
                    ["Qmax:", 0.4, "float", 'RE', None],
                    ["# Profile Steps:", 128, "int", 'RE', None],
                    ["Over Sampling Factor:", 4, "int", 'REL', None],

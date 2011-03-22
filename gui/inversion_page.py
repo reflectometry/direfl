@@ -58,7 +58,10 @@ import pylab
 import numpy
 from numpy import linspace, inf
 
-from ..api.invert import SurroundVariation, Inversion
+if len(sys.argv) > 1 and '--plot6' in sys.argv[1:]:
+    from ..api.invert2 import SurroundVariation, Inversion
+else:
+    from ..api.invert import SurroundVariation, Inversion
 from ..common.utilities import get_appdir
 
 from .input_list import InputListPanel
@@ -981,6 +984,11 @@ def perform_inversion(files, params):
                               v1=params[0], v2=params[1], stages=100)
     data = phase.Q, phase.RealR, phase.dRealR
 
+    if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
+        phase.save_q_r(outfile='inv_q_r.txt')
+        phase.save_q_i(outfile='inv_q_i.txt')
+        phase.save_q_r_dr(outfile='inv_q_r_dr.txt')
+
     # Perform phase inversion of the real part of a reflectivity amplitude that
     # was computed by the phase reconstruction algorithm.  The result is a step
     # profile of the scattering length density of the sample as a function of
@@ -1009,3 +1017,7 @@ def perform_inversion(files, params):
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right=0.96,
                           top=0.95, bottom=0.08)
+
+    if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
+        inv.save(outfile='inv_profile.prf')
+        print "*** Created inv_profile.prf"

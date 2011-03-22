@@ -1004,11 +1004,11 @@ def _refl_calc(kz, wavelength, depth, rho, mu, sigma):
 def reconstruct(file1, file2, u, v1, v2, stages=100):
     """
     Two reflectivity measurements of a film with different surrounding media
-    :math:`|r_1|^2` and :math:`|r_2|^2` can be combined to compute the expected 
-    complex reflection amplitude r_reversed of the free standing film measured 
-    from the opposite side. The calculation can be done by varying the fronting 
-    media or by varying the backing media. For this code we only support 
-    measurements through a uniform substrate *u*, on two varying surrounding 
+    :math:`|r_1|^2` and :math:`|r_2|^2` can be combined to compute the expected
+    complex reflection amplitude r_reversed of the free standing film measured
+    from the opposite side. The calculation can be done by varying the fronting
+    media or by varying the backing media. For this code we only support
+    measurements through a uniform substrate *u*, on two varying surrounding
     materials *v1*, *v2*.
 
     We have to be careful about terminology. We will use the term substrate to
@@ -1038,7 +1038,7 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
        the same absorption as the reflected beam. Refraction on entering and
        leaving the substrated is accounted for by a small adjustment to Q
        inside the reflectivity calculation.
-       
+
 
     When measuring reflectivity through the substrate, the beam enters the
     substrate from the side, refracts a little because of the steep angle of
@@ -1130,7 +1130,7 @@ class SurroundVariation():
             *z:* boolean
                 Represents the depth into the profile. z equals thickness at
                 the substrate.
-                
+
             *rho_initial:* boolean
                 The initial profile *rho_initial* should come from direct
                 inversion.
@@ -1159,7 +1159,7 @@ class SurroundVariation():
             *z:* boolean
                 Represents the depth into the profile. z equals thickness at
                 the substrate.
-                
+
             *rho:* boolean
                 If the resolution is known, then return the convolved theory
                 function.
@@ -1241,6 +1241,58 @@ class SurroundVariation():
         fid.write(header+"\n")
         numpy.savetxt(fid, array(v).T)
         fid.close()
+
+
+    def save_q_r_dr(self, outfile=None):
+        """
+        Save Q, RealR, and dRealR to a file.
+        """
+
+        fid = open(outfile, "w")
+        fid.write("# %13s %15s %15s\n"%("Q", "RealR", "dRealR"))
+        numpy.savetxt(fid, array([self.Q, self.RealR, self.dRealR]).T)
+        fid.close()
+        print "*** Created", outfile
+
+
+    def save_q_r(self, outfile=None):
+        """
+        Save Q and Real R to a file.
+        """
+
+        fid = open(outfile, "w")
+        fid.write("# %9s %11s\n"%("Q", "RealR"))
+        for point in zip(self.Q, self.RealR):
+            fid.write("%11.6g %11.6g\n"%point)
+        fid.close()
+        print "*** Created", outfile
+
+        '''
+        fid = open(outfile, "w")
+        fid.write("# %13s %15s\n"%("Q", "RealR"))
+        numpy.savetxt(fid, array([self.Q, self.RealR]).T)
+        fid.close()
+        '''
+
+
+    def save_q_i(self, outfile=None):
+        """
+        Save Q and Imaginary R to a file.
+        """
+
+        fid = open(outfile, "w")
+        fid.write("# %13s %15s\n"%("Q", "ImagR"))
+        numpy.savetxt(fid, array([self.Q, self.ImagR]).T)
+        fid.close()
+        print "*** Created", outfile
+
+        '''
+        fid = open(outfile, "w")
+        fid.write("# %10s %12s\n"%("Q", "ImagR"))
+        for point in zip(self.Q, self.ImagR):
+            fid.write("%12.6g %12.6g\n"%point)
+        fid.close()
+        '''
 
 
     def show(self):
