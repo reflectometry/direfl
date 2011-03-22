@@ -981,11 +981,6 @@ def perform_inversion(files, params):
                               v1=params[0], v2=params[1], stages=100)
     data = phase.Q, phase.RealR, phase.dRealR
 
-    if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
-        phase.save_q_r(outfile='inv_q_r.txt')
-        phase.save_q_i(outfile='inv_q_i.txt')
-        phase.save_q_r_dr(outfile='inv_q_r_dr.txt')
-
     # Perform phase inversion of the real part of a reflectivity amplitude that
     # was computed by the phase reconstruction algorithm.  The result is a step
     # profile of the scattering length density of the sample as a function of
@@ -1003,12 +998,13 @@ def perform_inversion(files, params):
                                       ctf_window=0, #cosine transform smoothing
                                       backrefl=True,
                                       bse=params[10],
-                                      noise=1,  # inversion noise factor
+                                      noise=1,      # inversion noise factor
                                       showiters=False,
                                       monitor=None))
 
     # Generate the plots.
     inv.run(showiters=False)
+
     if len(sys.argv) > 1 and '--plot6' in sys.argv[1:]:
         inv.plot6(phase=phase)
     else:
@@ -1018,6 +1014,17 @@ def perform_inversion(files, params):
                           left=0.09, right=0.96,
                           top=0.95, bottom=0.08)
 
+    # If the user requests, create data files to capture the data used to
+    # generate the plots.
     if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
-        inv.save(outfile='inv_profile.prf')
-        print "*** Created inv_profile.prf"
+        outfile='inv_phase.dat'
+        phase.save(outfile=outfile, uncertainty=True)
+        print "*** Created", outfile
+
+        outfile='inv_refl.dat'
+        phase.save_inverted(profile=(inv.z, inv.rho), outfile=outfile)
+        print "*** Created", outfile
+
+        outfile='inv_profile.dat'
+        inv.save(outfile=outfile)
+        print "*** Created", outfile

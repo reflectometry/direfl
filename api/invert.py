@@ -542,7 +542,7 @@ class Inversion():
             basefile = os.path.splitext(os.path.basename(self.name))[0]
             outfile = basefile+os.extsep+"amp"
         fid = open(outfile, "w")
-        fid.write("# %13s %15s %15s\n"%("z", "rho", "drho"))
+        fid.write("#  Z  Rho  dRho\n")
         numpy.savetxt(fid, array([self.z,self.rho,self.drho]).T)
         fid.close()
 
@@ -833,12 +833,12 @@ class Inversion():
             du = self.ctf_window*h*self.thickness/2
             qinter = Interpolator(ut, q, porder=1)
             q = (qinter(ut - du) + qinter(ut) + qinter(ut + du))/3
-        q = hstack((q,0))
+        q = hstack((q, 0))
         qp = [(ut, -2*q*self.rhoscale)]
 
-        Delta = zeros((mx,2*mx),'d')
+        Delta = zeros((mx, 2*mx),'d')
         for iter in range(iters):
-            for m in range(2,mx):
+            for m in range(2, mx):
                 n = array(range(m, 2*mx-(m+1)))
                 Delta[m,n] = (h**2 * q[m-1] * (g[m+n] + Delta[m-1,n])
                         + Delta[m-1,n+1] + Delta[m-1,n-1] - Delta[m-2,n])
@@ -979,7 +979,7 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     r[~idx] = _refl_calc(abs(kz[~idx]), wavelength[~idx],
                    depth[-1::-1], rho[-1::-1], mu[-1::-1],
                    sigma[n-2::-1])
-    r[abs(kz)<1.e-6] = -1  # to prevent running into a NaN later on
+    r[abs(kz)<1.e-6] = -1  # reflectivity at kz=0 is -1
     return r
 
 
@@ -1204,6 +1204,16 @@ class SurroundVariation():
         return R1,R2
 
 
+    def _calc_free(self, z, rho):
+        w = numpy.hstack((0, numpy.diff(z), 0))
+        rho = numpy.hstack((self.u, rho[1:], self.u))
+        rho[0] = self.u
+        Q = -self.Qin
+        if self.backrefl: Q=-Q
+        r = refl(Q, w, rho)
+        return r.real, r.imag
+
+
     def _calc_refl(self, w, rho):
         Q,dQ = self.Qin,self.dQin
         # Back reflectivity is equivalent to -Q inputs
@@ -1235,7 +1245,8 @@ class SurroundVariation():
 
     def save(self, outfile=None, uncertainty=True):
         """
-        Save Q,RealR,ImagR to three column text file named *outfile*.
+        Save Q, RealR, ImagR to a three column text file named *outfile*, or
+        save Q, RealR, ImagR, dRealR, dImagR to a five column text file.
 
         **Parameters:**
             *outfile:* file
@@ -1252,15 +1263,29 @@ class SurroundVariation():
             basefile = os.path.splitext(os.path.basename(self.name1))[0]
             outfile = basefile+os.extsep+"amp"
 
-        header = "# %13s %15s %15s"%("Q", "RealR", "ImagR")
+        header = "#  Q  RealR  ImagR"
         v = [self.Q, self.RealR, self.ImagR]
         if self.dRealR is not None and uncertainty:
-            header += " %15s %15s"%("dRealR","dImagR")
+            header += "  dRealR  dImagR"
             v += [self.dRealR, self.dImagR]
 
         fid = open(outfile, "w")
         fid.write(header+"\n")
         numpy.savetxt(fid, array(v).T)
+        fid.close()
+
+
+    def save_inverted(self, outfile=None, profile=None):
+        """
+        Save Q, R1 ,R2, RealR of the inverted profile.
+        """
+
+        R1, R2 = self.refl(*profile)
+        rer,imr = self._calc_free(*profile)
+        data = numpy.vstack((self.Qin, R1, R2, rer, imr))
+        fid = open(outfile, "w")
+        fid.write("#  Q  R1  R2  RealR  ImagR\n")
+        numpy.savetxt(fid, array(data).T)
         fid.close()
 
 
@@ -1288,13 +1313,6 @@ class SurroundVariation():
         fid.close()
         print "*** Created", outfile
 
-        '''
-        fid = open(outfile, "w")
-        fid.write("# %13s %15s\n"%("Q", "RealR"))
-        numpy.savetxt(fid, array([self.Q, self.RealR]).T)
-        fid.close()
-        '''
-
 
     def save_q_i(self, outfile=None):
         """
@@ -1306,14 +1324,6 @@ class SurroundVariation():
         numpy.savetxt(fid, array([self.Q, self.ImagR]).T)
         fid.close()
         print "*** Created", outfile
-
-        '''
-        fid = open(outfile, "w")
-        fid.write("# %10s %12s\n"%("Q", "ImagR"))
-        for point in zip(self.Q, self.ImagR):
-            fid.write("%12.6g %12.6g\n"%point)
-        fid.close()
-        '''
 
 
     def show(self):
