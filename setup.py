@@ -13,7 +13,7 @@ def configuration(parent_package='', top_path=None):
     config.add_subpackage('common')
     config.add_subpackage('gui')
 
-    config.add_data_dir('data')
+    config.add_data_dir('examples')
     config.add_data_dir('doc')
     config.add_data_dir('tests')
     #config.add_data_dir('xtras')

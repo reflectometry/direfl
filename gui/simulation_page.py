@@ -74,7 +74,7 @@ TEXT_FILES = "Text files (*.txt)|*.txt"
 ALL_FILES = "All files (*.*)|*.*"
 
 # Resource files.
-DATA_DIR = "data"
+DATA_DIR = "examples"
 DEMO_MODEL1_DESC = "demo_model_1.dat"
 DEMO_MODEL2_DESC = "demo_model_2.dat"
 DEMO_MODEL3_DESC = "demo_model_3.dat"
