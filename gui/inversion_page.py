@@ -58,10 +58,7 @@ import pylab
 import numpy
 from numpy import linspace, inf
 
-if len(sys.argv) > 1 and '--plot6' in sys.argv[1:]:
-    from ..api.invert2 import SurroundVariation, Inversion
-else:
-    from ..api.invert import SurroundVariation, Inversion
+from ..api.invert import SurroundVariation, Inversion
 from ..common.utilities import get_appdir
 
 from .input_list import InputListPanel
@@ -1012,7 +1009,10 @@ def perform_inversion(files, params):
 
     # Generate the plots.
     inv.run(showiters=False)
-    inv.plot(phase=phase)
+    if len(sys.argv) > 1 and '--plot6' in sys.argv[1:]:
+        inv.plot6(phase=phase)
+    else:
+        inv.plot(phase=phase)
 
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
                           left=0.09, right=0.96,

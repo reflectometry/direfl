@@ -611,6 +611,25 @@ class Inversion():
         self.plot_input(details=details)
 
 
+    def plot6(self, details=False, phase=None):
+        # This is an alternate to plot6 for evaluation purposes.
+        import pylab
+
+        if phase:
+            pylab.subplot(321)
+            phase.plot_measurement(profile=(self.z, self.rho))
+            pylab.subplot(323)
+            phase.plot_imaginary()
+            pylab.subplot(325)
+            phase.plot_phase()
+        pylab.subplot(322 if phase else 311)
+        self.plot_profile(details=details)
+        pylab.subplot(324 if phase else 312)
+        self.plot_input(details=details)
+        pylab.subplot(326 if phase else 313)
+        self.plot_residual()
+
+
     def plot_input(self, details=False, lowQ_inset=0):
         """
         Plot the real R vs. the real R computed from inversion.
@@ -636,7 +655,8 @@ class Inversion():
         else:
             plotamp(self.Q, self.RealR, dr=self.dRealR, label=None,
                     linestyle='', color="blue")
-            plotamp(self.Qinput, self.RealRinput, label="Original",
+            #plotamp(self.Qinput, self.RealRinput, label="Original",
+            plotamp(self.Qinput, self.RealRinput, label="Input",
                     color="blue")
             Rinverted = real(self.refl(self.Qinput))
             plotamp(self.Qinput, Rinverted, color=DARK_RED, label="Inverted")
@@ -1355,8 +1375,10 @@ class SurroundVariation():
 
     def plot_phase(self):
         import pylab
-        plotamp(self.Q, self.ImagR, dr=self.dImagR)
-        plotamp(self.Q, self.RealR, dr=self.dRealR)
+        plotamp(self.Q, self.ImagR, dr=self.dImagR,
+                color='blue', label='Imag R')
+        plotamp(self.Q, self.RealR, dr=self.dRealR,
+                color=DARK_RED, label='Real R')
         pylab.legend(prop=FontProperties(size='medium'))
         plottitle('Reconstructed Phase')
 
@@ -1370,7 +1392,7 @@ class SurroundVariation():
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.ylabel("(100 Q)^2 Imag R")
         pylab.xlabel("Q (inv A)")
-        plottitle('Reconstructed Phase (Imaginary)')
+        plottitle('Reconstructed Phase')
 
 
     def _load(self, file1, file2):

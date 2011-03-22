@@ -219,7 +219,7 @@ class Simulation():
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.xlabel('Q (inv A)')
         pylab.ylabel('(100 Q)^2 Imag R')
-        plottitle('Reconstructed Phase (Imaginary)')
+        plottitle('Reconstructed Phase')
 
 
     def plot_phase_residual(self, subplot=111):

@@ -41,6 +41,10 @@ Options for showing diagnostic info:
     --time          Display diagnostic timing information
     --syspath       Display the contents of sys.path
 
+Options for enabling features for evaluation purposes:
+    --write         Create files containing data used to generate certain plots
+    --plot6         Display 6 subplots instead of 4 in the inversion tab
+
 Options for overriding the default font and point size attributes where
 parameters in each set are mutually exclusive (last one takes precedence):
     --tahoma, --arial, --verdana
