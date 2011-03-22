@@ -979,6 +979,7 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     r[~idx] = _refl_calc(abs(kz[~idx]), wavelength[~idx],
                    depth[-1::-1], rho[-1::-1], mu[-1::-1],
                    sigma[n-2::-1])
+    r[abs(kz)<1.e-6] = -1  # to prevent running into a NaN later on
     return r
 
 
