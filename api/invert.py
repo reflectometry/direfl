@@ -655,7 +655,6 @@ class Inversion():
         else:
             plotamp(self.Q, self.RealR, dr=self.dRealR, label=None,
                     linestyle='', color="blue")
-            #plotamp(self.Qinput, self.RealRinput, label="Original",
             plotamp(self.Qinput, self.RealRinput, label="Input",
                     color="blue")
             Rinverted = real(self.refl(self.Qinput))
@@ -1205,6 +1204,7 @@ class SurroundVariation():
 
 
     def _calc_free(self, z, rho):
+        # This is more or less cloned code that should be written just once.
         w = numpy.hstack((0, numpy.diff(z), 0))
         rho = numpy.hstack((self.u, rho[1:], self.u))
         rho[0] = self.u

@@ -1,0 +1,7 @@
+# SLDensity  Thickness  Roughness
+6.33  20      # varying surround
+0.0   20   0  # air
+8.5   18   5  # organic
+4.28  70   5  # Au
+3.5   20   5  # Cr
+2.07  100  0  # Si substrate
