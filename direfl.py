@@ -169,8 +169,6 @@ class DiReflGUIApp(wx.App):
         monitors it will be placed on the left side of the screen.
         """
 
-        xpos = ypos = 0
-
         # WORKAROUND: When running Linux and using an Xming (X11) server on a
         # PC with a dual monitor configuration, the reported display count may
         # be 1 (instead of 2) with a display size of both monitors combined.
@@ -181,14 +179,17 @@ class DiReflGUIApp(wx.App):
         # application will be placed towards the left hand side of the screen.
 
         x, y, w, h = wx.Display().GetClientArea() # size excludes task bar
+        #print "*** x, y, w, h", x, y, w, h
+        xpos, ypos = x, y
+        h -= 20  # to make room for Mac window decorations
         if len(sys.argv) > 1 and '--platform' in sys.argv[1:]:
             j, k = wx.DisplaySize()  # size includes task bar area
             print "*** Reported screen size including taskbar is %d x %d"%(j, k)
             print "*** Reported screen size excluding taskbar is %d x %d"%(w, h)
 
         if w > 1920: w = 1280  # display on left side, not centered on screen
-        if w > desired_width:  xpos = (w - desired_width)/2
-        if h > desired_height: ypos = (h - desired_height)/2
+        if w > desired_width:  xpos = x + (w - desired_width)/2
+        if h > desired_height: ypos = y + (h - desired_height)/2
 
         # Return the suggested position and size for the application frame.
         return (xpos, ypos), (min(w, desired_width), min(h, desired_height))

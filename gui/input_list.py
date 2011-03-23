@@ -998,7 +998,7 @@ class AppTestFrame(wx.Frame):
             ["Non-editable field:", "Cannot be changed!", "str", '', None],
             ["ComboBox String:", "Two", "str", 'CREL', ("One", "Two", "Three")],
             # ComboBox items must be specified as strings
-            ["ComboBox String:", "", "int", 'CE', ("100", "200", "300")],
+            ["ComboBox String:", "100", "int", 'CE', ("100", "200", "300")],
             ["String (alphabetic):", "Aa", "str_alpha", 'E', None],
             ["String (alphanumeric):", "Aa1", "str_alnum", 'E', None],
             ["String (A-Z, a-z, 0-9, _, -):", "A-1_a", "str_id", 'E', None],
