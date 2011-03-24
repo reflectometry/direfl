@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2010, University of Maryland
+# Copyright (C) 2006-2011, University of Maryland
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -126,11 +126,11 @@ class SimulationPage(wx.Panel):
         self.sbi = StatusBarInfo()
         self.sbi.write(1, SIM_HELP1)
 
-        # Split the panel to separate the input fields from the plots.
-        # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
+        # Split the panel into parameter and plot subpanels.
         sp = wx.SplitterWindow(self, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
-        #sp.SetMinimumPaneSize(100)
-        sp.SetMinimumPaneSize(310)
+        sp.SetMinimumPaneSize(100)
+        if wx.Platform == "__WXMAC__":  # workaround to set sash position on
+            sp.SetMinimumPaneSize(310)  # frame.Show() to desired initial value
 
         # Create display panels as children of the splitter.
         self.pan1 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
@@ -152,8 +152,6 @@ class SimulationPage(wx.Panel):
         self.SetSizer(sizer)
         sizer.Fit(self)
 
-        #sp.SetSashPosition(position=310, redraw=False)
-        
 
     def init_param_panel(self):
         """Initializes the parameter input panel of the SimulationPage."""
@@ -161,6 +159,10 @@ class SimulationPage(wx.Panel):
         #----------------------------
         # Section 1: Model Parameters
         #----------------------------
+
+        # Note that a static box must be created before creating the widgets
+        # that appear inside it (box and widgets must have the same parent).
+        sbox1 = wx.StaticBox(self.pan1, wx.ID_ANY, "Model Parameters")
 
         # Create instructions for using the model description input box.
         line1 = wx.StaticText(self.pan1, wx.ID_ANY,
@@ -182,9 +184,7 @@ class SimulationPage(wx.Panel):
 
         # Group model parameter widgets into a labelled section and
         # manage them with a static box sizer.
-        #sbox1 = wx.StaticBox(self.pan1, wx.ID_ANY, "Model Parameters")
-        #sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
-        sbox1_sizer = wx.BoxSizer(wx.VERTICAL)
+        sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
         sbox1_sizer.Add(line1, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=5)
         sbox1_sizer.Add(line2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=5)
         sbox1_sizer.Add((10,4), 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=5)
@@ -195,6 +195,9 @@ class SimulationPage(wx.Panel):
         # Section 2: Instrument Parameters
         #---------------------------------
 
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Resolution Parameters")
+
+        # Instantiate object that manages and stores instrument metadata.
         self.instr_param = InstrumentParameters()
 
         # Create a panel for gathering instrument metadata.
@@ -244,15 +247,16 @@ class SimulationPage(wx.Panel):
 
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
-        #sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY,
-        #                     "Resolution Parameters")
-        #sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer = wx.BoxSizer(wx.VERTICAL)
+        sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
         sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=5)
 
         #---------------------------------------------------
         # Section 3: Inversion and Reconstruction Parameters
         #---------------------------------------------------
+
+        sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
+
+        # Instantiate object that manages and stores inversion parameters.
 
         fields = [
                    ["SLD of Surface for Run 1:", None, "float", 'RE', None],
@@ -281,9 +285,7 @@ class SimulationPage(wx.Panel):
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
-        #sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
-        #sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
-        sbox3_sizer = wx.BoxSizer(wx.VERTICAL)
+        sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
         sbox3_sizer.Add(self.inver_param, 1,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=5)
 
@@ -291,7 +293,10 @@ class SimulationPage(wx.Panel):
         # Section 4: Control Buttons
         #---------------------------
 
+        sbox4 = wx.StaticBox(self.pan1, wx.ID_ANY, "")
+
         # Create radio buttons to enable/disable resolution calculation.
+
         calc_reso = wx.StaticText(self.pan1, wx.ID_ANY,
                                   label="With Resolution:  ")
         calc_reso.SetBackgroundColour(WINDOW_BKGD_COLOUR)
@@ -308,9 +313,7 @@ class SimulationPage(wx.Panel):
         grid1.Add(self.radio1, 0, wx.ALIGN_CENTER)
         grid1.Add(self.radio2, 0, wx.ALIGN_CENTER)
 
-        #sbox4 = wx.StaticBox(self.pan1, wx.ID_ANY, "")
-        #sbox4_sizer = wx.StaticBoxSizer(sbox4, wx.HORIZONTAL)
-        sbox4_sizer = wx.BoxSizer(wx.VERTICAL)
+        sbox4_sizer = wx.StaticBoxSizer(sbox4, wx.HORIZONTAL)
         sbox4_sizer.Add(calc_reso, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         sbox4_sizer.Add(grid1, 0, wx.ALIGN_CENTER_VERTICAL)
 

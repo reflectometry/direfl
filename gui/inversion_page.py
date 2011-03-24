@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2010, University of Maryland
+# Copyright (C) 2006-2011, University of Maryland
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -111,11 +111,11 @@ class InversionPage(wx.Panel):
         self.sbi = StatusBarInfo()
         self.sbi.write(1, INV_HELP1)
 
-        # Split the panel to separate the input fields from the plots.
-        # wx.SP_LIVE_UPDATE can be omitted to disable repaint as sash is moved.
+        # Split the panel into parameter and plot subpanels.
         sp = wx.SplitterWindow(self, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
-        #sp.SetMinimumPaneSize(100)
-        sp.SetMinimumPaneSize(310)
+        sp.SetMinimumPaneSize(100)
+        if wx.Platform == "__WXMAC__":  # workaround to set sash position on
+            sp.SetMinimumPaneSize(310)  # frame.Show() to desired initial value
 
         # Create display panels as children of the splitter.
         self.pan1 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
@@ -141,8 +141,6 @@ class InversionPage(wx.Panel):
         sizer.Add(sp, 1, wx.EXPAND)
         self.SetSizer(sizer)
         sizer.Fit(self)
-        
-        #sp.SetSashPosition(position=310, redraw=False)
 
 
     def init_param_panel(self):
@@ -151,6 +149,10 @@ class InversionPage(wx.Panel):
         #----------------------------
         # Section 1: Input Data Files
         #----------------------------
+
+        # Note that a static box must be created before creating the widgets
+        # that appear inside it (box and widgets must have the same parent).
+        sbox1 = wx.StaticBox(self.pan1, wx.ID_ANY, "Reflectometry Data Files")
 
         # Create a panel for obtaining input file selections.
         self.pan11 = wx.Panel(self.pan1, wx.ID_ANY, style=wx.RAISED_BORDER)
@@ -208,15 +210,16 @@ class InversionPage(wx.Panel):
 
         # Group file selection widgets into a labelled section and
         # manage them with a static box sizer.
-        #sbox1 = wx.StaticBox(self.pan1, wx.ID_ANY, "Reflectometry Data Files")
-        #sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
-        sbox1_sizer = wx.BoxSizer(wx.VERTICAL)
+        sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
         sbox1_sizer.Add(self.pan11, 0, wx.EXPAND|wx.ALL, border=5)
 
         #---------------------------------
         # Section 2: Instrument Parameters
         #---------------------------------
 
+        sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY, "Resolution Parameters")
+
+        # Instantiate object that manages and stores instrument metadata.
         self.instr_param = InstrumentParameters()
 
         # Create a panel for gathering instrument metadata.
@@ -266,15 +269,16 @@ class InversionPage(wx.Panel):
 
         # Group instrument metadata widgets into a labelled section and
         # manage them with a static box sizer.
-        #sbox2 = wx.StaticBox(self.pan1, wx.ID_ANY,
-        #                     "Resolution Parameters for Information Only")
-        #sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer = wx.BoxSizer(wx.VERTICAL)
+        sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
         sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=5)
 
         #---------------------------------------------------
         # Section 3: Inversion and Reconstruction Parameters
         #---------------------------------------------------
+
+        sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
+
+        # Instantiate object that manages and stores inversion parameters.
 
         fields = [ ["SLD of Surface for Run 1:", None, "float", 'RE', None],
                    ["SLD of Surface for Run 2:", None, "float", 'RE', None],
@@ -299,9 +303,7 @@ class InversionPage(wx.Panel):
 
         # Group inversion parameter widgets into a labelled section and
         # manage them with a static box sizer.
-        #sbox3 = wx.StaticBox(self.pan1, wx.ID_ANY, "Inversion Parameters")
-        #sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
-        sbox3_sizer = wx.BoxSizer(wx.VERTICAL)
+        sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
         sbox3_sizer.Add(self.inver_param, 1,
                         wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=5)
 
