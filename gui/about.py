@@ -23,7 +23,7 @@
 """
 This module contains a custom About Dialog class and associated text strings
 used for informational display purposes.  Note that the product version is
-maintained in the version.py file and thus imported here.
+maintained in the version.py file and therefore is imported here.
 """
 
 import os
@@ -51,7 +51,7 @@ APP_NAME = "DiRefl"
 
 APP_TITLE = "DiRefl - Direct Inversion Reflectometry"
 
-APP_COPYRIGHT = "(C) 2010 University of Maryland"
+APP_COPYRIGHT = "(C) 2011 University of Maryland"
 
 APP_DESCRIPTION = """\
 The Direct Inversion Reflectometry (DiRefl) application generates a scattering \
@@ -64,11 +64,16 @@ DiRefl applies phase reconstruction and direct inversion techniques to analyze \
 the reflectivity datasets produced by the two neutron scattering experiments \
 performed on a single or multi-layer sample sandwiched between incident and \
 substrate layers whose characteristics are known.  The only setup difference \
-between the runs is that the user changes the material of one of the \
-surrounding layers.  Output from DiRefl is in the form of a SLD profile graph \
-and other supporting plots that can be saved or printed.  In addition, the user \
-can load, edit, and save model information, load reflectometry datasets, and \
-adjust several parameters that affect the qualitative results of the analysis.
+between the runs is that the user changes the composition of one of the \
+surrounding layers.
+
+The primary output from DiRefl is a SLD profile graph of the sample along with \
+other supporting plots that can be saved or printed.  Optionally, the raw data \
+used to generate the plots can be saved.  In addition, the user is able to \
+load, edit, and save model information, load and view their reflectometry \
+datasets, edit instrument and measurement settings that are used to calculate \
+resolution, and adjust inversion parameters that affect the qualitative \
+results of the analysis.
 """
 
 APP_LICENSE = """\
@@ -99,17 +104,20 @@ by scientists at NIST and initially coded in Fortran.  The port of this code \
 to Python and the design and development of the DiRefl application was a joint \
 effort by UMD and NIST as part of the Distributed Data Analysis of Neutron \
 Scattering Experiments (DANSE) project funded by the US National Science \
-Foundation under grant DMR-0520547.
+Foundation under grant DMR-0520547.  Principal contributors:
 
 Paul Kienzle, NIST
-    - API development
-    - Reflectivity and resolution calculations
+    - Implementation of simulation, reconstruction, and inversion functions
+      including the reflectivity and resolution calculations
+
 Charles Majkrzak, NIST
     - Phase reconstruction algorithm
+
 Norm Berk, NIST
     - Phase inversion algorithm
+
 James Krycka, UMD
-    - GUI development
+    - Graphical User Interface design and development
 """
 
 APP_PROJECT_URL = "http://reflectometry.org/danse"

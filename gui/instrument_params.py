@@ -177,16 +177,16 @@ class InstrumentParameters():
                    ["Instrument location:", self.instr_location[i],
                        "str", 'R', None],
                    ["Wavelength (A):", self.wavelength[1][i],
-                       "float", 'REH2', None, "Instrument Attributes"],
+                       "float", 'REH2', None, "Instrument Settings"],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i],
                        "float", 'RE', None],
                    ["Distance to Slit 1 (mm):", self.d_s1[1][i],
                        "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i],
                        "float", 'RE', None],
-                   ["Theta Lo (degrees):", self.Tlo[1][i],
+                   ["Theta Lo (deg):", self.Tlo[1][i],
                        "float", 'REH2', None, "Measurement Settings"],
-                   ["Theta Hi (degrees):", self.Thi[1][i],
+                   ["Theta Hi (deg):", self.Thi[1][i],
                        "float", 'E', None],
                    ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i],
                        "float", 'RE', None],
@@ -202,7 +202,7 @@ class InstrumentParameters():
                        "float", 'E', None],
                    ["Sample Width (mm):", self.sample_width[1][i],
                        "float", 'E', None],
-                   ["Sample Broadening (mm):", self.sample_broadening[1][i],
+                   ["Sample Broadening (deg):", self.sample_broadening[1][i],
                        "float", 'E', None],
                  ]
 
@@ -212,7 +212,7 @@ class InstrumentParameters():
         frame = wx.FindWindowByName("AppFrame")
         x, y = frame.GetPositionTuple()
         dlg = InputListDialog(parent=frame,
-                              title="Edit Instrument Parameters",
+                              title="Instrument Properties",
                               pos=(x+350, y+50),
                               itemlist=fields,
                               align=True)
@@ -254,7 +254,7 @@ class InstrumentParameters():
                    ["Instrument location:", self.instr_location[i],
                        "str", 'R', None],
                    ["Wavelength Lo (A):", self.wavelength_lo[1][i],
-                       "float", 'REH2', None, "Instrument Attributes"],
+                       "float", 'REH2', None, "Instrument Settings"],
                    ["Wavelength Hi (A):", self.wavelength_hi[1][i],
                        "float", 'RE', None],
                    ["Wavelength Dispersion (dLoL):", self.dLoL[1][i],
@@ -263,7 +263,7 @@ class InstrumentParameters():
                        "float", 'RE', None],
                    ["Distance to Slit 2 (mm):", self.d_s2[1][i],
                        "float", 'RE', None],
-                   ["Theta (degrees):", self.T[1][i],
+                   ["Theta (deg):", self.T[1][i],
                        "float", 'REH2', None, "Measurement Settings"],
                    ["Size of Slit 1 (mm):", self.slit1_size[1][i],
                        "float", 'RE', None],
@@ -271,7 +271,7 @@ class InstrumentParameters():
                        "float", 'RE', None],
                    ["Sample Width (mm):", self.sample_width[1][i],
                        "float", 'EL', None],
-                   ["Sample Broadening (mm):", self.sample_broadening[1][i],
+                   ["Sample Broadening (deg):", self.sample_broadening[1][i],
                        "float", 'E', None],
                  ]
 
@@ -281,7 +281,7 @@ class InstrumentParameters():
         frame = wx.FindWindowByName("AppFrame")
         x, y = frame.GetPositionTuple()
         dlg = InputListDialog(parent=frame,
-                              title="Edit Instrument Parameters",
+                              title="Instrument Properties",
                               pos=(x+350, y+50),
                               itemlist=fields,
                               align=True)

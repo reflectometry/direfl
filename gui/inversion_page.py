@@ -339,7 +339,7 @@ class InversionPage(wx.Panel):
     def init_plot_panel(self):
         """Initializes the plotting panel of the InversionPage."""
 
-        INTRO_TEXT = "Phase Reconstruction and Inversion of Experimental Data:"
+        INTRO_TEXT = "Phase Reconstruction and Inversion Using Experimental Data:"
 
         # Instantiate a figure object that will contain our plots.
         figure = Figure()

@@ -350,7 +350,7 @@ class SimulationPage(wx.Panel):
     def init_plot_panel(self):
         """Initializes the plotting panel of the SimulationPage."""
 
-        INTRO_TEXT = "Phase Reconstruction and Inversion of Simulated Data:"
+        INTRO_TEXT = "Phase Reconstruction and Inversion Using Simulated Data:"
 
         # Instantiate a figure object that will contain our plots.
         figure = Figure()

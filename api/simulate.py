@@ -183,7 +183,7 @@ class Simulation():
         else:
             z,rho = self.invert.z, self.invert.rho
 
-        self.phase.plot_measurement(profile=(z,rho))
+        self.phase.plot_measurement(profile=(z, rho))
 
 
     def plot_real(self, subplot=111):
@@ -194,7 +194,7 @@ class Simulation():
         pylab.subplot(subplot)
         q,re,dre = self.phase.Q, self.phase.RealR, self.phase.dRealR
         scale = 1e4*q**2
-        [h] = pylab.plot(q, scale*re, '.', hold=False, label="Simulated")
+        [h] = pylab.plot(q, scale*re, '.', hold=False, label="Input")
         if dre is not None:
             pylab.fill_between(q, scale*(re-dre), scale*(re+dre),
                                color=h.get_color(), alpha=0.2)
