@@ -113,9 +113,11 @@ class InversionPage(wx.Panel):
 
         # Split the panel into parameter and plot subpanels.
         sp = wx.SplitterWindow(self, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
-        sp.SetMinimumPaneSize(100)
+
         if wx.Platform == "__WXMAC__":  # workaround to set sash position on
-            sp.SetMinimumPaneSize(310)  # frame.Show() to desired initial value
+            sp.SetMinimumPaneSize(300)  # frame.Show() to desired initial value
+        else:
+            sp.SetMinimumPaneSize(100)
 
         # Create display panels as children of the splitter.
         self.pan1 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
@@ -127,13 +129,13 @@ class InversionPage(wx.Panel):
         self.init_param_panel()
         self.init_plot_panel()
 
-        # Attach the panels to the splitter.
+        # Attach the child panels to the splitter.
         # Below is a workaround to keep width of pan1 in both page0 and page1
         # the same.  For some reason Windows renders this panel a bit too wide.
         if wx.Platform == "__WXMSW__":
-            sp.SplitVertically(self.pan1, self.pan2, sashPosition=303)
+            sp.SplitVertically(self.pan1, self.pan2, sashPosition=296)
         else:
-            sp.SplitVertically(self.pan1, self.pan2, sashPosition=310)
+            sp.SplitVertically(self.pan1, self.pan2, sashPosition=300)
         sp.SetSashGravity(0.2)  # on resize grow mostly on right side
 
         # Put the splitter in a sizer attached to the main panel of the page.
@@ -145,6 +147,13 @@ class InversionPage(wx.Panel):
 
     def init_param_panel(self):
         """Initializes the parameter input panel of the InversionPage."""
+
+        # Determine the border size for widgets placed inside a StaticBox.
+        # On the Mac, a generous minimum border is provided that is sufficient.
+        if wx.Platform == "__WXMAC__":
+            SBB = 0
+        else:
+            SBB = 5
 
         #----------------------------
         # Section 1: Input Data Files
@@ -208,10 +217,10 @@ class InversionPage(wx.Panel):
         self.pan11.SetSizer(vbox1_sizer)
         vbox1_sizer.Fit(self.pan11)
 
-        # Group file selection widgets into a labelled section and
+        # Group file selection widgets into a labeled section and
         # manage them with a static box sizer.
         sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
-        sbox1_sizer.Add(self.pan11, 0, wx.EXPAND|wx.ALL, border=5)
+        sbox1_sizer.Add(self.pan11, 0, wx.EXPAND|wx.ALL, border=SBB)
 
         #---------------------------------
         # Section 2: Instrument Parameters
@@ -235,7 +244,8 @@ class InversionPage(wx.Panel):
                          choices=instr_names,
                          style=wx.CB_DROPDOWN|wx.CB_READONLY)
         self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, cb)
-        #cb.SetBackgroundColour(PALE_YELLOW)  # this is not a required input
+        # Currently this field is not a required input.
+        #cb.SetBackgroundColour(PALE_YELLOW)
         self.instr_cb = cb
 
         # Create a horizontal box sizer for the combo box and its label.
@@ -252,9 +262,9 @@ class InversionPage(wx.Panel):
 
         # Create a horizontal box sizer for the buttons.
         hbox2_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox2_sizer.Add((10,20), 1)  # stretchable whitespace
+        hbox2_sizer.Add((10,-1), 1)  # stretchable whitespace
         hbox2_sizer.Add(btn_edit, 0)
-        hbox2_sizer.Add((10,20), 0)  # non-stretchable whitespace
+        hbox2_sizer.Add((10,-1), 0)  # non-stretchable whitespace
         hbox2_sizer.Add(btn_reset, 0)
 
         # Create a vertical box sizer for the input file selectors.
@@ -267,10 +277,10 @@ class InversionPage(wx.Panel):
         self.pan12.SetSizer(vbox2_sizer)
         vbox2_sizer.Fit(self.pan12)
 
-        # Group instrument metadata widgets into a labelled section and
+        # Group instrument metadata widgets into a labeled section and
         # manage them with a static box sizer.
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=5)
+        sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=SBB)
 
         #---------------------------------------------------
         # Section 3: Inversion and Reconstruction Parameters
@@ -280,8 +290,9 @@ class InversionPage(wx.Panel):
 
         # Instantiate object that manages and stores inversion parameters.
 
-        fields = [ ["SLD of Surface for Run 1:", None, "float", 'RE', None],
-                   ["SLD of Surface for Run 2:", None, "float", 'RE', None],
+        fields = [
+                   ["SLD of Surface Trial 1:", None, "float", 'RE', None],
+                   ["SLD of Surface Trial 2:", None, "float", 'RE', None],
                    ["SLD of Substrate:", None, "float", 'RE', None],
                    ["Sample Thickness:", None, "float", 'RE', None],
                    ["Qmin:", 0.0, "float", 'RE', None],
@@ -301,11 +312,10 @@ class InversionPage(wx.Panel):
         self.inver_param = InputListPanel(parent=self.pan1, itemlist=fields,
                                           align=True)
 
-        # Group inversion parameter widgets into a labelled section and
+        # Group inversion parameter widgets into a labeled section and
         # manage them with a static box sizer.
         sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
-        sbox3_sizer.Add(self.inver_param, 1,
-                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=5)
+        sbox3_sizer.Add(self.inver_param, 1, wx.EXPAND|wx.ALL, border=SBB)
 
         #---------------------------
         # Section 4: Control Buttons
@@ -317,8 +327,8 @@ class InversionPage(wx.Panel):
 
         # Create a horizontal box sizer for the buttons.
         hbox3_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox3_sizer.Add((10,20), 1)  # stretchable whitespace
-        hbox3_sizer.Add(self.btn_compute, 0)
+        hbox3_sizer.Add((10,-1), 1)  # stretchable whitespace
+        hbox3_sizer.Add(self.btn_compute, 0, wx.TOP, border=4)
 
         #----------------------------------------
         # Manage all of the widgets in the panel.
@@ -334,6 +344,9 @@ class InversionPage(wx.Panel):
         # Associate the sizer with its container.
         self.pan1.SetSizer(sizer)
         sizer.Fit(self.pan1)
+
+        # The splitter sash position should be greater than best width size.
+        #print "Best size for Inversion Panel is", self.pan1.GetBestSizeTuple()
 
 
     def init_plot_panel(self):

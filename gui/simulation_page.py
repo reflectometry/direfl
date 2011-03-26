@@ -128,9 +128,11 @@ class SimulationPage(wx.Panel):
 
         # Split the panel into parameter and plot subpanels.
         sp = wx.SplitterWindow(self, style=wx.SP_3D|wx.SP_LIVE_UPDATE)
-        sp.SetMinimumPaneSize(100)
+
         if wx.Platform == "__WXMAC__":  # workaround to set sash position on
-            sp.SetMinimumPaneSize(310)  # frame.Show() to desired initial value
+            sp.SetMinimumPaneSize(300)  # frame.Show() to desired initial value
+        else:
+            sp.SetMinimumPaneSize(100)
 
         # Create display panels as children of the splitter.
         self.pan1 = wx.Panel(sp, wx.ID_ANY, style=wx.SUNKEN_BORDER)
@@ -143,7 +145,8 @@ class SimulationPage(wx.Panel):
         self.init_plot_panel()
 
         # Attach the child panels to the splitter.
-        sp.SplitVertically(self.pan1, self.pan2, sashPosition=310)
+        sp.SplitVertically(self.pan1, self.pan2)
+        sp.SetSashPosition(300) # on Mac needs to be set after frame.Show()
         sp.SetSashGravity(0.2)  # on resize grow mostly on right side
 
         # Put the splitter in a sizer attached to the main panel of the page.
@@ -155,6 +158,13 @@ class SimulationPage(wx.Panel):
 
     def init_param_panel(self):
         """Initializes the parameter input panel of the SimulationPage."""
+
+        # Determine the border size for widgets placed inside a StaticBox.
+        # On the Mac, a generous minimum border is provided that is sufficient.
+        if wx.Platform == "__WXMAC__":
+            SBB = 0
+        else:
+            SBB = 5
 
         #----------------------------
         # Section 1: Model Parameters
@@ -177,19 +187,18 @@ class SimulationPage(wx.Panel):
         # Create an input box to enter and edit the model description and
         # populate it with a header but no layer information.
         # Note that the number of lines determines the height of the box.
-        # TODO: create a model edit box with a min-max height.
         self.model = wx.TextCtrl(self.pan1, wx.ID_ANY, value=demo_model_params,
                          style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.RAISED_BORDER)
         self.model.SetBackgroundColour(WINDOW_BKGD_COLOUR)
 
-        # Group model parameter widgets into a labelled section and
+        # Group model parameter widgets into a labeled section and
         # manage them with a static box sizer.
         sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
-        sbox1_sizer.Add(line1, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=5)
-        sbox1_sizer.Add(line2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=5)
-        sbox1_sizer.Add((10,4), 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=5)
-        sbox1_sizer.Add(self.model, 1,
-                        wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT, border=5)
+        sbox1_sizer.Add(line1, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=SBB)
+        sbox1_sizer.Add(line2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=SBB)
+        sbox1_sizer.Add((-1,4), 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=SBB)
+        sbox1_sizer.Add(self.model, 1, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT,
+                        border=SBB)
 
         #---------------------------------
         # Section 2: Instrument Parameters
@@ -230,9 +239,9 @@ class SimulationPage(wx.Panel):
 
         # Create a horizontal box sizer for the buttons.
         hbox2_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox2_sizer.Add((10,20), 1)  # stretchable whitespace
+        hbox2_sizer.Add((10,-1), 1)  # stretchable whitespace
         hbox2_sizer.Add(btn_edit, 0)
-        hbox2_sizer.Add((10,20), 0)  # non-stretchable whitespace
+        hbox2_sizer.Add((10,-1), 0)  # non-stretchable whitespace
         hbox2_sizer.Add(btn_reset, 0)
 
         # Create a vertical box sizer for the input file selectors.
@@ -245,10 +254,10 @@ class SimulationPage(wx.Panel):
         self.pan12.SetSizer(vbox2_sizer)
         vbox2_sizer.Fit(self.pan12)
 
-        # Group instrument metadata widgets into a labelled section and
+        # Group instrument metadata widgets into a labeled section and
         # manage them with a static box sizer.
         sbox2_sizer = wx.StaticBoxSizer(sbox2, wx.VERTICAL)
-        sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=5)
+        sbox2_sizer.Add(self.pan12, 0, wx.EXPAND|wx.ALL, border=SBB)
 
         #---------------------------------------------------
         # Section 3: Inversion and Reconstruction Parameters
@@ -259,8 +268,8 @@ class SimulationPage(wx.Panel):
         # Instantiate object that manages and stores inversion parameters.
 
         fields = [
-                   ["SLD of Surface for Run 1:", None, "float", 'RE', None],
-                   ["SLD of Surface for Run 2:", None, "float", 'RE', None],
+                   ["SLD of Surface Trial 1:", None, "float", 'RE', None],
+                   ["SLD of Surface Trial 2:", None, "float", 'RE', None],
                 ###["SLD of Substrate:", 2.07, "float", 'RE', None],
                 ###["Sample Thickness:", 1000, "float", 'RE', None],
                    ["Qmin:", 0.0, "float", 'RE', None],
@@ -283,11 +292,10 @@ class SimulationPage(wx.Panel):
         self.inver_param = InputListPanel(parent=self.pan1, itemlist=fields,
                                           align=True)
 
-        # Group inversion parameter widgets into a labelled section and
+        # Group inversion parameter widgets into a labeled section and
         # manage them with a static box sizer.
         sbox3_sizer = wx.StaticBoxSizer(sbox3, wx.VERTICAL)
-        sbox3_sizer.Add(self.inver_param, 1,
-                        wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=5)
+        sbox3_sizer.Add(self.inver_param, 1, wx.EXPAND|wx.ALL, border=SBB)
 
         #---------------------------
         # Section 4: Control Buttons
@@ -298,7 +306,7 @@ class SimulationPage(wx.Panel):
         # Create radio buttons to enable/disable resolution calculation.
 
         calc_reso = wx.StaticText(self.pan1, wx.ID_ANY,
-                                  label="With Resolution:  ")
+                                  label="Resolution:  ")
         calc_reso.SetBackgroundColour(WINDOW_BKGD_COLOUR)
 
         self.radio1 = wx.RadioButton(self.pan1, wx.ID_ANY, "Yes  ",
@@ -323,9 +331,9 @@ class SimulationPage(wx.Panel):
 
         # Create a horizontal box sizer for the buttons.
         hbox3_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox3_sizer.Add(sbox4_sizer, 0)
-        hbox3_sizer.Add((10,20), 1)  # stretchable whitespace
-        hbox3_sizer.Add(self.btn_compute, 0, wx.TOP, border=6)
+        hbox3_sizer.Add(sbox4_sizer, 0, wx.ALIGN_CENTER_VERTICAL)
+        hbox3_sizer.Add((10,-1), 1)  # stretchable whitespace
+        hbox3_sizer.Add(self.btn_compute, 0, wx.TOP, border=4)
 
         #----------------------------------------
         # Manage all of the widgets in the panel.
@@ -345,6 +353,9 @@ class SimulationPage(wx.Panel):
         # Set flag to indicate that resolution will be calculated for a
         # simulation operation.
         self.calc_resolution = True
+
+        # The splitter sash position should be greater than best width size.
+        #print "Best size for Simulation panel is", self.pan1.GetBestSizeTuple()
 
 
     def init_plot_panel(self):
@@ -724,7 +735,7 @@ class SimulationPage(wx.Panel):
 
         if self.instr_param.get_instr_idx() < 0:
             popup_warning_message("Select an Instrument",
-                "Please select an instrument from the drop down list.")
+                "Please select an instrument to edit from the drop down list.")
             return
         self.instr_param.edit_metadata()
 
