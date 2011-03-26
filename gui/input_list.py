@@ -284,8 +284,8 @@ class InputListPanel(ScrolledPanel):
         # Specify the widget layout using sizers.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Create the text controls for labels and associated input fields
-        # and any optional headers.
+        # Create the text controls for labels and associated input fields and
+        # any optional headers.
         self.add_items_to_panel()
 
         # Divide the input items into sections prefaced by header text (except
@@ -386,21 +386,23 @@ class InputListPanel(ScrolledPanel):
             w, h = self.labels[x].GetSize()
             if w > self.widest: self.widest = w
 
-            # Create the input box widget (combo box or simple data entry box)
+            # Create the input box widget (combo box or simple data entry box).
             if combo:              # it is a drop down combo box list
                 self.inputs.append(wx.ComboBox(self, wx.ID_ANY,
                                    value=str(default),
                                    validator=ItemListValidator(datatype, required),
                                    choices=plist,
+                                   size=(80,-1),  # min width about 10 digits
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY))
                 self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
             else:                  # it is a simple data entry field
                 self.inputs.append(wx.TextCtrl(self, wx.ID_ANY,
                                    value=str(default),
-                                   validator=ItemListValidator(datatype, required)))
+                                   validator=ItemListValidator(datatype, required),
+                                   size=(80,-1)))  # min width about 10 digits
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
 
-            # Verfiy that field is editable, otherwise don't allow user to edit
+            # Verify that field is editable, otherwise don't allow user to edit.
             if not editable:
                 self.inputs[x].Enable(False)
 
@@ -650,8 +652,8 @@ class InputListDialog(wx.Dialog):
         # Specify the widget layout using sizers.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Create the text controls for labels and associated input fields
-        # and any optional headers.
+        # Create the text controls for labels and associated input fields and
+        # any optional headers.
         self.add_items_to_dialog_box()
 
         # Divide the input items into sections prefaced by header text (except
@@ -683,9 +685,9 @@ class InputListDialog(wx.Dialog):
         # emulates the Windows convention for placing a set of buttons at the
         # bottom right of the window.
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.Add((10,20), 1)  # stretchable whitespace
+        button_sizer.Add((10,-1), 1)  # stretchable whitespace
         button_sizer.Add(ok_button, 0)
-        button_sizer.Add((10,20), 0)  # non-stretchable whitespace
+        button_sizer.Add((10,-1), 0)  # non-stretchable whitespace
         button_sizer.Add(cancel_button, 0)
 
         # Add a separator line before the buttons.
@@ -778,15 +780,17 @@ class InputListDialog(wx.Dialog):
                                    value=str(default),
                                    validator=ItemListValidator(datatype, required),
                                    choices=plist,
+                                   size=(80,-1),  # min width about 10 digits
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY))
                 self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
             else:                  # it is a simple data entry field
                 self.inputs.append(wx.TextCtrl(self, wx.ID_ANY,
                                    value=str(default),
-                                   validator=ItemListValidator(datatype, required)))
+                                   validator=ItemListValidator(datatype, required),
+                                   size=(80,-1)))  # min width about 10 digits
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
 
-            # Verfiy that field is editable, otherwise don't allow user to edit
+            # Verify that field is editable, otherwise don't allow user to edit.
             if not editable:
                 self.inputs[x].Enable(False)
 
@@ -960,7 +964,7 @@ class AppTestFrame(wx.Frame):
     Resize the main window to see scroll bars disappear and reappear.
     """
 
-    # Establish efault font and point size for test.
+    # Establish the default font and point size for test.
     FONTNAME = "Arial"
     if wx.Platform == "__WXMSW__":
         FONTSIZE = 9
@@ -996,8 +1000,8 @@ class AppTestFrame(wx.Frame):
                 "Test Header (%dpt font, underlined)"%pt_size],
             ["String (str, reqiured):", "delete me", "str", 'RE', None],
             ["Non-editable field:", "Cannot be changed!", "str", '', None],
-            ["ComboBox String:", "Two", "str", 'CREL', ("One", "Two", "Three")],
             # ComboBox items must be specified as strings
+            ["ComboBox String:", "Two", "str", 'CREL', ("One", "Two", "Three")],
             ["ComboBox String:", "100", "int", 'CE', ("100", "200", "300")],
             ["String (alphabetic):", "Aa", "str_alpha", 'E', None],
             ["String (alphanumeric):", "Aa1", "str_alnum", 'E', None],
@@ -1021,9 +1025,9 @@ class AppTestFrame(wx.Frame):
 
         # Create a horizontal sizer for the buttons.
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.Add((10,20), 1)  # stretchable whitespace
+        button_sizer.Add((10,-1), 1)  # stretchable whitespace
         button_sizer.Add(submit_button, 0)
-        button_sizer.Add((10,20), 0)  # non-stretchable whitespace
+        button_sizer.Add((10,-1), 0)  # non-stretchable whitespace
         button_sizer.Add(exit_button, 0)
 
         # Create a vertical box sizer for the panel and layout widgets in it.

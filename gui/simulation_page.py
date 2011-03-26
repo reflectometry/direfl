@@ -268,8 +268,8 @@ class SimulationPage(wx.Panel):
         # Instantiate object that manages and stores inversion parameters.
 
         fields = [
-                   ["SLD of Surface Trial 1:", None, "float", 'RE', None],
-                   ["SLD of Surface Trial 2:", None, "float", 'RE', None],
+                   ["SLD of Surface for Exp 1:", None, "float", 'RE', None],
+                   ["SLD of Surface for Exp 2:", None, "float", 'RE', None],
                 ###["SLD of Substrate:", 2.07, "float", 'RE', None],
                 ###["Sample Thickness:", 1000, "float", 'RE', None],
                    ["Qmin:", 0.0, "float", 'RE', None],
