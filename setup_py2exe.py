@@ -69,12 +69,12 @@ manifest_for_python25 = """
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
 <assemblyIdentity
-    version="0.64.1.0"
+    version="1.0.0.0"
     processorArchitecture="x86"
-    name="Controls"
+    name="%(prog)s"
     type="win32"
 />
-<description>DiRefl</description>
+<description>%(prog)s</description>
 <dependency>
     <dependentAssembly>
         <assemblyIdentity
@@ -93,22 +93,22 @@ manifest_for_python25 = """
 # Create a manifest for use with Python 2.6 or 2.7 on Windows XP or Vista.
 
 manifest_for_python26 = """
-<assembly xmlns="urn:schemas-microsoft-com:asm.v1"
-manifestVersion="1.0">
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
   <assemblyIdentity
-    version="0.6.8.0"
+    version="5.0.0.0"
     processorArchitecture="x86"
-    name="MyCare Card Browser"
-    type="win32"
-  />
-  <description>MyCare Card Browser Program</description>
+    name="%(prog)s"
+    type="win32">
+  </assemblyIdentity>
+  <description>%(prog)s</description>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
       <requestedPrivileges>
         <requestedExecutionLevel
           level="asInvoker"
-          uiAccess="false"
-        />
+          uiAccess="false">
+        </requestedExecutionLevel>
       </requestedPrivileges>
     </security>
   </trustInfo>
@@ -119,8 +119,8 @@ manifestVersion="1.0">
         name="Microsoft.VC90.CRT"
         version="9.0.21022.8"
         processorArchitecture="x86"
-        publicKeyToken="1fc8b3b9a1e18e3b"
-      />
+        publicKeyToken="1fc8b3b9a1e18e3b">
+      </assemblyIdentity>
     </dependentAssembly>
   </dependency>
   <dependency>
@@ -131,8 +131,8 @@ manifestVersion="1.0">
         version="6.0.0.0"
         processorArchitecture="x86"
         publicKeyToken="6595b64144ccf1df"
-        language="*"
-      />
+        language="*">
+      </assemblyIdentity>
     </dependentAssembly>
   </dependency>
 </assembly>
@@ -169,6 +169,17 @@ data_files.append( ('examples', [os.path.join('examples', 'qrd2.refl')]) )
 data_files.append( ('examples', [os.path.join('examples', 'surround_air_4.refl')]) )
 data_files.append( ('examples', [os.path.join('examples', 'surround_d2o_4.refl')]) )
 
+# Add the Microsoft Visual C++ 2008 redistributable kit if we are building with
+# Python 2.6 or 2.7.  This kit will be installed on the target system as part
+# of the installation process for the frozen image.  Note that the Python 2.5
+# interpreter requires msvcr71.dll which is included in the Python25 package,
+# however, Python 2.6 and 2.7 require the msvcr90.dll but they do not bundle it
+# with the Python26 or Python27 package.  Thus, for Python 2.6 and later, the
+# appropriate dll must be present on the target system at runtime.
+if sys.version_info >= (2, 6):
+    pypath = os.path.dirname(sys.executable)
+    data_files.append( ('.', [os.path.join(pypath, 'vcredist_x86.exe')]) )
+
 # Specify required packages to bundle in the executable image.
 packages = ['matplotlib', 'numpy', 'scipy', 'pytz']
 
@@ -196,6 +207,7 @@ dll_excludes = ['libgdk_pixbuf-2.0-0.dll',
                 'QtGui4.dll',
                 'QtCore4.dll',
                 'msvcr71.dll',
+                'msvcp90.dll',
                 'w9xpopen.exe',
                 'cygwin1.dll']
 
@@ -207,23 +219,23 @@ class Target():
         self.version = version
 
 client = Target(
-    name = 'inversion',
-    description = 'DiRefl (Direct Inversion Reflectometry) GUI application',
+    name = 'DiRefl',
+    description = 'Direct Inversion Reflectometry (DiRefl) application',
     script = 'direfl.py',  # module to run on application start
     dest_base = 'direfl',  # file name part of the exe file to create
     icon_resources = [(1, 'direfl.ico')],  # also need to specify in data_files
     bitmap_resources = [],
-    other_resources = [(24, 1, manifest)])
+    other_resources = [(24, 1, manifest % dict(prog='DiRefl'))] )
 
-# Now do the work to create a standalone distribution using py2exe.
-# Specify either console mode or windows mode build.
+# Now we do the work to create a standalone distribution using py2exe.
 #
 # When the application is run in console mode, a console window will be created
 # to receive any logging or error messages and the application will then create
 # a separate GUI application window.
 #
 # When the application is run in windows mode, it will create a GUI application
-# window and no console window will be provided.
+# window and no console window will be provided.  Output to stderr will be
+# written to <app-image-name>.log.
 setup(
       #console=[client],
       windows=[client],
@@ -236,10 +248,10 @@ setup(
                    'optimize': 0,     # no byte-code optimization
                    'dist_dir': "dist",# where to put py2exe results
                    'xref': False,     # display cross reference (as html doc)
-                   'bundle_files': 1  # bundle python25.dll in executable
+                   'bundle_files': 1  # bundle python25.dll in library.zip
                          }
               },
-      zipfile=None,                   # bundle files in exe, not in library.zip
+      #zipfile=None,                  # None means bundle library.zip in exe
       data_files=data_files           # list of files to copy to dist directory
      )
 
