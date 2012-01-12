@@ -30,6 +30,9 @@ import os
 import sys
 import time
 
+APPNAME="DiRefl"
+DATA_DIR = "examples"
+
 #==============================================================================
 
 def get_appdir():
@@ -46,48 +49,59 @@ def get_appdir():
     return os.path.dirname(os.path.realpath(path))
 
 
-def get_rootdir(subdirlevel=1):
+_RESOURCE_DIR = None
+def resource_dir(app=APPNAME):
     """
-    Returns the path of the root directory of the package from which the
-    application is running (i.e., the path of the top-level directory of the
-    python package or the directory containing the frozen image being run).
+    Return the path to the application data.
 
-    The path returned is relative to where the application was started.
-    If subdirlevel = 0 then the script being run is assumed to be located
-    in the top-level directory of the package, otherwise n levels down.
-    For example, if the script is in <package>/bin, subdirlevel should be 1.
+    This is either in the environment variable {APP}_DATA, in the
+    source tree in gui/resources, or beside the executable in
+    {app}-data.
     """
+    # If we already found it, then we are done
+    global _RESOURCE_DIR
+    if _RESOURCE_DIR is not None: return _RESOURCE_DIR
 
-    path = get_appdir()
-    if hasattr(sys, "frozen"):  # check for py2exe image
-        return path
-    if subdirlevel > 0:
-        for x in range(subdirlevel):
-            path = os.path.abspath(os.path.join(path, '..'))
-    return path
+    # Check for data path in the environment
+    key = app.upper()+'_DATA'
+    if os.environ.has_key(key):
+        path = os.path.join(os.environ[key],data)
+        if not os.path.isdir(path):
+            raise RuntimeError('Path in environment %s not a directory'%key)
+        _RESOURCE_DIR = path
+        return _RESOURCE_DIR
 
-def get_rootdir_parent(subdirlevel=1):
-    """
-    Returns the path of the parent directory of the package from which the
-    application is running (i.e., the path one level above the top-level
-    directory of the package or returns None if a frozen image is being run).
+    # Check for data path in the package
+    path = os.path.join(os.path.dirname(__file__), 'resources')
+    #print >>sys.stderr, "checking for resource in",path
+    if os.path.isdir(path):
+        _RESOURCE_DIR = path
+        return _RESOURCE_DIR
 
-    See description of get_rootdir for definition of the subdirlevel parameter.
-    """
+    # Check for data path next to exe/zip file.
+    exepath = os.path.dirname(sys.executable)
+    path = os.path.join(exepath,app.lower()+'-data')
+    #print >>sys.stderr, "checking for resource in",path
+    if os.path.isdir(path):
+        _RESOURCE_DIR = path
+        return _RESOURCE_DIR
 
-    if hasattr(sys, "frozen"):  # check for py2exe image
-        return None
-    return os.path.abspath(os.path.join(get_rootdir(subdirlevel), '..'))
+    # py2app puts the data in Contents/Resources, but the executable
+    # is in Contents/MacOS.
+    path = os.path.join(exepath,'..','Resources',app.lower()+'-data')
+    #print >>sys.stderr, "checking for resource in",path
+    if os.path.isdir(path):
+        _RESOURCE_DIR = path
+        return _RESOURCE_DIR
 
-def get_datadir(subdirlevel=1):
-    """
-    Returns the path of the data directory of the package.
+    raise RuntimeError('Could not find the %s data files'%app)
 
-    See description of get_rootdir for definition of the subdirlevel parameter.
-    """
+def resource(filename):
+    return os.path.join(resource_dir(),filename)
 
-    #return os.path.abspath(os.path.join(get_rootdir(subdirlevel), 'refl1d-data'))
-    return os.path.abspath(get_rootdir(subdirlevel))
+def example_data(filename):
+    return os.path.join(get_appdir(), DATA_DIR, filename)
+
 
 #==============================================================================
 

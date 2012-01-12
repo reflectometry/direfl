@@ -59,7 +59,7 @@ import numpy
 from numpy import linspace, inf
 
 from ..api.invert import SurroundVariation, Inversion
-from ..common.utilities import get_appdir
+from .utilities import example_data
 
 from .input_list import InputListPanel
 from .instrument_params import InstrumentParameters
@@ -73,7 +73,6 @@ TEXT_FILES = "Text files (*.txt)|*.txt"
 ALL_FILES = "All files (*.*)|*.*"
 
 # Resource files.
-DATA_DIR = "examples"
 DEMO_REFLDATA1_1 = "qrd1.refl"
 DEMO_REFLDATA1_2 = "qrd2.refl"
 DEMO_REFLDATA2_1 = "surround_air_4.refl"
@@ -107,7 +106,6 @@ class InversionPage(wx.Panel):
 
         self.fignum=fignum
         self.SetBackgroundColour(colour)
-        self.app_root_dir = get_appdir()
         self.sbi = StatusBarInfo()
         self.sbi.write(1, INV_HELP1)
 
@@ -651,8 +649,8 @@ class InversionPage(wx.Panel):
         """Loads demo 1 reflectometry data files for measurements 1 and 2."""
 
         # Locate the demo data files.
-        datafile_1 = os.path.join(self.app_root_dir, DATA_DIR, DEMO_REFLDATA1_1)
-        datafile_2 = os.path.join(self.app_root_dir, DATA_DIR, DEMO_REFLDATA1_2)
+        datafile_1 = example_data(DEMO_REFLDATA1_1)
+        datafile_2 = example_data(DEMO_REFLDATA1_2)
 
         # Store the file names in text control boxes and position text so that
         # the file name is visible even if the beginning of the path is not.
@@ -694,8 +692,8 @@ class InversionPage(wx.Panel):
         """Loads demo 2 reflectometry data files for measurements 1 and 2."""
 
         # Locate the demo data files.
-        datafile_1 = os.path.join(self.app_root_dir, DATA_DIR, DEMO_REFLDATA2_1)
-        datafile_2 = os.path.join(self.app_root_dir, DATA_DIR, DEMO_REFLDATA2_2)
+        datafile_1 = example_data(DEMO_REFLDATA2_1)
+        datafile_2 = example_data(DEMO_REFLDATA2_2)
 
         # Store the file names in text control boxes and position text so that
         # the file name is visible even if the beginning of the path is not.

@@ -54,12 +54,11 @@ import pylab
 import numpy
 from numpy import linspace
 
-from ..common.utilities import get_appdir, log_time
+from .utilities import example_data, log_time
 
 from .wx_utils import StatusBarInfo
 
 # Resource files.
-DATA_DIR = "data"
 DEMO_REFLDATA1_1 = "qrd1.refl"
 DEMO_REFLDATA1_2 = "qrd2.refl"
 DEMO_REFLDATA2_1 = "surround_air_4.refl"
@@ -172,10 +171,9 @@ def test2():
     """
     from ..api.invert import SurroundVariation, Inversion
 
-    root = get_appdir()
-    #args = [os.path.join(root, DATA_DIR, 'wsh02_re.dat')]
-    file_1 = os.path.join(root, DATA_DIR, DEMO_REFLDATA1_1)
-    file_2 = os.path.join(root, DATA_DIR, DEMO_REFLDATA1_2)
+    #args = [example_data('wsh02_re.dat')]
+    file_1 = example_data(DEMO_REFLDATA1_1)
+    file_2 = example_data(DEMO_REFLDATA1_2)
     args = [file_1, file_2]
     if len(args) == 1:
         phase = None

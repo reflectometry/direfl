@@ -65,8 +65,7 @@ import time
 
 import wx
 
-from ..common.utilities import (get_appdir, get_datadir, get_rootdir,
-                                get_rootdir_parent, log_time)
+from .utilities import resource, log_time
 from .about import APP_TITLE
 
 # Defer import of AppFrame until after the splash screen has been displayed.
@@ -117,7 +116,7 @@ class DiReflGUIApp(wx.App):
         # executes app.MainLoop() AND either the splash screen timeout expires
         # or the user left clicks over the splash screen.
         if LOGTIM: log_time("Starting to display the splash screen")
-        pic = os.path.join(get_datadir(0), SPLASH_FILE)
+        pic = resource(SPLASH_FILE)
         self.display_splash_screen(img_name=pic, pos=pos, size=size)
 
         # Determine the position and size of the application frame based on the
@@ -239,7 +238,6 @@ def main():
 
     if len(sys.argv) > 1 and '--syspath' in sys.argv[1:]:
         print "*** Application directory is:   ", get_appdir()
-        print "*** Data directory is:          ", get_datadir(0)
         print "*** Package root directory is:  ", get_rootdir(0)
         print "*** Parent of root directory is:", get_rootdir_parent(0)
         print "*** Python path is:"

@@ -33,7 +33,7 @@ import sys
 
 import wx
 
-from ..common.utilities import get_appdir
+from .utilities import resource
 
 from .about import (AboutDialog, APP_TITLE, APP_DESCRIPTION, APP_LICENSE,
                     APP_CREDITS, APP_TUTORIAL)
@@ -56,8 +56,7 @@ class AppFrame(wx.Frame):
         wx.Frame.__init__(self, parent, id, title, pos, size, name=name)
 
         # Display the application's icon in the title bar.
-        icon = wx.Icon(os.path.join(get_appdir(), PROG_ICON),
-                       wx.BITMAP_TYPE_ICO)
+        icon = wx.Icon(resource(PROG_ICON), wx.BITMAP_TYPE_ICO)
         self.SetIcon(icon)
 
         # Set the default font family and font size for the application.

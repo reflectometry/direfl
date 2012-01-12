@@ -61,7 +61,7 @@ from numpy import linspace, inf
 
 from ..api.resolution import bins, binwidths
 from ..api.simulate import Simulation
-from ..common.utilities import get_appdir
+from .utilities import example_data
 
 from .input_list import InputListPanel
 from .instrument_params import InstrumentParameters
@@ -74,7 +74,6 @@ TEXT_FILES = "Text files (*.txt)|*.txt"
 ALL_FILES = "All files (*.*)|*.*"
 
 # Resource files.
-DATA_DIR = "examples"
 DEMO_MODEL1_DESC = "demo_model_1.dat"
 DEMO_MODEL2_DESC = "demo_model_2.dat"
 DEMO_MODEL3_DESC = "demo_model_3.dat"
@@ -122,7 +121,6 @@ class SimulationPage(wx.Panel):
 
         self.fignum=fignum
         self.SetBackgroundColour(colour)
-        self.app_root_dir = get_appdir()
         self.sbi = StatusBarInfo()
         self.sbi.write(1, SIM_HELP1)
 
@@ -750,7 +748,7 @@ class SimulationPage(wx.Panel):
     def OnLoadDemoModel1(self, event):
         """Loads Demo Model 1 from a file."""
 
-        filespec = os.path.join(self.app_root_dir, DATA_DIR, DEMO_MODEL1_DESC)
+        filespec = example_data(DEMO_MODEL1_DESC)
 
         # Read the entire input file into a buffer.
         try:
@@ -790,7 +788,7 @@ class SimulationPage(wx.Panel):
     def OnLoadDemoModel2(self, event):
         """Loads Demo Model 2 from a file."""
 
-        filespec = os.path.join(self.app_root_dir, DATA_DIR, DEMO_MODEL2_DESC)
+        filespec = example_data(DEMO_MODEL2_DESC)
 
         # Read the entire input file into a buffer.
         try:
@@ -830,7 +828,7 @@ class SimulationPage(wx.Panel):
     def OnLoadDemoModel3(self, event):
         """Loads Demo Model 3 from a file."""
 
-        filespec = os.path.join(self.app_root_dir, DATA_DIR, DEMO_MODEL3_DESC)
+        filespec = example_data(DEMO_MODEL3_DESC)
 
         # Read the entire input file into a buffer.
         try:

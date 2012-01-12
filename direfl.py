@@ -38,7 +38,7 @@ import time
 # allows the application to be run directly from the source tree, even if the
 # package has not been installed.
 try:
-    import inversion
+    import direfl
 except:
     this_dir_path = os.path.dirname(os.path.abspath(__file__))
     if os.path.basename(this_dir_path) == 'inversion':
@@ -51,5 +51,5 @@ except:
 #==============================================================================
 
 if __name__ == "__main__":
-    import inversion.gui.gui_app
-    inversion.gui.gui_app.main()
+    import direfl.gui.gui_app
+    direfl.gui.gui_app.main()
