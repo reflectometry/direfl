@@ -64,4 +64,5 @@ for creating datasets from a simple model description of the sample."""
           url='http://reflectometry.org/danse',
           license='BSD style license',
           platforms='Windows, Linux, MacOSX',
+          scripts=['bin/direfl'],
           configuration=configuration)

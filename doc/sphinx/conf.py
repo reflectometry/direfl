@@ -14,13 +14,18 @@
 # Manual edits to this file are placed between lines starting with '# ======'.
 
 import sys, os
+import glob
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.append(os.path.abspath('.'))
 
-sys.path.append(os.path.abspath(os.path.dirname('../../api')))
+buildpath = glob.glob('../../build/lib*')[0]
+sys.path.insert(0, os.path.abspath(buildpath))
+sys.path.insert(0, os.path.join(buildpath,'inversion'))
+
+#sys.path.append(os.path.abspath(os.path.dirname('../../api')))
 sys.path.append(os.path.abspath('_extensions'))
 
 
