@@ -170,7 +170,10 @@ class AppPanel(wx.Panel):
 
         nb = self.notebook = wx.Notebook(self, wx.ID_ANY,
                              style=wx.NB_TOP|wx.NB_FIXEDWIDTH|wx.NB_NOPAGETHEME)
-        nb.SetTabSize((100,20))  # works on Windows but not on Linux
+        try:
+            nb.SetTabSize((100,20))  # works on Windows but not on Linux
+        except:
+            pass
 
         # Create page windows as children of the notebook.
         self.page0 = SimulationPage(nb, colour=PALE_GREEN, fignum=0)
