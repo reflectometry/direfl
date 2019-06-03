@@ -5,6 +5,7 @@ import sys
 
 from setuptools import setup, find_packages, Extension
 
+import numpy
 import direfl
 
 packages = ['direfl']
@@ -14,12 +15,28 @@ if len(sys.argv) == 1:
     sys.argv.append('install')
 
 # reflmodule extension
+if sys.platform == "darwin":
+    # Python is not finding C++ headers on Mac unless the
+    # minimum OSX version is bumped from the default 10.6 up
+    # to 10.10.  Don't know if this is because of the mac
+    # setup (older development libraries not installed) or
+    # because of the anaconda build (targetted to 10.6) or
+    # some combination.  Override by setting the deployment
+    # target on the command line.  Curiously, Xcode can
+    # target c++ code to 10.7 on the same machine.
+    #os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', '10.10')
+    os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', '10.13')
+
 def reflmodule_config():
     sources = [os.path.join('direfl','api','lib',f)
                for f in ("reflmodule.cc","methods.cc",
                          "src/reflectivity.cc","src/magnetic.cc",
                          "src/reflrough.cc","src/resolution.c")]
-    module = Extension('direfl.api.reflmodule', sources=sources)
+    module = Extension('direfl.api.reflmodule',
+                       sources=sources,
+                       include_dirs=[numpy.get_include()],
+                       language="c++",
+                       )
     return module
 
 

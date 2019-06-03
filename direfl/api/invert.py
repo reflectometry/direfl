@@ -54,11 +54,11 @@ Scripts can use :func:`reconstruct` and :func:`invert`.  For example:
 
 .. doctest::
 
-    >>> import invert
+    >>> from direfl.invert import reconstruct, invert
     >>> substrate = 2.07
     >>> f1, f2 = 0, -0.53
-    >>> phase = reflectometry.reconstruct("file1", "file2", substrate, f1, f2)
-    >>> inversion = invert.invert(data=(phase.Q, phase.RealR), thickness=200)
+    >>> phase = reconstruct("file1", "file2", substrate, f1, f2)
+    >>> inversion = invert(data=(phase.Q, phase.RealR), thickness=200)
     >>> inversion.plot()
     >>> inversion.save("profile.dat")
 
@@ -86,8 +86,9 @@ References
 .. [Sacks1993]    P.E. Sacks, *Wave Motion* 18, 21-30 (1993).
 """
 
-from __future__ import division
+from __future__ import division, print_function
 import os
+from functools import reduce
 
 import numpy
 from numpy import pi, inf, nan, sqrt, exp, sin, cos, tan, log
@@ -110,6 +111,11 @@ from numpy.fft import fft
 from matplotlib.font_manager import FontProperties
 
 from .calc import convolve
+
+try:  # CRUFT: basestring isn't used in python3
+    basestring
+except:
+    basestring = str
 
 # Custom colors
 DARK_RED = "#990000"
@@ -520,9 +526,9 @@ class Inversion():
 
     def show(self):
         """Print z, rho, drho to the screen."""
-        print "# %9s %11s %11s"%("z", "rho", "drho")
+        print("# %9s %11s %11s"%("z", "rho", "drho"))
         for point in zip(self.z, self.rho, self.drho):
-            print "%11.4f %11.4f %11.4f"%point
+            print("%11.4f %11.4f %11.4f"%point)
 
 
     def save(self, outfile=None):
@@ -983,7 +989,7 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
 
 
 def _refl_calc(kz, wavelength, depth, rho, mu, sigma):
-    """Parratt recursion."""
+    """Abeles matrix calculation."""
     if len(kz) == 0: return kz
 
     ## Complex index of refraction is relative to the incident medium.
@@ -999,7 +1005,7 @@ def _refl_calc(kz, wavelength, depth, rho, mu, sigma):
     B22 = 1
     B21 = 0
     B12 = 0
-    for i in xrange(0,len(rho)-1):
+    for i in range(0,len(rho)-1):
         k_next = sqrt(kz_sq - (4*pi*rho[i+1] + 2j*pi*mu[i+1]/wavelength))
         F = (k - k_next) / (k + k_next)
         F *= exp(-2*k*k_next*sigma[i]**2)
@@ -1291,9 +1297,9 @@ class SurroundVariation():
 
     def show(self):
         """Print Q, RealR, ImagR to the screen."""
-        print "# %9s %11s %11s"%("Q","RealR", "ImagR")
+        print("# %9s %11s %11s"%("Q","RealR", "ImagR"))
         for point in zip(self.Q, self.RealR, self.ImagR):
-            print "%11.4g %11.4g %11.4g"%point
+            print("%11.4g %11.4g %11.4g"%point)
 
 
     def plot_measurement(self, profile=None):

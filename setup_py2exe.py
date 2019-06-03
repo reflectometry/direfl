@@ -221,7 +221,7 @@ class Target():
 client = Target(
     name = 'DiRefl',
     description = 'Direct Inversion Reflectometry (DiRefl) application',
-    script = 'direfl.py',  # module to run on application start
+    script = 'bin/direfl.py',  # module to run on application start
     dest_base = 'direfl',  # file name part of the exe file to create
     icon_resources = [(1, 'direfl.ico')],  # also need to specify in data_files
     bitmap_resources = [],

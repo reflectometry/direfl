@@ -25,6 +25,7 @@ This module contains common utility functions and classes for the application.
 """
 
 #==============================================================================
+from __future__ import print_function
 
 import os
 import sys
@@ -64,7 +65,7 @@ def resource_dir(app=APPNAME):
 
     # Check for data path in the environment
     key = app.upper()+'_DATA'
-    if os.environ.has_key(key):
+    if key in os.environ:
         path = os.path.join(os.environ[key],data)
         if not os.path.isdir(path):
             raise RuntimeError('Path in environment %s not a directory'%key)
@@ -162,47 +163,47 @@ class TimeStamp():
     def log_time_info(self, text=""):
         # Prints timestamp, delta time, elapsed time, and optional comment.
         t, d, e = self.gettime3()
-        print "==> %s%9.3fs%9.3fs  %s" %(t, d, e, text)
+        print("==> %s%9.3fs%9.3fs  %s" %(t, d, e, text))
 
     def log_timestamp(self, text=""):
         # Prints timestamp and optional comment.
         t, d, e = self.gettime3()
-        print "==> %s  %s" %(t, text)
+        print("==> %s  %s"%(t, text))
 
     def log_interval(self, text=""):
         # Prints elapsed time, delta time, and optional comment.
         d, e = self.gettime2()
-        print "==>%9.3fs%9.3fs  %s" %(d, e, text)
+        print("==>%9.3fs%9.3fs  %s"%(d, e, text))
 
 #==============================================================================
 
 if __name__ == '__main__':
     # Test the TimeStamp class and the convenience function.
         log_time("Using log_time() function")
-        print "Sleeping for 0.54 seconds ..."
+        print("Sleeping for 0.54 seconds ...")
         time.sleep(0.54)
         log_time("Using log_time() function")
-        print "Sleeping for 0.83 seconds ..."
+        print("Sleeping for 0.83 seconds ...")
         time.sleep(0.83)
         log_time("Using log_time() function")
-        print "Creating an instance of TimeStamp (as the second timing class)"
+        print("Creating an instance of TimeStamp (as the second timing class)")
         ts = TimeStamp()
-        print "Sleeping for 0.66 seconds ..."
+        print("Sleeping for 0.66 seconds ...")
         time.sleep(0.66)
         ts.log_time_info(text="Using log_time_info() method")
         ts.log_timestamp(text="Using log_timestamp() method")
         ts.log_interval(text="Using log_interval() method")
-        print "Sleeping for 0.35 seconds ..."
+        print("Sleeping for 0.35 seconds ...")
         time.sleep(0.35)
         ts.log_interval(text="Using log_interval() method")
-        print "Sleeping for 0.42 seconds ..."
+        print("Sleeping for 0.42 seconds ...")
         time.sleep(0.42)
         ts.log_interval(text="Using log_interval() method")
-        print "Resetting the clock ..."
+        print("Resetting the clock ...")
         ts.reset()
         ts.log_interval(text="Using log_interval() method")
-        print "Sleeping for 0.33 seconds ..."
+        print("Sleeping for 0.33 seconds ...")
         time.sleep(0.33)
         ts.log_interval(text="Using log_interval() method")
-        print "Switch back to the first timing class"
+        print("Switch back to the first timing class")
         log_time("Using log_time() function")

@@ -28,7 +28,7 @@ from matplotlib.font_manager import FontProperties
 
 from . import profile
 from .calc import convolve
-from .invert import  plottitle, refl, SurroundVariation, Inversion
+from .invert import plottitle, refl, SurroundVariation, Inversion
 
 # Note that for efficiency, pylab is only imported if plotting is requested.
 

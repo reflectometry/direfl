@@ -1,6 +1,6 @@
 """Initialization for the direct inversion package."""
 
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 
 def package_data():
     import os.path
