@@ -116,8 +116,8 @@ effects in the resolution::
 
 Properties of the instrument can be displayed::
 
-    >>> print ANDR.defaults()
-    >>> print instrument.defaults()
+    >>> print(ANDR.defaults())
+    >>> print(instrument.defaults())
 
 Details
 =======
@@ -881,7 +881,7 @@ def divergence(T=None, slits=None, distance=None,
         if sample_s < s2: dT = (s1+sample_s)/(2*d1)
     else:
         idx = sample_s < s2
-        #print s1,s2,d1,d2,T,dT,sample_s
+        #print(s1,s2,d1,d2,T,dT,sample_s)
         s1 = ones_like(sample_s)*s1
         dT = ones_like(sample_s)*dT
         dT[idx] = (s1[idx] + sample_s[idx])/(2*d1)

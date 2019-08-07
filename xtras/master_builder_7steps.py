@@ -26,6 +26,7 @@
 This script builds the DiRefl application and documentation from source and runs
 unit tests and doc tests.
 """
+from __future__ import print_function
 
 import os
 import sys
@@ -72,10 +73,10 @@ else:
     TOP_DIR = RUN_DIR
 SRC_DIR = os.path.join(TOP_DIR, PKG_NAME)
 INS_DIR = os.path.join(TOP_DIR, LOCAL_INSTALL)
-print "RUN_DIR =", RUN_DIR
-print "TOP_DIR =", TOP_DIR
-print "SRC_DIR =", SRC_DIR
-print "INS_DIR =", INS_DIR
+print("RUN_DIR =", RUN_DIR)
+print("TOP_DIR =", TOP_DIR)
+print("SRC_DIR =", SRC_DIR)
+print("INS_DIR =", INS_DIR)
 
 def checkout():
     # Check the system for all required dependent packages.
@@ -85,19 +86,19 @@ def checkout():
 
     # Checkout the application code from the repository into a directory tree
     # under the top level directory.
-    print "\nStep 1 - Checking out application code from the repository ...\n"
+    print("\nStep 1 - Checking out application code from the repository ...\n")
     os.chdir(TOP_DIR)
 
     if RUN_DIR == TOP_DIR:
         subprocess.call("%s checkout %s %s" % (SVN, SVN_REPO_URL, PKG_NAME))
     else:
-        print "*** Skipping checkout of repository because the executing script"
-        print "*** is within the repository, not in the top-level directory."
+        print("*** Skipping checkout of repository because the executing script")
+        print("*** is within the repository, not in the top-level directory.")
 
     #--------------------------------------------------------------------------
 
     # Create a zip file to archive the source code.
-    print "\nStep 2 - Creating a zip archive of the application repository ...\n"
+    print("\nStep 2 - Creating a zip archive of the application repository ...\n")
     os.chdir(SRC_DIR)
 
     # Get the version string for the application.
@@ -120,25 +121,25 @@ def checkout():
             a.write(f)
         a.close()
     except:
-        print "*** Failed to create zip file ***"
+        print("*** Failed to create zip file ***")
     else:
-        print "Zip file created"
+        print("Zip file created")
 
     #--------------------------------------------------------------------------
 
     # Install the application package in a private directory tree.
     # If the INS_DIR directory already exists, warn the user.
     # Intermediate work files are stored in the <SRC_DIR>/build directory tree.
-    print "\nStep 3 - Installing the %s package in %s...\n" %(PKG_NAME, INS_DIR)
+    print("\nStep 3 - Installing the %s package in %s...\n" %(PKG_NAME, INS_DIR))
     os.chdir(SRC_DIR)
 
     if os.path.isdir(INS_DIR):
-        print "\n WARNING!\n"
-        print "In order to build "+APP_NAME+" cleanly, the local build directory"
-        print INS_DIR+" needs to be deleted."
-        print "Do you want to delete this directory and continue (Y)"
-        print "            or continue with a dirty installation (N)"
-        print "            or exit the build script (E)"
+        print("\n WARNING!\n")
+        print("In order to build "+APP_NAME+" cleanly, the local build directory")
+        print(INS_DIR+" needs to be deleted.")
+        print("Do you want to delete this directory and continue (Y)")
+        print("            or continue with a dirty installation (N)")
+        print("            or exit the build script (E)")
         answer = raw_input("Please choose either (Y|N|E)? [E]: ")
         if answer.upper() == "Y":
             # Workaround: symbolic link to Inversion.pdf may be set to read-only.
@@ -159,7 +160,7 @@ def checkout():
 
     # Use py2exe to create a Win32 executable along with auxiliary files in the
     # <SRC_DIR>/dist directory tree.
-    print "\nStep 4 - Using py2exe to create a Win32 executable ...\n"
+    print("\nStep 4 - Using py2exe to create a Win32 executable ...\n")
     os.chdir(SRC_DIR)
 
     subprocess.call("%s setup_py2exe.py" %PYTHON)
@@ -168,8 +169,8 @@ def checkout():
 
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller for
     # the application.
-    print "\nStep 5 - Running Inno Setup Compiler to create Win32 "\
-          "installer/uninstaller ...\n"
+    print("\nStep 5 - Running Inno Setup Compiler to create Win32 "
+          "installer/uninstaller ...\n")
     os.chdir(SRC_DIR)
 
     # First create an include file to convey the application's version
@@ -187,7 +188,7 @@ def checkout():
     #--------------------------------------------------------------------------
 
     # Run the Sphinx utility to build the application's documentation.
-    print "\nStep 6 - Running the Sphinx utility to build documentation ...\n"
+    print("\nStep 6 - Running the Sphinx utility to build documentation ...\n")
     os.chdir(os.path.join(INS_DIR, PKG_NAME, "doc", "sphinx"))
 
     # Delete any left over files from a previous build.
@@ -204,7 +205,7 @@ def checkout():
     #--------------------------------------------------------------------------
 
     # Run Nose unittests and doctests.
-    print "\nStep 7 - Running Nose unittests and doctests ...\n"
+    print("\nStep 7 - Running Nose unittests and doctests ...\n")
     os.chdir(INS_DIR)
 
     subprocess.call("nosetests -v %s" % PKG_NAME)
@@ -217,8 +218,8 @@ def check_packages():
     # Python appears to write directly to the console, not to stdout, so the
     # following code does not work as expected:
     # p = subprocess.Popen("%s -V" % PYTHON, stdout=subprocess.PIPE)
-    # print "Using ", p.stdout.read().strip()
-    print "Using ",
+    # print("Using ", p.stdout.read().strip())
+    print("Using ", end="")
     subprocess.call("%s -V" % PYTHON)  # displays python name and version string
 
     req_pack = {}
@@ -226,7 +227,7 @@ def check_packages():
     try:
         import matplotlib
     except:
-        print "matplotlib not found"
+        print("matplotlib not found")
 
     if not matplotlib.__version__ == "0.99.0":
         req_pack["matplotlib"]= ("0.99.0", matplotlib.__version__)
@@ -234,7 +235,7 @@ def check_packages():
     try:
         import numpy
     except:
-        print "numpy not found"
+        print("numpy not found")
 
     if not numpy.__version__ == "1.2.1":
         req_pack["numpy"]= ("1.2.1", numpy.__version__)
@@ -242,7 +243,7 @@ def check_packages():
     try:
         import scipy
     except:
-        print "scipy not found"
+        print("scipy not found")
 
     if not scipy.__version__ == "0.7.0":
         req_pack["scipy"]= ("0.7.0", scipy.__version__)
@@ -250,7 +251,7 @@ def check_packages():
     try:
         import wx
     except:
-        print "wx not found"
+        print("wx not found")
 
     if not wx.__version__ == "2.8.11.0":
         req_pack["wx"]= ("2.8.11.0", wx.__version__)
@@ -258,7 +259,7 @@ def check_packages():
     try:
         import setuptools
     except:
-        print "setuptools not found"
+        print("setuptools not found")
 
     if not setuptools.__version__ == "0.6c11":
         req_pack["setuptools"]= ("0.6c11", setuptools.__version__)
@@ -266,7 +267,7 @@ def check_packages():
     try:
         import sphinx
     except:
-        print "sphinx not found"
+        print("sphinx not found")
 
     if not sphinx.__version__ == "1.0":
         req_pack["sphinx"]= ("1.0", sphinx.__version__)
@@ -277,13 +278,13 @@ def check_packages():
         if not gcc_version == "3.4.5":
             req_pack["gcc"]= ("3.4.5", gcc_version)
     except:
-        print "gcc compiler not found"
+        print("gcc compiler not found")
 
     if not req_pack == {}:
-        print "\n WARNING!\n"
+        print("\n WARNING!\n")
         for key, values in req_pack.items():
-            print key, ("required version is %s and your system version is %s"
-                        % (req_pack[key][0], req_pack[key][1]))
+            print(key, ("required version is %s and your system version is %s"
+                        % (req_pack[key][0], req_pack[key][1])))
         ans = raw_input("\nDo you want to continue (Y|N)? [N]: ")
         if ans.upper() != "Y":
             sys.exit()
@@ -323,7 +324,7 @@ def dir_archive(dir_name, subdir):
     return file_list
 
 if __name__ == "__main__":
-    print "Build script for "+APP_NAME
+    print("Build script for "+APP_NAME)
     if len(sys.argv)==1:
         # If there is no argument, build the installer
         sys.argv.append("-i")
@@ -331,11 +332,11 @@ if __name__ == "__main__":
     if len(sys.argv)>1:
         # Help
         if sys.argv[1]=="-h":
-            print "Usage:"
-            print "    python build_%s.py [command]\n" % APP_NAME
-            print "[command] can be any of the following:"
-            print "    -h: Lists the command line options"
-            print "    -t: Builds application from the trunk"
+            print("Usage:")
+            print("    python build_%s.py [command]\n" % APP_NAME)
+            print("[command] can be any of the following:")
+            print("    -h: Lists the command line options")
+            print("    -t: Builds application from the trunk")
 
         else:
             # Check the command line argument

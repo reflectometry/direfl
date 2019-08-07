@@ -26,6 +26,7 @@ for calculating resolution.
 """
 
 #==============================================================================
+from __future__ import print_function
 
 import sys
 
@@ -219,7 +220,8 @@ class InstrumentParameters():
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
             if len(sys.argv) > 1 and '--tracep' in sys.argv[1:]:
-                print "*** Instrument (resolution) parameters:"; print results
+                print("*** Instrument (resolution) parameters:")
+                print(results)
 
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable
@@ -288,7 +290,8 @@ class InstrumentParameters():
         if dlg.ShowModal() == wx.ID_OK:
             results = dlg.GetResultsAltFormat()
             if len(sys.argv) > 1 and '--tracep' in sys.argv[1:]:
-                print "*** Instrument (resolution) parameters:"; print results
+                print("*** Instrument (resolution) parameters:")
+                print(results)
 
             # Skip results[0], the radiation value that is not editable
             # Skip results[1], the location value that is not editable

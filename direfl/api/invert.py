@@ -482,7 +482,7 @@ class Inversion():
 
         from numpy.random import normal
         idx = self.dRealR > 1e-15
-        #print "min dR", min(self.dRealR[self.dRealR>1e-15])
+        #print("min dR", min(self.dRealR[self.dRealR>1e-15]))
         q, rer, drer = self.Q[idx], self.RealR[idx], self.dRealR[idx]
         rerinv = real(self.refl(q))
         chisq = numpy.sum(((rer - rerinv)/drer)**2)/len(q)

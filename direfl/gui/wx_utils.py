@@ -25,6 +25,7 @@ This module contains GUI utility functions and classes for the application.
 """
 
 #==============================================================================
+from __future__ import print_function
 
 import os
 import sys
@@ -103,10 +104,10 @@ def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
     fontname = frame.GetFont().GetFaceName()
 
     x, y = wx.ClientDC(frame).GetPPI()
-    print "*** Benchmark text width and height in pixels = %4d %2d"\
-          %(benchmark_width, benchmark_height)
-    print "*** Compare against %s font with dpi resolution of %d:"\
-          %(fontname, x)
+    print("*** Benchmark text width and height in pixels = %4d %2d"
+          %(benchmark_width, benchmark_height))
+    print("*** Compare against %s font with dpi resolution of %d:"
+          %(fontname, x))
 
     for fontsize in xrange(12, 5, -1):
         frame.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL, False,
@@ -114,8 +115,8 @@ def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
         benchmark = wx.StaticText(frame, wx.ID_ANY, label="")
         w, h = benchmark.GetTextExtent(benchmark_text)
         benchmark.Destroy()
-        print "      For point size %2d, benchmark text w, h = %4d  %2d"\
-              %(fontsize, w, h)
+        print("      For point size %2d, benchmark text w, h = %4d  %2d"
+              %(fontsize, w, h))
 
     frame.Destroy()
 
@@ -200,7 +201,7 @@ def startWorker(consumer=None, workerFn=None, wargs=None, wkwargs=None):
         try:
             workerFn(*args, **kwargs)
         except:
-            print traceback.format_exc()
+            print(traceback.format_exc())
             raise
     return delayedresult.startWorker(consumer=consumer, workerFn=catch,
                                      wargs=wargs, wkwargs=wkwargs)
@@ -218,7 +219,7 @@ class ExecuteInThread():
 
     def __init__(self, callback, function, *args, **kwargs):
         if callback is None: callback = _callback
-        #print "*** ExecuteInThread init:", callback, function, args, kwargs
+        #print("*** ExecuteInThread init:", callback, function, args, kwargs)
 
         startWorker(consumer=callback, workerFn=function,
                     wargs=args, wkwargs=kwargs)
@@ -259,5 +260,5 @@ class WorkInProgress(wx.Panel):
 
     def TimerHandler(self, event):
         #self.count += 1
-        #print "*** count = ", self.count
+        #print("*** count = ", self.count)
         self.gauge.Pulse()

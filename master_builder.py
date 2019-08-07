@@ -44,6 +44,7 @@ implicit root (i.e. top-level) directory.
   E:/work/test1/inversion/this-script.py
                /inversion/...
 """
+from __future__ import print_function
 
 import os
 import sys
@@ -149,29 +150,29 @@ def build_it():
 def checkout_code():
     # Checkout the application code from the repository into a directory tree
     # under the top level directory.
-    print SEPARATOR
-    print "\nStep 1 - Checking out application code from the repository ...\n"
+    print(SEPARATOR)
+    print("\nStep 1 - Checking out application code from the repository ...\n")
     os.chdir(TOP_DIR)
 
     if RUN_DIR == TOP_DIR:
         exec_cmd("%s checkout %s %s" %(SVN, SVN_REPO_URL, PKG_NAME))
     else:
-        print "*** Skipping checkout of repository because the executing script"
-        print "*** is within the repository, not in the top-level directory."
+        print("*** Skipping checkout of repository because the executing script")
+        print("*** is within the repository, not in the top-level directory.")
 
 
 def create_archive(version=None):
     # Create zip and tar archives of the source code and a manifest file
     # containing the names of all files.
-    print SEPARATOR
-    print "\nStep 2 - Creating an archive of the source code ...\n"
+    print(SEPARATOR)
+    print("\nStep 2 - Creating an archive of the source code ...\n")
     os.chdir(SRC_DIR)
 
     try:
         # Create zip and tar archives in the dist subdirectory.
         exec_cmd("%s setup.py sdist --formats=zip,gztar" %(PYTHON))
     except:
-        print "*** Failed to create source archive ***"
+        print("*** Failed to create source archive ***")
     else:
         # Copy the archives and its manifest to the top-level directory.
         shutil.move(os.path.join("dist", PKG_NAME+"-"+str(version)+".zip"),
@@ -186,16 +187,16 @@ def install_package():
     # Install the application package in a private directory tree.
     # If the INS_DIR directory already exists, warn the user.
     # Intermediate work files are stored in the <SRC_DIR>/build directory tree.
-    print SEPARATOR
-    print "\nStep 3 - Installing the %s package in %s...\n" %(PKG_NAME, INS_DIR)
+    print(SEPARATOR)
+    print("\nStep 3 - Installing the %s package in %s...\n" %(PKG_NAME, INS_DIR))
     os.chdir(SRC_DIR)
 
     if os.path.isdir(INS_DIR):
-        print "WARNING: In order to build", APP_NAME, "cleanly, the local build"
-        print "directory", INS_DIR, "needs to be deleted."
-        print "Do you want to delete this directory and continue (D)"
-        print "            or leave contents intact and continue (C)"
-        print "            or exit the build script (E)"
+        print("WARNING: In order to build", APP_NAME, "cleanly, the local build")
+        print("directory", INS_DIR, "needs to be deleted.")
+        print("Do you want to delete this directory and continue (D)")
+        print("            or leave contents intact and continue (C)")
+        print("            or exit the build script (E)")
         answer = raw_input("Please choose either (D|C|E)? [E]: ")
         if answer.upper() == "D":
             shutil.rmtree(INS_DIR, ignore_errors=True)
@@ -214,8 +215,8 @@ def install_package():
 def create_windows_exe():
     # Use py2exe to create a Win32 executable along with auxiliary files in the
     # <SRC_DIR>/dist directory tree.
-    print SEPARATOR
-    print "\nStep 4 - Using py2exe to create a Win32 executable ...\n"
+    print(SEPARATOR)
+    print("\nStep 4 - Using py2exe to create a Win32 executable ...\n")
     os.chdir(SRC_DIR)
 
     exec_cmd("%s setup_py2exe.py" %PYTHON)
@@ -224,9 +225,9 @@ def create_windows_exe():
 def create_windows_installer(version=None):
     # Run the Inno Setup Compiler to create a Win32 installer/uninstaller for
     # the application.
-    print SEPARATOR
-    print "\nStep 5 - Running Inno Setup Compiler to create Win32 "\
-          "installer/uninstaller ...\n"
+    print(SEPARATOR)
+    print("\nStep 5 - Running Inno Setup Compiler to create Win32 "
+          "installer/uninstaller ...\n")
     os.chdir(SRC_DIR)
 
     # First create an include file to convey the application's version
@@ -244,8 +245,8 @@ def create_windows_installer(version=None):
 
 def build_documentation():
     # Run the Sphinx utility to build the application's documentation.
-    print SEPARATOR
-    print "\nStep 6 - Running the Sphinx utility to build documentation ...\n"
+    print(SEPARATOR)
+    print("\nStep 6 - Running the Sphinx utility to build documentation ...\n")
     os.chdir(os.path.join(INS_DIR, PKG_NAME, "doc", "sphinx"))
 
     # Delete any left over files from a previous build.
@@ -262,8 +263,8 @@ def build_documentation():
 
 def run_unittests():
     # Run Nose unittests.
-    print SEPARATOR
-    print "\nStep 7 - Running Nose unittests ...\n"
+    print(SEPARATOR)
+    print("\nStep 7 - Running Nose unittests ...\n")
     os.chdir(INS_DIR)
 
     exec_cmd("nosetests -v %s" %PKG_NAME)
@@ -271,8 +272,8 @@ def run_unittests():
 
 def run_doctests():
     # Run Nose doctests.
-    print SEPARATOR
-    print "\nStep 8 - Running Nose doctests ...\n"
+    print(SEPARATOR)
+    print("\nStep 8 - Running Nose doctests ...\n")
     os.chdir(INS_DIR)
 
     exec_cmd("nosetests -v --with-doctest %s"
@@ -292,11 +293,11 @@ def check_dependencies():
     from pkg_resources import parse_version as PV
 
     python_ver = platform.python_version()
-    print "Using Python", python_ver
-    print ""
+    print("Using Python", python_ver)
+    print("")
     if PV(python_ver) < PV(MIN_PYTHON) or PV(python_ver) >= PV(MAX_PYTHON):
-        print "ERROR - build requires Python >= %s, but < %s" %(MIN_PYTHON,
-                                                                MAX_PYTHON)
+        print("ERROR - build requires Python >= %s, but < %s" %(MIN_PYTHON,
+                                                                MAX_PYTHON))
         sys.exit()
 
 
@@ -400,16 +401,16 @@ def check_dependencies():
     error = False
     for key, values in req_pkg.items():
         if req_pkg[key][0] == "0":
-            print "====> %s not found; version %s or later is required - ERROR" \
-                %(key, req_pkg[key][1])
+            print("====> %s not found; version %s or later is required - ERROR"
+                %(key, req_pkg[key][1]))
             error = True
         elif req_pkg[key][0] == "?":
-            print "Found %s" %(key)  # version is unknown
+            print("Found %s" %(key))  # version is unknown
         elif PV(req_pkg[key][0]) >= PV(req_pkg[key][1]):
-            print "Found %s %s" %(key, req_pkg[key][0])
+            print("Found %s %s" %(key, req_pkg[key][0]))
         else:
-            print "Found %s %s but minimum tested version is %s - WARNING" \
-                %(key, req_pkg[key][0], req_pkg[key][1])
+            print("Found %s %s but minimum tested version is %s - WARNING"
+                %(key, req_pkg[key][0], req_pkg[key][1]))
             error = True
 
     if error:
@@ -417,7 +418,7 @@ def check_dependencies():
         if ans.upper() != "Y":
             sys.exit()
     else:
-        print "\nSoftware dependencies have been satisfied"
+        print("\nSoftware dependencies have been satisfied")
 
 
 def exec_cmd(command):
@@ -433,24 +434,24 @@ if __name__ == "__main__":
     if len(sys.argv)>1:
         # Display help if requested.
         if len(sys.argv) > 1 and '-h' in sys.argv[1:]:
-            print "\nUsage: python master_builder.py [options]\n"
-            print "Options:"
-            print "  -a  Skip build of source archive"
-            print "  -b  Skip build of books (documentation)"
-            print "  -d  Skip doctests"
-            print "  -h  Show this help text"
-            print "  -s  Skip software dependency checks"
-            print "  -t  Skip all tests (unittests and doctests); same as -u -d"
-            print "  -u  Skip unittests"
-            print "  -w  Skip build of Windows executable and installer"
+            print("\nUsage: python master_builder.py [options]\n")
+            print("Options:")
+            print("  -a  Skip build of source archive")
+            print("  -b  Skip build of books (documentation)")
+            print("  -d  Skip doctests")
+            print("  -h  Show this help text")
+            print("  -s  Skip software dependency checks")
+            print("  -t  Skip all tests (unittests and doctests); same as -u -d")
+            print("  -u  Skip unittests")
+            print("  -w  Skip build of Windows executable and installer")
             sys.exit()
 
-    print "\nBuilding the %s application from the %s repository ...\n" \
-        %(APP_NAME, PKG_NAME)
-    print "Current working directory  =", RUN_DIR
-    print "Top-level (root) directory =", TOP_DIR
-    print "Package (source) directory =", SRC_DIR
-    print "Installation directory     =", INS_DIR
-    print ""
+    print("\nBuilding the %s application from the %s repository ...\n"
+        %(APP_NAME, PKG_NAME))
+    print("Current working directory  =", RUN_DIR)
+    print("Top-level (root) directory =", TOP_DIR)
+    print("Package (source) directory =", SRC_DIR)
+    print("Installation directory     =", INS_DIR)
+    print("")
 
     build_it()

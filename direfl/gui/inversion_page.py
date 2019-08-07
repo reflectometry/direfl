@@ -28,6 +28,7 @@ along with user specified parameter settings.
 """
 
 #==============================================================================
+from __future__ import print_function
 
 import os
 import sys
@@ -344,7 +345,7 @@ class InversionPage(wx.Panel):
         sizer.Fit(self.pan1)
 
         # The splitter sash position should be greater than best width size.
-        #print "Best size for Inversion Panel is", self.pan1.GetBestSizeTuple()
+        #print("Best size for Inversion Panel is", self.pan1.GetBestSizeTuple())
 
 
     def init_plot_panel(self):
@@ -476,7 +477,7 @@ class InversionPage(wx.Panel):
         # Get the validated inversion parameters.
         params = self.inver_param.GetResults()
         if len(sys.argv) > 1 and '--tracep' in sys.argv[1:]:
-            print "*** Inversion parameters:"; print params
+            print("*** Inversion parameters:"); print(params)
 
         #--------------------------------------
         # Step 3: Process Instrument Parameters
@@ -989,9 +990,9 @@ def perform_inversion(files, params):
     """
 
     if len(sys.argv) > 1 and '--debug' in sys.argv[1:]:
-        print "*** Inputs to perform_inversion()"
-        print "*** files =", files
-        print "*** params =", params
+        print("*** Inputs to perform_inversion()")
+        print("*** files =", files)
+        print("*** params =", params)
 
     # Perform phase reconstruction using two reflectivity measurements of a
     # sample where the only change in the setup between the two runs is that a
@@ -1038,12 +1039,12 @@ def perform_inversion(files, params):
     if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
         outfile='inv_phase.dat'
         phase.save(outfile=outfile, uncertainty=True)
-        print "*** Created", outfile
+        print("*** Created", outfile)
 
         outfile='inv_refl.dat'
         phase.save_inverted(profile=(inv.z, inv.rho), outfile=outfile)
-        print "*** Created", outfile
+        print("*** Created", outfile)
 
         outfile='inv_profile.dat'
         inv.save(outfile=outfile)
-        print "*** Created", outfile
+        print("*** Created", outfile)

@@ -29,6 +29,7 @@ profile of the sample.
 """
 
 #==============================================================================
+from __future__ import print_function
 
 import os
 import sys
@@ -353,7 +354,7 @@ class SimulationPage(wx.Panel):
         self.calc_resolution = True
 
         # The splitter sash position should be greater than best width size.
-        #print "Best size for Simulation panel is", self.pan1.GetBestSizeTuple()
+        #print("Best size for Simulation panel is", self.pan1.GetBestSizeTuple())
 
 
     def init_plot_panel(self):
@@ -499,14 +500,14 @@ class SimulationPage(wx.Panel):
         # Get the validated inversion parameters.
         params = self.inver_param.GetResults()
         if len(sys.argv) > 1 and '--tracep' in sys.argv[1:]:
-            print "*** Simulation parameters:"; print params
+            print("*** Simulation parameters:"); print(params)
 
         sample = layers[1:-1]
         params.append(layers[-1][0])  # add SLD of substrate to list
         params.append(layers[-1][2])  # add roughness of substrate to list
         if len(sys.argv) > 1 and '--tracep' in sys.argv[1:]:
-            print "*** Model parameters (all layers):"; print layers
-            print "*** Sample layers excluding Surround:"; print sample
+            print("*** Model parameters (all layers):"); print(layers)
+            print("*** Sample layers excluding Surround:"); print(sample)
 
         #---------------------------------------------------------------
         # Step 3: Process Instrument Parameters and Calculate Resolution
@@ -648,8 +649,8 @@ class SimulationPage(wx.Panel):
             '''
             Q = numpy.linspace(params[2], params[3], params[4])
             res = instrument.resolution(Q=Q, L=L, dL=dL)
-            print "*** len of Q, res.Q, res.dQ, L:",
-            print len(Q), len(res.Q), len(res.dQ), len(L)
+            print("*** len of Q, res.Q, res.dQ, L:",
+                  len(Q), len(res.Q), len(res.dQ), len(L))
             '''
             res = instrument.resolution(L=L, dL=dL)
             Q = res.Q
@@ -943,13 +944,13 @@ def perform_simulation(sample, params, Q=None, dQ=None):
     """
 
     if len(sys.argv) > 1 and '--debug' in sys.argv[1:]:
-        print "*** Inputs to perform_simulation()"
-        print "*** sample =", sample
-        print "*** params =", params
+        print("*** Inputs to perform_simulation()")
+        print("*** sample =", sample)
+        print("*** params =", params)
         if Q is not None:
-            print "***  Q len =", len(Q),  "  Q lo:hi =",  Q[0],  Q[-1]
+            print("***  Q len =", len(Q),  "  Q lo:hi =",  Q[0],  Q[-1])
         if dQ is not None:
-            print "*** dQ len =", len(dQ), " dQ lo:hi =", dQ[0], dQ[-1]
+            print("*** dQ len =", len(dQ), " dQ lo:hi =", dQ[0], dQ[-1])
 
     # Construct a dictionary of keyword arguments for the invert_args parameter
     # used by the phase inversion algorithm.

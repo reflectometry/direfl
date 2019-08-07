@@ -74,7 +74,7 @@ def resource_dir(app=APPNAME):
 
     # Check for data path in the package
     path = os.path.join(os.path.dirname(__file__), 'resources')
-    #print >>sys.stderr, "checking for resource in",path
+    #print("checking for resource in",path, file=sys.stderr)
     if os.path.isdir(path):
         _RESOURCE_DIR = path
         return _RESOURCE_DIR
@@ -82,7 +82,7 @@ def resource_dir(app=APPNAME):
     # Check for data path next to exe/zip file.
     exepath = os.path.dirname(sys.executable)
     path = os.path.join(exepath,app.lower()+'-data')
-    #print >>sys.stderr, "checking for resource in",path
+    #print("checking for resource in",path, file=sys.stderr)
     if os.path.isdir(path):
         _RESOURCE_DIR = path
         return _RESOURCE_DIR
@@ -90,7 +90,7 @@ def resource_dir(app=APPNAME):
     # py2app puts the data in Contents/Resources, but the executable
     # is in Contents/MacOS.
     path = os.path.join(exepath,'..','Resources',app.lower()+'-data')
-    #print >>sys.stderr, "checking for resource in",path
+    #print("checking for resource in",path, file=sys.stderr)
     if os.path.isdir(path):
         _RESOURCE_DIR = path
         return _RESOURCE_DIR

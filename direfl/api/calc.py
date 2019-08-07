@@ -29,6 +29,8 @@ __all__ = [ 'reflectivity', 'reflectivity_amplitude',
             'fixedres', 'varyingres', 'convolve'
             ]
 
+from functools import reduce
+
 import numpy
 from numpy import pi, sin, cos, conj
 from numpy import ascontiguousarray as _dense
@@ -140,13 +142,13 @@ def magnetic_reflectivity(*args,**kw):
     r = magnetic_amplitude(*args,**kw)
     return [(z*z.conj()).real for z in r]
 
-def unpolarized_magnetic(*args,**kw):
+def unpolarized_magnetic(*args, **kw):
     """
     Returns the average of magnetic reflectivity for all cross-sections.
 
     See magnetic_reflectivity for details.
     """
-    return reduce(numpy.add, magnetic_reflectivity(*args,**kw))/2.
+    return reduce(numpy.add, magnetic_reflectivity(*args, **kw))/2.
 
 def magnetic_amplitude(Q,
                        depth,

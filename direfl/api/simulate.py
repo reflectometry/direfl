@@ -17,7 +17,7 @@ Simulate classes and functions:
 #TODO: allow sample to be a full reflectivity model
 #TODO: include resolution in the simulation
 
-from __future__ import division
+from __future__ import division, print_function
 
 import sys
 
@@ -133,8 +133,8 @@ class Simulation():
         interface_z = numpy.cumsum(widths)
         rho_idx = numpy.searchsorted(interface_z, z)
         rho = rhos[rho_idx]
-        #print rho,z
-        #print rhos,interface_z
+        #print(rho, z)
+        #print(rhos, interface_z)
 
         return z,rho
 
@@ -298,7 +298,7 @@ class Simulation():
             for point in zip(self.q, self.R1, self.dR1):
                 fid.write("%12.6g %12.6g %12.6g\n"%point)
             fid.close()
-            print "*** Created", outfile
+            print("*** Created", outfile)
 
             outfile = 'sim_data2.refl'
             fid = open(outfile, "w")
@@ -306,7 +306,7 @@ class Simulation():
             for point in zip(self.q, self.R2, self.dR2):
                 fid.write("%12.6g %12.6g %12.6g\n"%point)
             fid.close()
-            print "*** Created", outfile
+            print("*** Created", outfile)
 
         self.phase = SurroundVariation(data1, data2, u=u, v1=v1, v2=v2,
                                        **self.phase_args)
@@ -329,16 +329,16 @@ class Simulation():
         if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
             outfile='sim_phase.dat'
             self.phase.save(outfile=outfile, uncertainty=True)
-            print "*** Created", outfile
+            print("*** Created", outfile)
 
             outfile='sim_refl.dat'
             z, rho = self.sample_profile()
             self.phase.save_inverted(profile=(z, rho), outfile=outfile)
-            print "*** Created", outfile
+            print("*** Created", outfile)
 
             outfile='sim_profile.dat'
             self.invert.save(outfile=outfile)
-            print "*** Created", outfile
+            print("*** Created", outfile)
 
 
     def _optimize(self):
@@ -369,7 +369,7 @@ def wait(msg=None):
     import pylab
     #from matplotlib.blocking_input import BlockingInput
 
-    if msg: print msg
+    if msg: print(msg)
 
     #block = BlockingInput(fig=pylab.gcf(), eventslist=('key_press_event',))
     #block(n=1, timeout=-1)

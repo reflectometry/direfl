@@ -25,6 +25,7 @@ This module implements InputListPanel, InputListDialog, and InputListValidator
 classes to provide general purpose mechanisms for obtaining and validating user
 input from a structured list of input fields.
 """
+from __future__ import print_function
 
 import wx
 from wx.lib.scrolledpanel import ScrolledPanel
@@ -279,7 +280,7 @@ class InputListPanel(ScrolledPanel):
             font = self.GetFont()
             font.SetPointSize(fontsize)
             self.SetFont(font)
-        #print "Input List Panel font ptsize =", self.GetFont().GetPointSize()
+        #print("Input List Panel font ptsize =", self.GetFont().GetPointSize())
 
         # Specify the widget layout using sizers.
         main_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -496,7 +497,7 @@ class InputListPanel(ScrolledPanel):
                 break
         # Get the edited string.
         text = text_ctrl.GetValue()
-        print "Field:", box_idx, text
+        print("Field:", box_idx, text)
         """
 
         # Run the validator bound to the text control box that has been edited.
@@ -523,7 +524,7 @@ class InputListPanel(ScrolledPanel):
         for box_idx, box_instance in enumerate(self.inputs):
             if current_box is box_instance:
                 break
-        print "Combo:", box_idx, item_idx, self.itemlist[box_idx][3][item_idx]
+        print("Combo:", box_idx, item_idx, self.itemlist[box_idx][3][item_idx])
         """
 
         # Run the validator bound to the combo box that has a selection event.
@@ -640,7 +641,7 @@ class InputListDialog(wx.Dialog):
             font = self.GetFont()
             font.SetPointSize(fontsize)
             self.SetFont(font)
-        #print "Input Dialog box font ptsize =", self.GetFont().GetPointSize()
+        #print("Input Dialog box font ptsize =", self.GetFont().GetPointSize())
 
         # Create the button controls (OK and Cancel) and bind their events.
         ok_button = wx.Button(self, wx.ID_OK, "OK")
@@ -665,12 +666,12 @@ class InputListDialog(wx.Dialog):
             if i > 0 and self.headers[i] is not None:
                 sect.append(i)
         sect.append(self.item_cnt)
-        #print "Section index list:", sect
+        #print("Section index list:", sect)
 
         # Place the items for each section in its own flex grid sizer.
         for i in xrange(len(sect)-1):
             j = sect[i]; k = sect[i+1] - 1
-            #print "Items per section:", j, "to", k
+            #print("Items per section:", j, "to", k)
             fg_sizer = self.add_items_to_sizer(j, k)
 
             # Add the flex grid sizer to the main sizer.
@@ -915,7 +916,7 @@ class InputListDialog(wx.Dialog):
                 break
         # Get the edited string.
         text = text_ctrl.GetValue()
-        print "Field:", box_idx, text
+        print("Field:", box_idx, text)
         """
 
         # Run the validator bound to the text control box that has been edited.
@@ -942,7 +943,7 @@ class InputListDialog(wx.Dialog):
         for box_idx, box_instance in enumerate(self.inputs):
             if current_box is box_instance:
                 break
-        print "Combo:", box_idx, item_idx, self.itemlist[box_idx][3][item_idx]
+        print("Combo:", box_idx, item_idx, self.itemlist[box_idx][3][item_idx])
         """
 
         # Run the validator bound to the combo box that has a selection event.
@@ -1051,13 +1052,13 @@ class AppTestFrame(wx.Frame):
                               align=True,
                               fontsize=self.FONTSIZE)
         if dlg.ShowModal() == wx.ID_OK:
-            print "****** Dialog Box results from validated input fields:"
-            print "  ", dlg.GetResults()
-            print "****** Dialog Box results from validated input fields" +\
-                  " (None if no input):"
-            print "  ", dlg.GetResultsAltFormat()
-            print "****** Dialog Box results from raw input fields:"
-            print "  ", dlg.GetResultsRawInput()
+            print("****** Dialog Box results from validated input fields:")
+            print("  ", dlg.GetResults())
+            print("****** Dialog Box results from validated input fields"
+                  " (None if no input):")
+            print("  ", dlg.GetResultsAltFormat())
+            print("****** Dialog Box results from raw input fields:")
+            print("  ", dlg.GetResultsRawInput())
         dlg.Destroy()
 
 
@@ -1071,13 +1072,13 @@ class AppTestFrame(wx.Frame):
                 message="Please correct the highlighted fields in error.",
                 style=wx.ICON_ERROR|wx.OK)
             return  # keep the dialog box open
-        print "****** Scrolled Panel results from validated input fields:"
-        print "  ", self.scrolled.GetResults()
-        print "****** Scrolled Panel results from validated input fields" +\
-              " (None if no input):"
-        print "  ", self.scrolled.GetResultsAltFormat()
-        print "****** Scrolled Panel results from raw input fields:"
-        print "  ", self.scrolled.GetResultsRawInput()
+        print("****** Scrolled Panel results from validated input fields:")
+        print("  ", self.scrolled.GetResults())
+        print("****** Scrolled Panel results from validated input fields"
+              " (None if no input):")
+        print("  ", self.scrolled.GetResultsAltFormat())
+        print("****** Scrolled Panel results from raw input fields:")
+        print("  ", self.scrolled.GetResultsRawInput())
 
 
     def OnExit(self, event):

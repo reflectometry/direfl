@@ -58,10 +58,9 @@ Options for controlling the development and testing environment:
 """
 
 #==============================================================================
+from __future__ import print_function
 
-import os
 import sys
-import time
 
 import wx
 
@@ -110,7 +109,7 @@ class DiReflGUIApp(wx.App):
         # Determine the position and size of the splash screen based on the
         # desired size and screen real estate that we have to work with.
         pos, size = self.window_placement(SPLASH_WIDTH, SPLASH_HEIGHT)
-        #print "splash pos and size =", pos, size
+        #print("splash pos and size =", pos, size)
 
         # Display the splash screen.  It will remain visible until the caller
         # executes app.MainLoop() AND either the splash screen timeout expires
@@ -122,7 +121,7 @@ class DiReflGUIApp(wx.App):
         # Determine the position and size of the application frame based on the
         # desired size and screen real estate that we have to work with.
         pos, size = self.window_placement(FRAME_WIDTH, FRAME_HEIGHT)
-        #print "frame pos and size =", pos, size
+        #print("frame pos and size =", pos, size)
 
         # Create the application frame, but it will not be shown until the
         # splash screen terminates.  Note that import of AppFrame is done here
@@ -168,13 +167,13 @@ class DiReflGUIApp(wx.App):
         # application will be placed towards the left hand side of the screen.
 
         x, y, w, h = wx.Display().GetClientArea() # size excludes task bar
-        #print "*** x, y, w, h", x, y, w, h
+        #print("*** x, y, w, h", x, y, w, h)
         xpos, ypos = x, y
         h -= 20  # to make room for Mac window decorations
         if len(sys.argv) > 1 and '--platform' in sys.argv[1:]:
             j, k = wx.DisplaySize()  # size includes task bar area
-            print "*** Reported screen size including taskbar is %d x %d"%(j, k)
-            print "*** Reported screen size excluding taskbar is %d x %d"%(w, h)
+            print("*** Reported screen size including taskbar is %d x %d"%(j, k))
+            print("*** Reported screen size excluding taskbar is %d x %d"%(w, h))
 
         if w > 1920: w = 1280  # display on left side, not centered on screen
         if w > desired_width:  xpos = x + (w - desired_width)/2
@@ -237,12 +236,12 @@ def main():
         wx.lib.inspection.InspectionTool().Show()
 
     if len(sys.argv) > 1 and '--syspath' in sys.argv[1:]:
-        print "*** Application directory is:   ", get_appdir()
-        print "*** Package root directory is:  ", get_rootdir(0)
-        print "*** Parent of root directory is:", get_rootdir_parent(0)
-        print "*** Python path is:"
+        print("*** Application directory is:   ", get_appdir())
+        print("*** Package root directory is:  ", get_rootdir(0))
+        print("*** Parent of root directory is:", get_rootdir_parent(0))
+        print("*** Python path is:")
         for i, p in enumerate(sys.path):
-            print "%5d  %s" %(i, p)
+            print("%5d  %s" %(i, p))
 
     # Enter event loop which allows the user to interact with the application.
     if LOGTIM: log_time("Entering the event loop")

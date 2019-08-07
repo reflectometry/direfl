@@ -1,5 +1,6 @@
 # This program is public domain
 # Author: Paul Kienzle
+from __future__ import division, print_function
 
 import numpy
 from numpy import inf
@@ -138,7 +139,7 @@ class Microslabs:
         allows more flexibility than trying to compute the effects
         of roughness on non-flat layers.
         """
-        print "Ignoring special interface on the top of the stack"
+        print("Ignoring special interface on the top of the stack")
         pass
 
     def _w(self):

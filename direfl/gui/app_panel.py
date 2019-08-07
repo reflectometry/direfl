@@ -228,8 +228,8 @@ class AppPanel(wx.Panel):
         """
 
         ### prev_page = self.notebook.GetPage(event.GetOldSelection())
-        ### print "*** OnPageChanged:", event.GetOldSelection(),\
-        ###                             event.GetSelection()
+        ### print("*** OnPageChanged:", event.GetOldSelection(),
+        ###                             event.GetSelection())
         curr_page = self.notebook.GetPage(event.GetSelection())
         curr_page.OnActivePage()
         event.Skip()

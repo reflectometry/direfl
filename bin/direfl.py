@@ -27,6 +27,7 @@ This script starts the DiRefl Direct Inversion Reflectometry application.
 """
 
 #==============================================================================
+from __future__ import print_function
 
 import os
 import sys
@@ -44,9 +45,9 @@ except:
     if os.path.basename(this_dir_path) == 'inversion':
         sys.path.insert(1, (os.path.dirname(this_dir_path)))
     else:
-        print """\
+        print("""\
         *** To run this script, either install the inversion package or
-        *** place this module in the top-level directory of the package."""
+        *** place this module in the top-level directory of the package.""")
 
 #==============================================================================
 

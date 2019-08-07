@@ -39,7 +39,7 @@ def dTdL2dQ(T=None, dT=None, L=None, dL=None):
 
     # Compute dQ from wavelength dispersion (dL) and angular divergence (dT)
     T,dT = radians(T), radians(dT)
-    #print T, dT, L, dL
+    #print(T, dT, L, dL)
     dQ = (4*pi/L) * sqrt( (sin(T)*dL/L)**2 + (cos(T)*dT)**2 )
 
     #sqrt((dL/L)**2+(radians(dT)/tan(radians(T)))**2)*probe.Q
@@ -89,8 +89,8 @@ def parse_file(file):
             else:
                 header[key] = value
     if fh is not file: fh.close()
-    #print [len(d) for d in data]
-    #print "\n".join(k+":"+v for k,v in header.items())
+    #print([len(d) for d in data])
+    #print("\n".join(k+":"+v for k,v in header.items()))
     return header, numpy.array(data).T
 
 def string_like(s):
