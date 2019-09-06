@@ -41,7 +41,7 @@ from wx.lib import delayedresult
 import matplotlib
 
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as Toolbar
+from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as Toolbar
 
 # The Figure object is used to create backend-independent plot representations.
 from matplotlib.figure import Figure
@@ -692,7 +692,7 @@ class SimulationPage(wx.Panel):
         try:
             ExecuteInThread(self.OnComputeEnd, perform_simulation,
                             sample, params, Q=Q, dQ=dQ)
-        except Exception, e:
+        except Exception as e:
             popup_error_message("Operation Failed", str(e))
             self.sbi.write(2, "")
             return

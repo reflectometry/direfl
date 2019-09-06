@@ -40,7 +40,7 @@ from wx.lib import delayedresult
 import matplotlib
 
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wxagg import NavigationToolbar2Wx as Toolbar
+from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as Toolbar
 
 # The Figure object is used to create backend-independent plot representations.
 from matplotlib.figure import Figure
@@ -187,10 +187,10 @@ class InversionPage(wx.Panel):
         # Create file selector button controls.
         # Match the button height to the text box height. Using y = -1 on
         # Windows does this, but not on Linux where the button height is larger.
-        x, y = self.TCfile1.GetSizeTuple()
+        x, y = self.TCfile1.GetSize()
         btn_sel1 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, y))
         self.Bind(wx.EVT_BUTTON, self.OnSelectFile1, btn_sel1)
-        x, y = self.TCfile2.GetSizeTuple()
+        x, y = self.TCfile2.GetSize()
         btn_sel2 = wx.Button(self.pan11, wx.ID_ANY, "...", size=(30, y))
         self.Bind(wx.EVT_BUTTON, self.OnSelectFile2, btn_sel2)
 
@@ -447,7 +447,7 @@ class InversionPage(wx.Panel):
         try:
             fd = open(files[0], 'r')
             fd.close()
-        except:
+        except Exception:
             popup_error_message("Load Data Error",
                                 "Cannot access file "+files[0])
             return
@@ -455,7 +455,7 @@ class InversionPage(wx.Panel):
         try:
             fd = open(files[1], 'r')
             fd.close()
-        except:
+        except Exception:
             popup_error_message("Load Data Error",
                                 "Cannot access file "+files[1])
             return
@@ -551,7 +551,7 @@ class InversionPage(wx.Panel):
             #perform_inversion(files, params)
             ExecuteInThread(self.OnComputeEnd, perform_inversion,
                                                files, params)
-        except Exception, e:
+        except Exception as e:
             popup_error_message("Operation Failed", str(e))
             self.sbi.write(2, "")
             return
@@ -842,7 +842,7 @@ class InversionPage(wx.Panel):
             try:
                 fd = open(file1, 'r')
                 fd.close()
-            except:
+            except Exception:
                 self.TCfile1.SetBackgroundColour("PINK")
                 self.TCfile1.SetFocus()
                 self.TCfile1.Refresh()
@@ -854,7 +854,7 @@ class InversionPage(wx.Panel):
             try:
                 fd = open(file2, 'r')
                 fd.close()
-            except:
+            except Exception:
                 self.TCfile2.SetBackgroundColour("PINK")
                 self.TCfile2.SetFocus()
                 self.TCfile2.Refresh()
@@ -865,7 +865,7 @@ class InversionPage(wx.Panel):
         # Now we can load and plot the dataset.
         try:
             self.load_data(file1, file2)
-        except ValueError, e:
+        except ValueError as e:
             popup_error_message("Data File Error", str(e))
             return
         else:
@@ -941,16 +941,16 @@ class InversionPage(wx.Panel):
         # reflectivity files collected from real experiments.  Files qrd1.refl
         # and qrd2.refl have both of these issues that are clearly demonstrated
         # in the plots.
-        def plot1(Q, R, dR, label, color, hold=True):
-            #pylab.plot(Q, R, '.', label=label, color=color, hold=hold)
+        def plot1(Q, R, dR, label, color):
+            #pylab.plot(Q, R, '.', label=label, color=color)
 	        #pylab.gca().set_yscale('symlog', linthreshy=t, linwidthy=0.1)
-            pylab.semilogy(Q, R, '.', label=label, color=color, hold=hold)
+            pylab.semilogy(Q, R, '.', label=label, color=color)
             if dR is not None:
                 pylab.fill_between(Q, (R-dR), (R+dR),
-                                       color=color, alpha=0.2, hold=True)
+                                       color=color, alpha=0.2)
         '''
 
-        def plot1(Q, R, dR, label, color, hold=True):
+        def plot1(Q, R, dR, label, color):
             # Generate a plot for one data file while trying to deal with bogus
             # negative values for dR or very small values for dR in a sensible
             # way.  This technique was developed by Paul Kienzle and will
@@ -961,21 +961,22 @@ class InversionPage(wx.Panel):
                 minR = numpy.min(R[R>0])/2
 
             pylab.semilogy(Q, numpy.maximum(R,minR), '.', label=label,
-                              color=color, hold=hold)
+                              color=color)
             if dR is not None:
                 idx = numpy.argsort(Q)
                 pylab.fill_between(Q, numpy.maximum(R-dR,minR),
                                       numpy.maximum(R+dR,minR),
-                                      color=color, alpha=0.2, hold=True)
+                                      color=color, alpha=0.2)
 
         # Only show file.ext portion of the file specification on the plots.
         name1 = os.path.basename(self.name1)
         name2 = os.path.basename(self.name2)
 
         if self.plot_file1:
-            plot1(self.Qin, self.R1in, self.dR1in, name1, 'blue', hold=False)
+            pylab.cla()
+            plot1(self.Qin, self.R1in, self.dR1in, name1, 'blue')
         if self.plot_file2:
-            plot1(self.Qin, self.R2in, self.dR2in, name2, 'green', hold=True)
+            plot1(self.Qin, self.R2in, self.dR2in, name2, 'green')
 
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.ylabel('Reflectivity')

@@ -460,10 +460,9 @@ class Inversion():
             qp = self._invert(ctf, iters=self.iters)
             if self.showiters: # Show individual iterations
                 import pylab
-                hold = False
+                pylab.cla()
                 for qpi in qp:
-                    pylab.plot(qpi[0], qpi[1], hold=hold)
-                    hold = True
+                    pylab.plot(qpi[0], qpi[1])
                 pylab.ginput(show_clicks=False)
             z, rho = remesh(qp[-1], 0, self.thickness, self.rhopoints)
 
@@ -657,7 +656,7 @@ class Inversion():
         if details:
             plotamp(self.Qinput, self.RealRinput)
             for p in self.signals:
-                plotamp(self.Q, p[1], hold=True)
+                plotamp(self.Q, p[1])
         else:
             plotamp(self.Q, self.RealR, dr=self.dRealR, label=None,
                     linestyle='', color="blue")
@@ -709,10 +708,8 @@ class Inversion():
 
         pylab.grid(True)
         if details:
-            hold = pylab.ishold()
             for p in self.profiles:
-                pylab.plot(p[0], p[1]+self.substrate, hold=hold)
-                hold=True
+                pylab.plot(p[0], p[1]+self.substrate)
         else:
             z,rho,drho = self.z, self.rho, self.drho
             [h] = pylab.plot(z, rho, color=DARK_RED, **kw)
@@ -1306,18 +1303,18 @@ class SurroundVariation():
         """Plot the data, and if available, the inverted theory."""
         import pylab
 
-        def plot1(Q, R, dR, Rth, surround, label, color, hold=True):
+        def plot1(Q, R, dR, Rth, surround, label, color):
             # Fresnel reflectivity
             if self.backrefl:
                 F = abs(refl(Q, [0, 0], [self.u, surround]))**2
             else:
                 F = abs(refl(Q, [0, 0], [surround, self.u]))**2
-            pylab.plot(Q, R/F, '.', label=label, color=color, hold=hold)
+            pylab.plot(Q, R/F, '.', label=label, color=color)
             if Rth is not None:
-                pylab.plot(Q, Rth/F, '-', label=None, color=color, hold=True)
+                pylab.plot(Q, Rth/F, '-', label=None, color=color)
             if dR is not None:
                 pylab.fill_between(Q, (R-dR)/F, (R+dR)/F,
-                                   color=color, alpha=0.2, hold=True)
+                                   color=color, alpha=0.2)
                 if Rth is not None:
                     chisq = sum(((R-Rth)/dR)**2)
                 else:
@@ -1337,10 +1334,11 @@ class SurroundVariation():
         # Only show file.ext portion of the file specification
         name1 = os.path.basename(self.name1)
         name2 = os.path.basename(self.name2)
+        pylab.cla()
         chisq1, n1 = plot1(self.Qin, self.R1in, self.dR1in, R1,
-                           self.v1, name1, 'blue', hold=False)
+                           self.v1, name1, 'blue')
         chisq2, n2 = plot1(self.Qin, self.R2in, self.dR2in, R2,
-                           self.v2, name2, 'green', hold=True)
+                           self.v2, name2, 'green')
         pylab.legend(prop=FontProperties(size='medium'))
         chisq = (chisq1+chisq2)/(n1+n2)
         if chisq != 0:

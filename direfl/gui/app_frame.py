@@ -29,7 +29,6 @@ tool bar, and status bar.
 #==============================================================================
 from __future__ import print_function
 
-import os
 import sys
 
 import wx
@@ -185,7 +184,7 @@ class AppFrame(wx.Frame):
         sb = self.statusbar = self.CreateStatusBar()
         sb.SetFieldsCount(1)
 
-    def OnAbout(self, evt):
+    def OnAbout(self, event):
         """Shows the About dialog box."""
 
         dlg = AboutDialog(parent=self, title="About", info=APP_DESCRIPTION,
@@ -194,7 +193,7 @@ class AppFrame(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
 
-    def OnCredits(self, evt):
+    def OnCredits(self, event):
         """Shows the Credits dialog box."""
 
         dlg = AboutDialog(parent=self, title="Credits", info=APP_CREDITS,
@@ -207,7 +206,7 @@ class AppFrame(wx.Frame):
         """Terminates the program."""
         self.Close()
 
-    def OnLicense(self, evt):
+    def OnLicense(self, event):
         """Shows the License dialog box."""
 
         dlg = AboutDialog(parent=self, title="License", info=APP_LICENSE,

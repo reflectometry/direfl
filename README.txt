@@ -41,3 +41,8 @@ DiRefl was developed jointly by the National Institute of Standards and
 Technology (NIST) and the University of Maryland (UMD) as part of the
 Distributed Data Analysis of Neutron Scattering Experiments (DANSE) project
 funded by the US National Science Foundation under grant DMR-0520547.
+
+To run from the source directory:
+
+    python setup.py build_ext --inplace
+    pythonw -m direfl.gui.gui_app

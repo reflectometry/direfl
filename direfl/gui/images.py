@@ -3,9 +3,10 @@ Get the images in the Tool Bar
 """
 
 import os
+import io
+
 import wx
 from wx import ImageFromStream, BitmapFromImage
-import cStringIO
 
 #----------------------------------------------------------------------
 def getNewData():
@@ -39,7 +40,7 @@ def getNewBitmap():
     return BitmapFromImage(getNewImage())
 
 def getNewImage():
-    stream = cStringIO.StringIO(getNewData())
+    stream = io.BytesIO(getNewData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------
@@ -67,7 +68,7 @@ def getOpenBitmap():
     return BitmapFromImage(getOpenImage())
 
 def getOpenImage():
-    stream = cStringIO.StringIO(getOpenData())
+    stream = io.BytesIO(getOpenData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------
@@ -94,7 +95,7 @@ def getCopyBitmap():
     return BitmapFromImage(getCopyImage())
 
 def getCopyImage():
-    stream = cStringIO.StringIO(getCopyData())
+    stream = io.BytesIO(getCopyData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------
@@ -123,7 +124,7 @@ def getPasteBitmap():
     return BitmapFromImage(getPasteImage())
 
 def getPasteImage():
-    stream = cStringIO.StringIO(getPasteData())
+    stream = io.BytesIO(getPasteData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------
@@ -149,7 +150,7 @@ def getSaveBitmap():
     return BitmapFromImage(getSaveImage())
 
 def getSaveImage():
-    stream = cStringIO.StringIO(getSaveData())
+    stream = io.BytesIO(getSaveData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------
@@ -176,7 +177,7 @@ def getSaveAllBitmap():
     return BitmapFromImage(getSaveAllImage())
 
 def getSaveAllImage():
-    stream = cStringIO.StringIO(getSaveAllData())
+    stream = io.BytesIO(getSaveAllData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------
@@ -206,7 +207,7 @@ def getPrintBitmap():
     return BitmapFromImage(getPrintImage())
 
 def getPrintImage():
-    stream = cStringIO.StringIO(getPrintData())
+    stream = io.BytesIO(getPrintData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------
@@ -233,7 +234,7 @@ def getPrintPreviewBitmap():
     return BitmapFromImage(getPrintPreviewImage())
 
 def getPrintPreviewImage():
-    stream = cStringIO.StringIO(getPrintPreviewData())
+    stream = io.BytesIO(getPrintPreviewData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------
@@ -260,7 +261,7 @@ def getCutBitmap():
     return BitmapFromImage(getCutImage())
 
 def getCutImage():
-    stream = cStringIO.StringIO(getCutData())
+    stream = io.BytesIO(getCutData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------
@@ -291,7 +292,7 @@ def getUndoBitmap():
     return BitmapFromImage(getUndoImage())
 
 def getUndoImage():
-    stream = cStringIO.StringIO(getUndoData())
+    stream = io.BytesIO(getUndoData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------
@@ -320,7 +321,7 @@ def getRedoBitmap():
     return BitmapFromImage(getRedoImage())
 
 def getRedoImage():
-    stream = cStringIO.StringIO(getRedoData())
+    stream = io.BytesIO(getRedoData())
     return ImageFromStream(stream)
 
 #----------------------------------------------------------------------------
@@ -340,7 +341,7 @@ def getBlankBitmap():
     return BitmapFromImage(getBlankImage())
 
 def getBlankImage():
-    stream = cStringIO.StringIO(getBlankData())
+    stream = io.BytesIO(getBlankData())
     return ImageFromStream(stream)
 
 def getBlankIcon():

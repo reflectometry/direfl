@@ -89,7 +89,6 @@ example loads and plots two data files:
     >>> probe1 = instrument.load('blg117.refl')
     >>> probe2 = instrument.load('blg126.refl')
     >>> probe1.plot()
-    >>> pylab.hold(True)
     >>> probe2.plot()
     >>> pylab.show()
 
@@ -916,17 +915,19 @@ def opening_slits(T=None,slits_at_Tlo=None,Tlo=None,Thi=None,
     s2 = ones_like(T) * b2
 
     # Slits at Tlo<=T<=Thi
-    if Tlo != None:
+    if Tlo is not None:
         try:
-            m1,m2 = slits_at_Tlo
+            m1, m2 = slits_at_Tlo
         except TypeError:
-            m1=m2 = slits_at_Tlo
-        idx = (abs(T) >= Tlo) & (abs(T) <= Thi)
+            m1 = m2 = slits_at_Tlo
+        idx = (abs(T) >= Tlo)
+        if Thi is not None:
+            idx &= (abs(T) <= Thi)
         s1[idx] = m1 * T[idx]/Tlo
         s2[idx] = m2 * T[idx]/Tlo
 
     # Slits at T > Thi
-    if Thi != None:
+    if Thi is not None:
         if slits_above is None:
             slits_above = m1 * Thi/Tlo, m2 * Thi/Tlo
         try:

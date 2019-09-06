@@ -64,6 +64,11 @@ import sys
 
 import wx
 
+try: # CRUFT: SplashScreen moved in wx 4.0
+    from wx.adv import SplashScreen, SPLASH_TIMEOUT, SPLASH_CENTRE_ON_SCREEN
+except ImportError:
+    from wx import SplashScreen, SPLASH_TIMEOUT, SPLASH_CENTRE_ON_SCREEN
+
 from .utilities import resource, log_time
 from .about import APP_TITLE
 
@@ -196,14 +201,12 @@ class DiReflGUIApp(wx.App):
         # or the user has left clicked on the screen.  Thus any processing
         # performed by the calling routine (including doing imports) will
         # prevent the splash screen from disappearing.
-        splash = wx.SplashScreen(bitmap=bm,
-                                 splashStyle=(wx.SPLASH_TIMEOUT|
-                                              wx.SPLASH_CENTRE_ON_SCREEN),
-                                 style=(wx.SIMPLE_BORDER|
-                                        wx.FRAME_NO_TASKBAR|
-                                        wx.STAY_ON_TOP),
-                                 milliseconds=SPLASH_TIMEOUT,
-                                 parent=None, id=wx.ID_ANY)
+        splash = SplashScreen(
+            bitmap=bm,
+            splashStyle=(SPLASH_TIMEOUT|SPLASH_CENTRE_ON_SCREEN),
+            style=(wx.SIMPLE_BORDER|wx.FRAME_NO_TASKBAR|wx.STAY_ON_TOP),
+            milliseconds=SPLASH_TIMEOUT,
+            parent=None, id=wx.ID_ANY)
         splash.Bind(wx.EVT_CLOSE, self.OnCloseSplashScreen)
 
         # Repositon if center of screen placement is overridden by caller.
@@ -246,3 +249,6 @@ def main():
     # Enter event loop which allows the user to interact with the application.
     if LOGTIM: log_time("Entering the event loop")
     app.MainLoop()
+
+if __name__ == "__main__":
+    main()

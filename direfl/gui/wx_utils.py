@@ -71,7 +71,7 @@ def choose_fontsize(fontname=None):
         fontname = frame.GetFont().GetFaceName()
     max_width = BENCHMARK_WIDTH + BENCHMARK_WIDTH/100
 
-    for fontsize in xrange(12, 5, -1):
+    for fontsize in range(12, 5, -1):
         frame.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL, False,
                               fontname))
         benchmark = wx.StaticText(frame, wx.ID_ANY, label="")
@@ -109,7 +109,7 @@ def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
     print("*** Compare against %s font with dpi resolution of %d:"
           %(fontname, x))
 
-    for fontsize in xrange(12, 5, -1):
+    for fontsize in range(12, 5, -1):
         frame.SetFont(wx.Font(fontsize, wx.SWISS, wx.NORMAL, wx.NORMAL, False,
                               fontname))
         benchmark = wx.StaticText(frame, wx.ID_ANY, label="")

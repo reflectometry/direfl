@@ -36,13 +36,18 @@ DATA_DIR = "examples"
 
 #==============================================================================
 
+def dirn(path, n):
+    for k in range(n):
+        path = os.path.dirname(path)
+    return path
+
 def get_appdir():
     """
     Returns the path of the directory that contains the application being run
     (i.e., the directory path of the executing python script or frozen image).
     Note that this path may be different than the current working directory.
     """
-
+    return dirn(os.path.realpath(__file__), 3)
     if hasattr(sys, "frozen"):  # check for py2exe image
         path = sys.executable
     else:

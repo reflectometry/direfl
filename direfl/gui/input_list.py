@@ -143,7 +143,7 @@ class ItemListValidator(wx.PyValidator):
                     self.value = self.value_alt = str(text)
 
             text_ctrl.SetBackgroundColour(
-                wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW))
+                wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
             text_ctrl.Refresh()
             self.TransferFromWindow()
             return True
@@ -154,7 +154,8 @@ class ItemListValidator(wx.PyValidator):
             text_ctrl.Refresh()
             return False
 
-        except:
+        except Exception as exc:
+            #print(exc)
             text_ctrl.SetBackgroundColour("PINK")
             text_ctrl.SetFocus()
             text_ctrl.Refresh()
@@ -294,13 +295,13 @@ class InputListPanel(ScrolledPanel):
         # list is created that contains the index of the item that starts a new
         # section plus a final entry that is one beyond the last item.
         sect = [0]  # declare item 0 to be start of a new section
-        for i in xrange(self.item_cnt):
+        for i in range(self.item_cnt):
             if i > 0 and self.headers[i] is not None:
                 sect.append(i)
         sect.append(self.item_cnt)
 
         # Place the items for each section in its own flex grid sizer.
-        for i in xrange(len(sect)-1):
+        for i in range(len(sect)-1):
             j = sect[i]; k = sect[i+1] - 1
             fg_sizer = self.add_items_to_sizer(j, k)
 
@@ -332,7 +333,7 @@ class InputListPanel(ScrolledPanel):
         self.headers = []; self.labels = []; self.inputs = []
         self.widest = 0
 
-        for x in xrange(self.item_cnt):
+        for x in range(self.item_cnt):
             params = len(self.itemlist[x])
             if params == 6:
                 text, default, datatype, flags, plist, header = self.itemlist[x]
@@ -413,13 +414,13 @@ class InputListPanel(ScrolledPanel):
 
         # Determine if all input boxes should be aligned across sections.
         if self.align:
-            for x in xrange(self.item_cnt):
+            for x in range(self.item_cnt):
                 self.labels[x].SetMinSize((self.widest, -1))
 
 
     def add_items_to_sizer(self, start, end):
         sizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=10)
-        for x in xrange(start, end+1):
+        for x in range(start, end+1):
             sizer.Add(self.labels[x], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             sizer.Add(self.inputs[x], 0, wx.EXPAND)
         sizer.AddGrowableCol(1)
@@ -427,7 +428,7 @@ class InputListPanel(ScrolledPanel):
 
 
     def update_items_in_panel(self, new_values):
-        for x in xrange(len(self.inputs)):
+        for x in range(len(self.inputs)):
             if new_values[x] is not None:
                 self.inputs[x].SetValue(str(new_values[x]))
 
@@ -445,7 +446,7 @@ class InputListPanel(ScrolledPanel):
         """
 
         ret = []
-        for x in xrange(self.item_cnt):
+        for x in range(self.item_cnt):
             ret.append(self.inputs[x].GetValidator().GetValidatedInput())
         return ret
 
@@ -462,7 +463,7 @@ class InputListPanel(ScrolledPanel):
         """
 
         ret = []
-        for x in xrange(self.item_cnt):
+        for x in range(self.item_cnt):
             ret.append(self.inputs[x].GetValidator().GetValidatedInputAlt())
         return ret
 
@@ -477,7 +478,7 @@ class InputListPanel(ScrolledPanel):
         """
 
         ret = []
-        for x in xrange(self.item_cnt):
+        for x in range(self.item_cnt):
             ret.append(str(self.inputs[x].GetValue()))
         return ret
 
@@ -662,14 +663,14 @@ class InputListDialog(wx.Dialog):
         # list is created that contains the index of the item that starts a new
         # section plus a final entry that is one beyond the last item.
         sect = [0]  # declare item 0 to be start of a new section
-        for i in xrange(self.item_cnt):
+        for i in range(self.item_cnt):
             if i > 0 and self.headers[i] is not None:
                 sect.append(i)
         sect.append(self.item_cnt)
         #print("Section index list:", sect)
 
         # Place the items for each section in its own flex grid sizer.
-        for i in xrange(len(sect)-1):
+        for i in range(len(sect)-1):
             j = sect[i]; k = sect[i+1] - 1
             #print("Items per section:", j, "to", k)
             fg_sizer = self.add_items_to_sizer(j, k)
@@ -720,7 +721,7 @@ class InputListDialog(wx.Dialog):
         self.widest = 0
         first_error_idx = None
 
-        for x in xrange(self.item_cnt):
+        for x in range(self.item_cnt):
             params = len(self.itemlist[x])
             if params == 6:
                 text, default, datatype, flags, plist, header = self.itemlist[x]
@@ -806,13 +807,13 @@ class InputListDialog(wx.Dialog):
 
         # Determine if all input boxes should be aligned across sections.
         if self.align:
-            for x in xrange(self.item_cnt):
+            for x in range(self.item_cnt):
                 self.labels[x].SetMinSize((self.widest, -1))
 
 
     def add_items_to_sizer(self, start, end):
         sizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=10)
-        for x in xrange(start, end+1):
+        for x in range(start, end+1):
             sizer.Add(self.labels[x], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
             sizer.Add(self.inputs[x], 0, wx.EXPAND)
         sizer.AddGrowableCol(1)
@@ -820,7 +821,7 @@ class InputListDialog(wx.Dialog):
 
 
     def update_items_in_dialog_box(self, new_values):
-        for x in xrange(len(self.inputs)):
+        for x in range(len(self.inputs)):
             if new_values[x] is not None:
                 self.inputs[x].SetValue(str(new_values[x]))
 
@@ -838,7 +839,7 @@ class InputListDialog(wx.Dialog):
         """
 
         ret = []
-        for x in xrange(self.item_cnt):
+        for x in range(self.item_cnt):
             ret.append(self.inputs[x].GetValidator().GetValidatedInput())
         return ret
 
@@ -855,7 +856,7 @@ class InputListDialog(wx.Dialog):
         """
 
         ret = []
-        for x in xrange(self.item_cnt):
+        for x in range(self.item_cnt):
             ret.append(self.inputs[x].GetValidator().GetValidatedInputAlt())
         return ret
 
@@ -870,7 +871,7 @@ class InputListDialog(wx.Dialog):
         """
 
         ret = []
-        for x in xrange(self.item_cnt):
+        for x in range(self.item_cnt):
             ret.append(str(self.inputs[x].GetValue()))
         return ret
 

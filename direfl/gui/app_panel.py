@@ -172,7 +172,7 @@ class AppPanel(wx.Panel):
                              style=wx.NB_TOP|wx.NB_FIXEDWIDTH|wx.NB_NOPAGETHEME)
         try:
             nb.SetTabSize((100,20))  # works on Windows but not on Linux
-        except:
+        except Exception:
             pass
 
         # Create page windows as children of the notebook.
@@ -217,7 +217,7 @@ class AppPanel(wx.Panel):
         # we force a page change event so that the status bar is properly set
         # on startup.
         nb.ChangeSelection(0)
-        nb.SendPageChangedEvent(0, 0)
+        #nb.SendPageChangedEvent(0, 0)
 
 
     def OnPageChanged(self, event):

@@ -194,7 +194,8 @@ class Simulation():
         pylab.subplot(subplot)
         q,re,dre = self.phase.Q, self.phase.RealR, self.phase.dRealR
         scale = 1e4*q**2
-        [h] = pylab.plot(q, scale*re, '.', hold=False, label="Input")
+        pylab.cla()
+        [h] = pylab.plot(q, scale*re, '.', label="Input")
         if dre is not None:
             pylab.fill_between(q, scale*(re-dre), scale*(re+dre),
                                color=h.get_color(), alpha=0.2)
@@ -202,7 +203,7 @@ class Simulation():
         # Plot free film phase for comparison
         q_free,re_free = self.q, real(self.rfree)
         scale = 1e4*q_free**2
-        pylab.plot(q_free, scale*re_free, hold=True, label="Ideal")
+        pylab.plot(q_free, scale*re_free, label="Ideal")
 
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.xlabel('Q (inv A)')
@@ -216,9 +217,9 @@ class Simulation():
 
         pylab.subplot(subplot)
         pylab.plot(self.phase.Q, -1e4*self.phase.Q**2*self.phase.ImagR,
-                   hold=True, color='blue', label="Imag R+")
+                   color='blue', label="Imag R+")
         pylab.plot(self.phase.Q, 1e4*self.phase.Q**2*self.phase.ImagR,
-                   hold=True, color='green', label="Imag R-")
+                   color='green', label="Imag R-")
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.xlabel('Q (inv A)')
         pylab.ylabel('(100 Q)^2 Imag R')
@@ -243,13 +244,14 @@ class Simulation():
         pylab.subplot(subplot)
 
         z, rho = self.sample_profile()
-        [h] = pylab.plot(z, rho, color='blue', hold=False)
+        pylab.cla()
+        [h] = pylab.plot(z, rho, color='blue')
         pylab.fill_between(z, numpy.zeros_like(rho), rho,
                            color=h.get_color(), alpha=0.2)
-        self.invert.plot_profile(hold=True)
+        self.invert.plot_profile()
 
         if self.fitz is not None: # plot fitted
-            pylab.plot(self.fitz, self.fitrho, hold=True)
+            pylab.plot(self.fitz, self.fitrho)
             legend.append('Fitted')
 
         legend = ['Model', 'Inverted']

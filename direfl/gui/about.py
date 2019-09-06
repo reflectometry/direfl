@@ -26,7 +26,6 @@ used for informational display purposes.  Note that the product version is
 maintained in the version.py file and therefore is imported here.
 """
 
-import os
 import wx
 
 try:
@@ -138,7 +137,7 @@ class AboutDialog(wx.Dialog):
 
     def __init__(self,
                  parent=None,
-                 id = wx.ID_ANY,
+                 id=wx.ID_ANY,
                  title="About",
                  pos=wx.DefaultPosition,
                  size=wx.DefaultSize,

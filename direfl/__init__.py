@@ -6,4 +6,4 @@ def package_data():
     import os.path
     from glob import glob
     from .gui.utilities import resource_dir, APPNAME
-    return { APPNAME.lower()+'-data': glob(os.path.join(resource_dir(),'*')) }
+    return {APPNAME.lower()+'-data': glob(os.path.join(resource_dir(), '*'))}
