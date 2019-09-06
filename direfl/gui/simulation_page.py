@@ -195,7 +195,7 @@ class SimulationPage(wx.Panel):
         sbox1_sizer = wx.StaticBoxSizer(sbox1, wx.VERTICAL)
         sbox1_sizer.Add(line1, 0, wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT, border=SBB)
         sbox1_sizer.Add(line2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=SBB)
-        sbox1_sizer.Add((-1,4), 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=SBB)
+        sbox1_sizer.Add((-1, 4), 0, wx.EXPAND|wx.LEFT|wx.RIGHT, border=SBB)
         sbox1_sizer.Add(self.model, 1, wx.EXPAND|wx.BOTTOM|wx.LEFT|wx.RIGHT,
                         border=SBB)
 
@@ -238,9 +238,9 @@ class SimulationPage(wx.Panel):
 
         # Create a horizontal box sizer for the buttons.
         hbox2_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox2_sizer.Add((10,-1), 1)  # stretchable whitespace
+        hbox2_sizer.Add((10, -1), 1)  # stretchable whitespace
         hbox2_sizer.Add(btn_edit, 0)
-        hbox2_sizer.Add((10,-1), 0)  # non-stretchable whitespace
+        hbox2_sizer.Add((10, -1), 0)  # non-stretchable whitespace
         hbox2_sizer.Add(btn_reset, 0)
 
         # Create a vertical box sizer for the input file selectors.
@@ -331,7 +331,7 @@ class SimulationPage(wx.Panel):
         # Create a horizontal box sizer for the buttons.
         hbox3_sizer = wx.BoxSizer(wx.HORIZONTAL)
         hbox3_sizer.Add(sbox4_sizer, 0, wx.ALIGN_CENTER_VERTICAL)
-        hbox3_sizer.Add((10,-1), 1)  # stretchable whitespace
+        hbox3_sizer.Add((10, -1), 1)  # stretchable whitespace
         hbox3_sizer.Add(self.btn_compute, 0, wx.TOP, border=4)
 
         #----------------------------------------
@@ -398,7 +398,7 @@ class SimulationPage(wx.Panel):
         # Create a horizontal box sizer to hold the title and progress bar.
         hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
         hbox1_sizer.Add(self.pan2_intro, 0, wx.ALIGN_CENTER_VERTICAL)
-        hbox1_sizer.Add((10,25), 1)  # stretchable whitespace
+        hbox1_sizer.Add((10, 25), 1)  # stretchable whitespace
         hbox1_sizer.Add(self.pan2_gauge, 0)
 
         # Create a vertical box sizer to manage the widgets in the main panel.

@@ -31,7 +31,7 @@ For simulation, you just need a probe but not the associated data::
 
     from ncnrdata import ANDR
     instrument = ANDR(Tlo=0.5, slits_at_Tlo=0.2, slits_below=0.1)
-    probe = instrument.simulate(T=linspace(0,5,51))
+    probe = instrument.simulate(T=linspace(0, 5, 51))
     pylab.plot(probe.Q, probe.dQ)
     pylab.ylabel('resolution (1-sigma)')
     pylab.xlabel('Q (inv A)')
@@ -41,7 +41,7 @@ And for magnetic::
 
     from ncnrdata import NG1
     instrument = NG1(slits_at_Tlo=1)
-    probe = instrument.simulate_magnetic(T=linspace(0,5,51))
+    probe = instrument.simulate_magnetic(T=linspace(0, 5, 51))
     pylab.plot(probe.Q, probe.dQ)
     pylab.ylabel('resolution (1-sigma)')
     pylab.xlabel('Q (inv A)')
@@ -69,11 +69,11 @@ def load(filename, instrument=None, **kw):
     """
     if filename is None: return None
     if instrument is None: instrument=Monochromatic()
-    header,data = parse_file(filename)
+    header, data = parse_file(filename)
     header.update(**kw)
-    Q,R,dR = data
+    Q, R, dR = data
     resolution = instrument.resolution(Q, **header)
-    probe = resolution.probe(data=(R,dR), **header)
+    probe = resolution.probe(data=(R, dR), **header)
     probe.title = header['title'] if 'title' in header else filename
     probe.date = header['date'] if 'date' in header else "unknown"
     probe.instrument = (header['instrument'] if 'instrument' in header
@@ -145,7 +145,7 @@ def find_xsec(filename):
         if os.path.exists(filename+a): return filename+a
         elif os.path.exists(filename+a.lower()): return filename+a.lower()
         else: return None
-    return (check('A'),check('B'),check('C'),check('D'))
+    return (check('A'), check('B'), check('C'), check('D'))
 
 def parse_file(filename):
     """
@@ -166,14 +166,14 @@ def parse_file(filename):
     # Fill in instrument parameters, if not available from the file
     if 'instrument' in header and header['instrument'] in INSTRUMENTS:
         instrument = INSTRUMENTS[header['instrument']]
-        header.setdefault('radiation',instrument.radiation)
-        header.setdefault('wavelength',str(instrument.wavelength))
-        header.setdefault('dLoL',str(instrument.dLoL))
-        header.setdefault('d_s1',str(instrument.d_s1))
-        header.setdefault('d_s2',str(instrument.d_s2))
+        header.setdefault('radiation', instrument.radiation)
+        header.setdefault('wavelength', str(instrument.wavelength))
+        header.setdefault('dLoL', str(instrument.dLoL))
+        header.setdefault('d_s1', str(instrument.d_s1))
+        header.setdefault('d_s2', str(instrument.d_s2))
 
     if 'columns' in header: header['columns'] = header['columns'].split()
-    for key in ('wavelength','dLoL','d_s1','d_s2'):
+    for key in ('wavelength', 'dLoL', 'd_s1', 'd_s2'):
         if key in header: header[key] = float(header[key])
 
     return header, data
@@ -198,7 +198,7 @@ class NCNRLoader(Monochromatic):
         _, Rth = M.reflectivity()
         dR = 0.01*M.fresnel()
         R = Rth + numpy.random.randn(*Rth.shape)*dR
-        probe.data = R,dR
+        probe.data = R, dR
 
         return probe
     '''

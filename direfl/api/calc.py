@@ -65,7 +65,7 @@ def reflectivity(*args, **kw):
 
     Use reflectivity_amplitude to return the complex waveform.
     """
-    r = reflectivity_amplitude(*args,**kw)
+    r = reflectivity_amplitude(*args, **kw)
     return (r*conj(r)).real
 
 def reflectivity_amplitude(Q,
@@ -80,8 +80,8 @@ def reflectivity_amplitude(Q,
 
     See reflectivity for details.
     """
-    Q = _dense(Q,'d')
-    R = numpy.empty(Q.shape,'D')
+    Q = _dense(Q, 'd')
+    R = numpy.empty(Q.shape, 'D')
 
     n = len(depth)
     if numpy.isscalar(wavelength):
@@ -91,10 +91,10 @@ def reflectivity_amplitude(Q,
     if numpy.isscalar(sigma):
         sigma = sigma*numpy.ones(n-1, 'd')
 
-    wavelength,depth,rho,mu = [_dense(v, 'd')
+    wavelength, depth, rho, mu = [_dense(v, 'd')
                                  for v in (wavelength, depth, rho, mu)]
 
-    rho,mu = [v*1e-6 for v in (rho, mu)]
+    rho, mu = [v*1e-6 for v in (rho, mu)]
     if sigma is not None:
         sigma = _dense(sigma, 'd')
         reflmodule._reflectivity_amplitude_rough(rho, mu, depth, sigma, wavelength, Q, R)
@@ -103,12 +103,12 @@ def reflectivity_amplitude(Q,
     return R
 
 
-def magnetic_reflectivity(*args,**kw):
+def magnetic_reflectivity(*args, **kw):
     """
     Magnetic reflectivity for slab models.
 
     Returns the expected values for the four polarization cross
-    sections (++,+-,-+,--).
+    sections (++, +-, -+, --).
 
     Return reflectivity R^2 from slab model with sharp interfaces.
     returns reflectivities.
@@ -139,7 +139,7 @@ def magnetic_reflectivity(*args,**kw):
 
     Use magnetic_amplitude to return the complex waveform.
     """
-    r = magnetic_amplitude(*args,**kw)
+    r = magnetic_amplitude(*args, **kw)
     return [(z*z.conj()).real for z in r]
 
 def unpolarized_magnetic(*args, **kw):
@@ -164,7 +164,7 @@ def magnetic_amplitude(Q,
 
     See magnetic_reflectivity for details.
     """
-    Q = _dense(Q,'d')
+    Q = _dense(Q, 'd')
     n = len(depth)
     if numpy.isscalar(wavelength):
         wavelength=wavelength*numpy.ones(Q.shape, 'd')
@@ -175,50 +175,50 @@ def magnetic_amplitude(Q,
     if numpy.isscalar(theta_m):
         theta_m = theta_m*numpy.ones(n, 'd')
 
-    depth,rho,mu,rho_m,wavelength,theta_m \
-        = [_dense(a,'d') for a in (depth, rho, mu,
+    depth, rho, mu, rho_m, wavelength, theta_m \
+        = [_dense(a, 'd') for a in (depth, rho, mu,
            rho_m, wavelength, theta_m)]
-    R1,R2,R3,R4 = [numpy.empty(Q.shape,'D') for pol in (1, 2, 3, 4)]
+    R1, R2, R3, R4 = [numpy.empty(Q.shape, 'D') for pol in (1, 2, 3, 4)]
     expth = cos(theta_m * pi/180.0) + 1j*sin(theta_m * pi/180.0)
 
-    rho,mu,rho_m = [v*1e-6 for v in (rho, mu, rho_m)]
+    rho, mu, rho_m = [v*1e-6 for v in (rho, mu, rho_m)]
     reflmodule._magnetic_amplitude(rho, mu, depth, wavelength,
                                    rho_m,  expth, Aguide, Q,
                                    R1, R2, R3, R4
                                    )
-    return R1,R2,R3,R4
+    return R1, R2, R3, R4
 
 
-def fixedres(wavelength,dLoL,dT,Q):
+def fixedres(wavelength, dLoL, dT, Q):
     """
     Return resolution dQ for fixed slits.
 
 
     Angular divergence dT is (s1+s2)/d, where d is the distance
-    between the slits and s1,s2 is the slit openings.  Slits and
+    between the slits and s1, s2 is the slit openings.  Slits and
     distances should use the same units.
     """
-    dQ = numpy.empty(Q.shape,'d')
-    reflmodule._fixedres(wavelength,dLoL,dT,_dense(Q,'d'),dQ)
+    dQ = numpy.empty(Q.shape, 'd')
+    reflmodule._fixedres(wavelength, dLoL, dT, _dense(Q, 'd'), dQ)
     return dQ
 
 
-def varyingres(wavelength,dLoL,dToT,Q):
+def varyingres(wavelength, dLoL, dToT, Q):
     """
     Return resolution dQ for varying slits.
 
-    Angular divergence dT/T is (s1+s2)/d/theta(Q(s1,s2)).
+    Angular divergence dT/T is (s1+s2)/d/theta(Q(s1, s2)).
     """
-    dQ = numpy.empty(Q.shape,'d')
-    reflmodule._varyingres(wavelength,dLoL,dToT,_dense(Q,'d'),dQ)
+    dQ = numpy.empty(Q.shape, 'd')
+    reflmodule._varyingres(wavelength, dLoL, dToT, _dense(Q, 'd'), dQ)
     return dQ
 
 
-def convolve(Qi,Ri,Q,dQ):
+def convolve(Qi, Ri, Q, dQ):
     """
     Return convolution R[k] of width dQ[k] at points Q[k].
     """
-    R = numpy.empty(Q.shape,'d')
-    reflmodule._convolve(_dense(Qi,'d'),_dense(Ri,'d'),
-                         _dense(Q,'d'),_dense(dQ,'d'),R)
+    R = numpy.empty(Q.shape, 'd')
+    reflmodule._convolve(_dense(Qi, 'd'), _dense(Ri, 'd'),
+                         _dense(Q, 'd'), _dense(dQ, 'd'), R)
     return R

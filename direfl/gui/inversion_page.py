@@ -261,9 +261,9 @@ class InversionPage(wx.Panel):
 
         # Create a horizontal box sizer for the buttons.
         hbox2_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox2_sizer.Add((10,-1), 1)  # stretchable whitespace
+        hbox2_sizer.Add((10, -1), 1)  # stretchable whitespace
         hbox2_sizer.Add(btn_edit, 0)
-        hbox2_sizer.Add((10,-1), 0)  # non-stretchable whitespace
+        hbox2_sizer.Add((10, -1), 0)  # non-stretchable whitespace
         hbox2_sizer.Add(btn_reset, 0)
 
         # Create a vertical box sizer for the input file selectors.
@@ -304,7 +304,7 @@ class InversionPage(wx.Panel):
                 ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
                 ###["Back Reflectivity:", "True", "str", 'C', ("True", "False")],
                 ###["Inversion Noise Factor:", 1, "int", 'RE', None],
-                ###["Show Iterations:", "False", "str", ,'CRE', ("True", "False")]
+                ###["Show Iterations:", "False", "str", 'CRE', ("True", "False")]
                 ###["Monitor:", "", "str", 'RE', None]
                  ]
 
@@ -326,7 +326,7 @@ class InversionPage(wx.Panel):
 
         # Create a horizontal box sizer for the buttons.
         hbox3_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        hbox3_sizer.Add((10,-1), 1)  # stretchable whitespace
+        hbox3_sizer.Add((10, -1), 1)  # stretchable whitespace
         hbox3_sizer.Add(self.btn_compute, 0, wx.TOP, border=4)
 
         #----------------------------------------
@@ -389,7 +389,7 @@ class InversionPage(wx.Panel):
         # Create a horizontal box sizer to hold the title and progress bar.
         hbox1_sizer = wx.BoxSizer(wx.HORIZONTAL)
         hbox1_sizer.Add(self.pan2_intro, 0, wx.ALIGN_CENTER_VERTICAL)
-        hbox1_sizer.Add((10,25), 1)  # stretchable whitespace
+        hbox1_sizer.Add((10, 25), 1)  # stretchable whitespace
         hbox1_sizer.Add(self.pan2_gauge, 0)
 
         # Create a vertical box sizer to manage the widgets in the main panel.
@@ -876,8 +876,8 @@ class InversionPage(wx.Panel):
 
     def load_data(self, file1, file2):
         """
-        Loads the data from files or alternatively from tuples of (Q,R) or
-        (Q,R,dR), (Q,dQ,R,dR) or (Q,dQ,R,dR,L).
+        Loads the data from files or alternatively from tuples of (Q, R) or
+        (Q, R, dR), (Q, dQ, R, dR) or (Q, dQ, R, dR, L).
 
         This code is adapted from SurroundVariation._load().
         TODO: Replace this loader with a general purpose loader that will be
@@ -960,12 +960,12 @@ class InversionPage(wx.Panel):
             else:
                 minR = numpy.min(R[R>0])/2
 
-            pylab.semilogy(Q, numpy.maximum(R,minR), '.', label=label,
+            pylab.semilogy(Q, numpy.maximum(R, minR), '.', label=label,
                               color=color)
             if dR is not None:
                 idx = numpy.argsort(Q)
-                pylab.fill_between(Q, numpy.maximum(R-dR,minR),
-                                      numpy.maximum(R+dR,minR),
+                pylab.fill_between(Q, numpy.maximum(R-dR, minR),
+                                      numpy.maximum(R+dR, minR),
                                       color=color, alpha=0.2)
 
         # Only show file.ext portion of the file specification on the plots.

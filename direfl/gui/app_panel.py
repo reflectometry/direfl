@@ -146,7 +146,7 @@ class AppPanel(wx.Panel):
         '''
         tb.AddSimpleTool(wx.ID_OPEN, getOpenBitmap(),
                          "Open Data Files", "Open reflectivity data files")
-        icon_size = (16,16)
+        icon_size = (16, 16)
         icon_bitmap = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR,
                                                icon_size)
         tb.AddSimpleTool(wx.ID_OPEN, icon_bitmap,

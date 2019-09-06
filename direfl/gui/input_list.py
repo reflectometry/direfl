@@ -128,7 +128,7 @@ class ItemListValidator(wx.PyValidator):
                     if self.required:
                         raise RuntimeError("input required")
                 else:
-                    temp = text.replace('_', 'a').replace('-','a')
+                    temp = text.replace('_', 'a').replace('-', 'a')
                     if temp.isalnum():
                         self.value = self.value_alt = str(text)
                     else:
@@ -394,14 +394,14 @@ class InputListPanel(ScrolledPanel):
                                    value=str(default),
                                    validator=ItemListValidator(datatype, required),
                                    choices=plist,
-                                   size=(80,-1),  # min width about 10 digits
+                                   size=(80, -1),  # min width about 10 digits
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY))
                 self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
             else:                  # it is a simple data entry field
                 self.inputs.append(wx.TextCtrl(self, wx.ID_ANY,
                                    value=str(default),
                                    validator=ItemListValidator(datatype, required),
-                                   size=(80,-1)))  # min width about 10 digits
+                                   size=(80, -1)))  # min width about 10 digits
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
 
             # Verify that field is editable, otherwise don't allow user to edit.
@@ -687,9 +687,9 @@ class InputListDialog(wx.Dialog):
         # emulates the Windows convention for placing a set of buttons at the
         # bottom right of the window.
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.Add((10,-1), 1)  # stretchable whitespace
+        button_sizer.Add((10, -1), 1)  # stretchable whitespace
         button_sizer.Add(ok_button, 0)
-        button_sizer.Add((10,-1), 0)  # non-stretchable whitespace
+        button_sizer.Add((10, -1), 0)  # non-stretchable whitespace
         button_sizer.Add(cancel_button, 0)
 
         # Add a separator line before the buttons.
@@ -782,14 +782,14 @@ class InputListDialog(wx.Dialog):
                                    value=str(default),
                                    validator=ItemListValidator(datatype, required),
                                    choices=plist,
-                                   size=(80,-1),  # min width about 10 digits
+                                   size=(80, -1),  # min width about 10 digits
                                    style=wx.CB_DROPDOWN|wx.CB_READONLY))
                 self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.inputs[x])
             else:                  # it is a simple data entry field
                 self.inputs.append(wx.TextCtrl(self, wx.ID_ANY,
                                    value=str(default),
                                    validator=ItemListValidator(datatype, required),
-                                   size=(80,-1)))  # min width about 10 digits
+                                   size=(80, -1)))  # min width about 10 digits
                 self.Bind(wx.EVT_TEXT, self.OnText, self.inputs[x])
 
             # Verify that field is editable, otherwise don't allow user to edit.
@@ -1027,9 +1027,9 @@ class AppTestFrame(wx.Frame):
 
         # Create a horizontal sizer for the buttons.
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.Add((10,-1), 1)  # stretchable whitespace
+        button_sizer.Add((10, -1), 1)  # stretchable whitespace
         button_sizer.Add(submit_button, 0)
-        button_sizer.Add((10,-1), 0)  # non-stretchable whitespace
+        button_sizer.Add((10, -1), 0)  # non-stretchable whitespace
         button_sizer.Add(exit_button, 0)
 
         # Create a vertical box sizer for the panel and layout widgets in it.

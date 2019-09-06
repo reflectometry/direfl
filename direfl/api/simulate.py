@@ -38,7 +38,7 @@ class Simulation():
     ========================  =================================================
     Parameters                Description
     ========================  =================================================
-    *sample*                  structure [(rho1,d1), ..., (rhon, dn)]
+    *sample*                  structure [(rho1, d1), ..., (rhon, dn)]
     *q*, *dq*                 measurement points
     *u*, *v1*, *v2*           uniform and varying SLDs for surround variation
     *noise*                   percentage noise in the measurement
@@ -76,7 +76,7 @@ class Simulation():
         Reset or adjust input parameters, generating new sample data.
         """
 
-        for k,v in kw.items():
+        for k, v in kw.items():
             setattr(self, k, v)
 
         # Generate pure signals.  Note that the measurements are done
@@ -85,7 +85,7 @@ class Simulation():
         q, u, v1, v2 = self.q, self.u, self.v1, self.v2
         urough = self.urough
 
-        # Measuring through the substrate so use -q to generate r1,r2
+        # Measuring through the substrate so use -q to generate r1, r2
         rho = [p[0] for p in self.sample]+[u]
         d = [0] + [p[1] for p in self.sample] + [0]
         sigma = [p[2] for p in self.sample]+[urough]
@@ -136,22 +136,22 @@ class Simulation():
         #print(rho, z)
         #print(rhos, interface_z)
 
-        return z,rho
+        return z, rho
 
 
     def sample_profile(self):
-        z,rho_u,sigma_u = self.invert.z, self.invert.substrate, self.urough
+        z, rho_u, sigma_u = self.invert.z, self.invert.substrate, self.urough
         rhos, widths, sigmas = zip(*self.sample)
         substrate_width = self.invert.thickness - numpy.sum(widths)
         widths = numpy.hstack((0, widths, substrate_width))
         rhos = numpy.hstack((0, rhos, rho_u))
         sigmas = numpy.hstack((sigmas, sigma_u))
 
-        #rhos,widths,sigmas = rhos[::-1],widths[::-1],sigmas[::-1]
-        rho = profile.build_profile(z,value=rhos,
+        #rhos, widths, sigmas = rhos[::-1], widths[::-1], sigmas[::-1]
+        rho = profile.build_profile(z, value=rhos,
                                     thickness=widths, roughness=sigmas)
 
-        return z,rho
+        return z, rho
 
 
     def phase_residual(self):
@@ -179,9 +179,9 @@ class Simulation():
 
         pylab.subplot(subplot)
         if self.fitz is not None:
-            z,rho = self.fitz, self.fitrho
+            z, rho = self.fitz, self.fitrho
         else:
-            z,rho = self.invert.z, self.invert.rho
+            z, rho = self.invert.z, self.invert.rho
 
         self.phase.plot_measurement(profile=(z, rho))
 
@@ -192,7 +192,7 @@ class Simulation():
 
         # Plot reconstructed phase with uncertainty
         pylab.subplot(subplot)
-        q,re,dre = self.phase.Q, self.phase.RealR, self.phase.dRealR
+        q, re, dre = self.phase.Q, self.phase.RealR, self.phase.dRealR
         scale = 1e4*q**2
         pylab.cla()
         [h] = pylab.plot(q, scale*re, '.', label="Input")
@@ -201,7 +201,7 @@ class Simulation():
                                color=h.get_color(), alpha=0.2)
 
         # Plot free film phase for comparison
-        q_free,re_free = self.q, real(self.rfree)
+        q_free, re_free = self.q, real(self.rfree)
         scale = 1e4*q_free**2
         pylab.plot(q_free, scale*re_free, label="Ideal")
 
@@ -345,8 +345,8 @@ class Simulation():
 
     def _optimize(self):
         """Drive final optimization on inverted profile"""
-        z,rho = self.phase.optimize(self.invert.z, self.invert.rho)
-        self.fitz, self.fitrho = z,rho
+        z, rho = self.phase.optimize(self.invert.z, self.invert.rho)
+        self.fitz, self.fitrho = z, rho
 
 
     def _swfvarnexdum(self):
@@ -355,8 +355,8 @@ class Simulation():
 
         data1 = self.q, self.R1, 0*self.q
         data2 = self.q, self.R2, 0*self.q
-        numpy.savetxt('qrd1.' ,numpy.array(data1).T)
-        numpy.savetxt('qrd2.' ,numpy.array(data2).T)
+        numpy.savetxt('qrd1.' , numpy.array(data1).T)
+        numpy.savetxt('qrd2.' , numpy.array(data2).T)
         fid = open('varin.', 'w')
         fid.write("%d %g %g %g\n"%(len(self.q),
                                    self.u*1e-6, self.v1*1e-6, self.v2*1e-6))
@@ -373,6 +373,6 @@ def wait(msg=None):
 
     if msg: print(msg)
 
-    #block = BlockingInput(fig=pylab.gcf(), eventslist=('key_press_event',))
+    #block = BlockingInput(fig=pylab.gcf(), eventslist=('key_press_event', ))
     #block(n=1, timeout=-1)
     pylab.ginput()

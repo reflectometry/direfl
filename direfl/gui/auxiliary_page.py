@@ -146,7 +146,7 @@ def test1():
     # Surround parameters.
     u, v1, v2 = 2.07, 0, 4.5
     # Default sample.
-    sample = ([5,100,sv], [1,123,sa], [3,47,sa], [-1,25,sa])
+    sample = ([5, 100, sv], [1, 123, sa], [3, 47, sa], [-1, 25, sa])
     bse = 0
 
     # Run the simulation.

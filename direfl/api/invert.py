@@ -65,7 +65,7 @@ Scripts can use :func:`reconstruct` and :func:`invert`.  For example:
 The resulting profile has attributes for the input (*Q*, *RealR*) and the
 output (*z*, *rho*, *drho*).  There are methods for plotting  (*plot*,
 *plot_residual*) and storing (*save*).  The analysis can be rerun with
-different attributes (*run(key=val,...)*).
+different attributes (*run(key=val, ...)*).
 
 See :func:`reconstruct` and :class:`Inversion` for details.
 
@@ -114,7 +114,7 @@ from .calc import convolve
 
 try:  # CRUFT: basestring isn't used in python3
     basestring
-except:
+except Exception:
     basestring = str
 
 # Custom colors
@@ -132,7 +132,7 @@ def invert(**kw):
     """
     Invert data returning an :class:`Inversion` object.
 
-    If outfile is specified, save z,rho,drho to the named file.
+    If outfile is specified, save z, rho, drho to the named file.
     If plot=True, show a plot before returning
     """
 
@@ -171,9 +171,9 @@ class Inversion():
       =================   =========================================================
       Input Parameters    Description
       =================   =========================================================
-      *data*              The name of an input file or a pair of vectors (Q,RealR)
+      *data*              The name of an input file or a pair of vectors (Q, RealR)
                           where RealR is the real portion of the complex
-                          reflectivity amplitude.input filename or Q,RealR data
+                          reflectivity amplitude.input filename or Q, RealR data
                           (required).
       *thickness* (400)   Defines the total thickness of the film of interest. If
                           the value chosen is too small, the inverted profile will
@@ -221,12 +221,12 @@ class Inversion():
       If *monitor* is specified, then Poisson noise is used instead, according to
       the following::
 
-      *noise* U[-1,1] (poisson(*monitor* |real R|)/*monitor* - |real R|)
+      *noise* U[-1, 1] (poisson(*monitor* |real R|)/*monitor* - |real R|)
 
       That is, a value is pulled from the Poisson distribution of the expected
       counts, and the noise is the difference between this and the actual counts.
       This is further scaled by a fudge factor of *noise* and a further random
-      uniform in [-1,1].
+      uniform in [-1, 1].
 
       ====================  =======================================================
       Uncertainty controls  Description
@@ -302,9 +302,9 @@ class Inversion():
                               profiles from the noisy data sets. The uncertainty *drho*
                               does not take into account the possible variation in the
                               signal above *Qmax*.
-      *signals*               It is a list of the noisy (Q,RealR) input signals generated
+      *signals*               It is a list of the noisy (Q, RealR) input signals generated
                               by the uncertainty controls.
-      *profiles*              It is a list of the corresponding (z,rho) profiles. The
+      *profiles*              It is a list of the corresponding (z, rho) profiles. The
                               first stage is computed without noise, so *signals[0]*
                               contains the meshed input and *profiles[0]* contains the
                               output of the inversion process without additional noise.
@@ -372,7 +372,7 @@ class Inversion():
 
     def _setdata(self, data, name="data"):
         """
-        Set *Qinput*, *RealRinput* from Q ,real(R) vectors.
+        Set *Qinput*, *RealRinput* from Q, real(R) vectors.
         """
 
         self.name = name
@@ -382,7 +382,7 @@ class Inversion():
             q, rer = data
             drer = None
         # Force equal spacing by interpolation
-        self.Qinput,self.RealRinput = asarray(q),asarray(rer)
+        self.Qinput, self.RealRinput = asarray(q), asarray(rer)
         self.dRealRinput = asarray(drer) if drer is not None else None
 
 
@@ -411,11 +411,11 @@ class Inversion():
         # between Qmin and Qmax
         dq = (q[-1]-q[0])/(len(q) - 1)
         npts = int(q[-1]/dq + 1.5)
-        q,rer = remesh([q,rer], 0, q[-1], npts, left=0, right=0)
+        q, rer = remesh([q, rer], 0, q[-1], npts, left=0, right=0)
 
         # Process uncertainty
         if self.dRealRinput is not None:
-            q, drer = remesh([q,drer], 0, q[-1], npts, left=0, right=0)
+            q, drer = remesh([q, drer], 0, q[-1], npts, left=0, right=0)
         else:
             drer = None
 
@@ -429,7 +429,7 @@ class Inversion():
         All control keywords from the constructor can be used, except
         *data* and *outfile*.
         Sets *signals* to the list of noisy (Q, RealR) signals and sets
-        *profiles* to the list of generated (z,rho) profiles.
+        *profiles* to the list of generated (z, rho) profiles.
         """
 
         from numpy.random import uniform, poisson, normal
@@ -450,10 +450,10 @@ class Inversion():
                 noisyR = rer + self.noise*unoise*pnoise
             elif drer is not None:
                 # Use gaussian uncertainty estimate as noise source
-                noisyR = rer + normal(0,1)*self.noise*drer
+                noisyR = rer + normal(0, 1)*self.noise*drer
             else:
                 # Use 5% relative amplitude as noise source
-                noisyR = rer + normal(0,1)*self.noise*0.05*abs(rer)
+                noisyR = rer + normal(0, 1)*self.noise*0.05*abs(rer)
 
             ctf = self._transform(noisyR, Qmax=q[-1],
                                   bse=self.bse, porder=1)
@@ -468,8 +468,8 @@ class Inversion():
 
             if not self.backrefl:
                 z, rho = z[::-1], rho[::-1]
-            signals.append((q,noisyR))
-            profiles.append((z,rho))
+            signals.append((q, noisyR))
+            profiles.append((z, rho))
         self.signals, self.profiles = signals, profiles
 
 
@@ -532,7 +532,7 @@ class Inversion():
 
     def save(self, outfile=None):
         """
-        Save z,rho,drho to three column text file named *outfile*.
+        Save z, rho, drho to three column text file named *outfile*.
 
         **Parameters:**
             *outfile:* file
@@ -548,7 +548,7 @@ class Inversion():
             outfile = basefile+os.extsep+"amp"
         fid = open(outfile, "w")
         fid.write("#  Z  Rho  dRho\n")
-        numpy.savetxt(fid, array([self.z,self.rho,self.drho]).T)
+        numpy.savetxt(fid, array([self.z, self.rho, self.drho]).T)
         fid.close()
 
 
@@ -685,7 +685,7 @@ class Inversion():
                 ymax = max(max(self.RealRinput[self.Qinput<qmax]),
                            max(Rinverted[self.Qinput<qmax]))
                 pylab.setp(ax, xticks=[], yticks=[],
-                           xlim=[0,qmax], ylim=[-1, 1.1*(ymax+1)-1])
+                           xlim=[0, qmax], ylim=[-1, 1.1*(ymax+1)-1])
                 pylab.axes(orig)
 
         plottitle('Reconstructed Phase')
@@ -711,9 +711,9 @@ class Inversion():
             for p in self.profiles:
                 pylab.plot(p[0], p[1]+self.substrate)
         else:
-            z,rho,drho = self.z, self.rho, self.drho
+            z, rho, drho = self.z, self.rho, self.drho
             [h] = pylab.plot(z, rho, color=DARK_RED, **kw)
-            pylab.fill_between(z,rho-drho, rho+drho,
+            pylab.fill_between(z, rho-drho, rho+drho,
                                color=h.get_color(), alpha=0.2)
             #pylab.plot(z, rho+drho, '--', color=h.get_color())
             #pylab.plot(z, rho-drho, '--', color=h.get_color())
@@ -743,7 +743,7 @@ class Inversion():
 
         import pylab
 
-        Q,RealR = self.Qinput, self.RealRinput
+        Q, RealR = self.Qinput, self.RealRinput
         r = self.refl(Q)
         pylab.plot(Q, Q**2*(real(r)-RealR))
         pylab.ylabel('Residuals [Q^2 * (Real R - input)]')
@@ -756,7 +756,7 @@ class Inversion():
         Set a group of attributes.
         """
 
-        for k,v in kw.items():
+        for k, v in kw.items():
             if hasattr(self, k):
                 setattr(self, k, v)
             else:
@@ -838,12 +838,12 @@ class Inversion():
         q = hstack((q, 0))
         qp = [(ut, -2*q*self.rhoscale)]
 
-        Delta = zeros((mx, 2*mx),'d')
+        Delta = zeros((mx, 2*mx), 'd')
         for iter in range(iters):
             for m in range(2, mx):
                 n = array(range(m, 2*mx-(m+1)))
-                Delta[m,n] = (h**2 * q[m-1] * (g[m+n] + Delta[m-1,n])
-                        + Delta[m-1,n+1] + Delta[m-1,n-1] - Delta[m-2,n])
+                Delta[m, n] = (h**2 * q[m-1] * (g[m+n] + Delta[m-1, n])
+                        + Delta[m-1, n+1] + Delta[m-1, n-1] - Delta[m-2, n])
             udiag = -g[:2*mx-2:2] - diag(Delta)[:mx-1]
             mup = len(udiag) - 2
             h = 1/mup
@@ -885,7 +885,7 @@ def plotamp(Q, r, dr=None, scaled=True, ylabel="Real R", **kw):
 
 class Interpolator():
     """
-    Construct an interpolation function from pairs (xi,yi).
+    Construct an interpolation function from pairs (xi, yi).
     """
 
     def __init__(self, xi, yi, porder=1):
@@ -901,7 +901,7 @@ class Interpolator():
         return interp(x, self.xi, self.yi)
 
 
-def phase_shift(q,r,shift=0):
+def phase_shift(q, r, shift=0):
     return r*exp(1j*shift*q)
 
 
@@ -915,7 +915,7 @@ def remesh(data, xmin, xmax, npts, left=None, right=None):
     if npts > len(x): npts = len(x)
     newx = linspace(xmin, xmax, npts)
     newy = interp(newx, x, y, left=left, right=right)
-    return array((newx,newy))
+    return array((newx, newy))
 
 
 # This program is public domain.
@@ -958,13 +958,13 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     nQ = len(Qz)
 
     # Make everything into arrays
-    kz = asarray(Qz,'d')/2
-    depth = asarray(depth,'d')
-    rho = asarray(rho,'d')
+    kz = asarray(Qz, 'd')/2
+    depth = asarray(depth, 'd')
+    rho = asarray(rho, 'd')
     mu = mu*ones(n, 'd') if isscalar(mu) else asarray(mu, 'd')
     wavelength = wavelength*ones(nQ, 'd') \
         if isscalar(wavelength) else asarray(wavelength, 'd')
-    sigma = sigma*ones(n-1, 'd') if isscalar(sigma) else asarray(sigma,'d')
+    sigma = sigma*ones(n-1, 'd') if isscalar(sigma) else asarray(sigma, 'd')
 
     # Scale units
     rho = rho*1e-6
@@ -972,11 +972,11 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
 
     ## For kz < 0 we need to reverse the order of the layers
     ## Note that the interface array sigma is conceptually one
-    ## shorter than rho,mu so when reversing it, start at n-1.
+    ## shorter than rho, mu so when reversing it, start at n-1.
     ## This allows the caller to provide an array of length n
-    ## corresponding to rho,mu or of length n-1.
+    ## corresponding to rho, mu or of length n-1.
     idx = (kz>=0)
-    r = empty(len(kz),'D')
+    r = empty(len(kz), 'D')
     r[idx] = _refl_calc(kz[idx], wavelength[idx], depth, rho, mu, sigma)
     r[~idx] = _refl_calc(abs(kz[~idx]), wavelength[~idx],
                    depth[-1::-1], rho[-1::-1], mu[-1::-1],
@@ -1002,7 +1002,7 @@ def _refl_calc(kz, wavelength, depth, rho, mu, sigma):
     B22 = 1
     B21 = 0
     B12 = 0
-    for i in range(0,len(rho)-1):
+    for i in range(0, len(rho)-1):
         k_next = sqrt(kz_sq - (4*pi*rho[i+1] + 2j*pi*mu[i+1]/wavelength))
         F = (k - k_next) / (k + k_next)
         F *= exp(-2*k*k_next*sigma[i]**2)
@@ -1089,8 +1089,8 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
     Input parameters  Description
     ================  =============================================================
     *file1*, *file2*  reflectivity measurements at identical Q values. *file1*
-                      and *file2* can be pairs of vectors (q1,r1), (q2,r2) or files
-                      containing at least two columns (q,r), with the remaining
+                      and *file2* can be pairs of vectors (q1, r1), (q2, r2) or files
+                      containing at least two columns (q, r), with the remaining
                       columns such as dr, dq, and lambda ignored. If a third
                       vector, dr, is present in both datasets, then an uncertainty
                       estimate will be calculated for the reconstructed phase.
@@ -1112,7 +1112,7 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
     ==================  =========================================
     """
 
-    return SurroundVariation(file1, file2, u, v1 ,v2, stages=stages)
+    return SurroundVariation(file1, file2, u, v1 , v2, stages=stages)
 
 
 class SurroundVariation():
@@ -1165,17 +1165,17 @@ class SurroundVariation():
         from scipy.optimize import fmin_l_bfgs_b as fmin
 
         def cost(rho):
-            R1,R2 = self.refl(z, rho, resid=True)
+            R1, R2 = self.refl(z, rho, resid=True)
             return numpy.sum(R1**2) + numpy.sum(R2**2)
 
         rho_final=rho_initial
-        rho_final,f,d = fmin(cost,rho_initial,approx_grad=True,maxfun=20)
-        return z,rho_final
+        rho_final, f, d = fmin(cost, rho_initial, approx_grad=True, maxfun=20)
+        return z, rho_final
 
 
     def refl(self, z, rho, resid=False):
         """
-        Return the reflectivities R1 and R2 for the film *z*,*rho* in the
+        Return the reflectivities R1 and R2 for the film *z*, *rho* in the
         context of the substrate and surround variation.
 
         **Parameters:**
@@ -1191,7 +1191,7 @@ class SurroundVariation():
 
         **Returns:**
             *R1, R2:* (boolean, boolean)|
-                Return the reflectivities R1 and R2 for the film *z*,*rho*.
+                Return the reflectivities R1 and R2 for the film *z*, *rho*.
         """
 
         w = numpy.hstack((0, numpy.diff(z), 0))
@@ -1203,7 +1203,7 @@ class SurroundVariation():
         if resid:
             R1 = (self.R1in-R1)/self.dR1in
             R2 = (self.R2in-R2)/self.dR2in
-        return R1,R2
+        return R1, R2
 
 
     def _calc_free(self, z, rho):
@@ -1218,12 +1218,12 @@ class SurroundVariation():
 
 
     def _calc_refl(self, w, rho):
-        Q,dQ = self.Qin,self.dQin
+        Q, dQ = self.Qin, self.dQin
         # Back reflectivity is equivalent to -Q inputs
         if self.backrefl: Q = -Q
         r = refl(Q, w, rho)
         if dQ is not None:
-            R = convolve(Q,abs(r)**2,Q,dQ)
+            R = convolve(Q, abs(r)**2, Q, dQ)
         else:
             R = abs(r)**2
         return R
@@ -1238,12 +1238,12 @@ class SurroundVariation():
         Q, re, im = self.Qin, self.RealR, self.ImagR
         if self.dRealR is not None:
             dre, dim = self.dRealR, self.dImagR
-            keep = reduce(lambda y, x: isfinite(x)&y, [re,im], True)
-            self.Q,self.RealR, self.dRealR, self.ImagR, self.dImagR \
+            keep = reduce(lambda y, x: isfinite(x)&y, [re, im], True)
+            self.Q, self.RealR, self.dRealR, self.ImagR, self.dImagR \
                 = [v[keep] for v in (Q, re, dre, im, dim)]
         else:
-            keep = reduce(lambda y, x: isfinite(x)&y, [re,im], True)
-            self.Q, self.RealR, self.ImagR = [v[keep] for v in (Q,re,im)]
+            keep = reduce(lambda y, x: isfinite(x)&y, [re, im], True)
+            self.Q, self.RealR, self.ImagR = [v[keep] for v in (Q, re, im)]
 
 
     def save(self, outfile=None, uncertainty=True):
@@ -1253,7 +1253,7 @@ class SurroundVariation():
 
         **Parameters:**
             *outfile:* file
-                Include dRealR,dImagR if they exist and if *uncertainty*
+                Include dRealR, dImagR if they exist and if *uncertainty*
                 is True, making a five column file.
             *uncertainity:* boolean
                 Include dRealR and dImagR if True.
@@ -1280,11 +1280,11 @@ class SurroundVariation():
 
     def save_inverted(self, outfile=None, profile=None):
         """
-        Save Q, R1 ,R2, RealR of the inverted profile.
+        Save Q, R1, R2, RealR of the inverted profile.
         """
 
         R1, R2 = self.refl(*profile)
-        rer,imr = self._calc_free(*profile)
+        rer, imr = self._calc_free(*profile)
         data = numpy.vstack((self.Qin, R1, R2, rer, imr))
         fid = open(outfile, "w")
         fid.write("#  Q  R1  R2  RealR  ImagR\n")
@@ -1294,7 +1294,7 @@ class SurroundVariation():
 
     def show(self):
         """Print Q, RealR, ImagR to the screen."""
-        print("# %9s %11s %11s"%("Q","RealR", "ImagR"))
+        print("# %9s %11s %11s"%("Q", "RealR", "ImagR"))
         for point in zip(self.Q, self.RealR, self.ImagR):
             print("%11.4g %11.4g %11.4g"%point)
 
@@ -1324,7 +1324,7 @@ class SurroundVariation():
                 # Doesn't make sense to compute chisq for unweighted
                 # reflectivity since there are several orders of magnitude
                 # differences between the data points.
-                return 0,1
+                return 0, 1
 
         if profile is not None:
             R1, R2 = self.refl(*profile)
@@ -1375,8 +1375,8 @@ class SurroundVariation():
 
     def _load(self, file1, file2):
         """
-        Load the data from files or from tuples of (Q,R) or (Q,R,dR),
-        (Q,dQ,R,dR) or (Q,dQ,R,dR,L).
+        Load the data from files or from tuples of (Q, R) or (Q, R, dR),
+        (Q, dQ, R, dR) or (Q, dQ, R, dR, L).
         """
 
         # This code assumes the following data file formats:
@@ -1444,11 +1444,11 @@ class SurroundVariation():
         from numpy.random import normal
         runs = []
         for i in range(stages):
-            R1 = normal(self.R1in,self.dR1in)
-            R2 = normal(self.R2in,self.dR2in)
+            R1 = normal(self.R1in, self.dR1in)
+            R2 = normal(self.R2in, self.dR2in)
             rer, imr = _phase_reconstruction(self.Qin, R1, R2,
                                              self.u, self.v1, self.v2)
-            runs.append((rer,imr))
+            runs.append((rer, imr))
         rers, rims = zip(*runs)
         self.RealR = valid_f(mean, rers)
         self.ImagR = valid_f(mean, rims)
@@ -1456,7 +1456,7 @@ class SurroundVariation():
         self.dImagR = valid_f(std, rims)
 
 
-def valid_f(f, A,axis=0):
+def valid_f(f, A, axis=0):
     """
     Calculate vector function f using only the finite elements of the array *A*.
     *axis* is the axis over which the calculation should be performed, or None
@@ -1484,7 +1484,7 @@ def _phase_reconstruction(Q, R1sq, R2sq, rho_u, rho_v1, rho_v2):
     """
 
     Qsq = Q**2 + 16.*pi*rho_u*1e-6
-    usq,v1sq,v2sq = [(1-16*pi*rho*1e-6/Qsq) for rho in (rho_u, rho_v1, rho_v2)]
+    usq, v1sq, v2sq = [(1-16*pi*rho*1e-6/Qsq) for rho in (rho_u, rho_v1, rho_v2)]
 
     sigma1 = 2 * sqrt(v1sq*usq) * (1+R1sq) / (1-R1sq)
     sigma2 = 2 * sqrt(v2sq*usq) * (1+R2sq) / (1-R2sq)
@@ -1521,17 +1521,17 @@ through the substrate."""
     inversion_keys = [] # Collect the keywords we are using
 
     group = OptionGroup(parser, "Sample description", description=None)
-    group.add_option("-t","--thickness", dest="thickness",
+    group.add_option("-t", "--thickness", dest="thickness",
                       default=Inversion.thickness, type="float",
                       help="sample thickness (A)")
-    group.add_option("-u","--substrate", dest="substrate",
+    group.add_option("-u", "--substrate", dest="substrate",
                       default=Inversion.substrate, type="float",
                       help="sample substrate material (10^6 * SLD)")
-    group.add_option("-v","--surround", dest="surround",
+    group.add_option("-v", "--surround", dest="surround",
                       type="float", nargs=2,
                       help="varying materials v1 v2 (10^6 * SLD) [for phase]")
     # fronting is not an inversion key
-    inversion_keys += ['thickness','substrate']
+    inversion_keys += ['thickness', 'substrate']
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Data description", description=None)
@@ -1544,14 +1544,14 @@ through the substrate."""
     group.add_option("-n", "--noise", dest="noise",
                       default=Inversion.noise, type="float",
                       help="noise scaling")
-    group.add_option("-M","--monitor", dest="monitor",
+    group.add_option("-M", "--monitor", dest="monitor",
                       default=Inversion.monitor, type="int",
                       help="monitor counts used for measurement")
     inversion_keys += ['Qmin', 'Qmax', 'noise', 'monitor']
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Outputs", description=None)
-    group.add_option("-o","--outfile", dest="outfile", default=None,
+    group.add_option("-o", "--outfile", dest="outfile", default=None,
                       help="profile file (infile.prf), use '-' for console")
     group.add_option("--ampfile", dest="ampfile", default=None,
                       help="amplitude file (infile.amp)")
@@ -1612,7 +1612,7 @@ through the substrate."""
     # have options for, I update the list of parameters that I
     # allow for each group of parameters, and pull the returned
     # values out below.
-    res = Inversion(data=data, **dict((key,getattr(options,key))
+    res = Inversion(data=data, **dict((key, getattr(options, key))
                                       for key in inversion_keys))
     res.run(showiters=False)
 
