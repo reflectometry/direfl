@@ -120,7 +120,7 @@ class SimulationPage(wx.Panel):
     def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
 
-        self.fignum=fignum
+        self.fignum = fignum
         self.SetBackgroundColour(colour)
         self.sbi = StatusBarInfo()
         self.sbi.write(1, SIM_HELP1)
@@ -175,9 +175,9 @@ class SimulationPage(wx.Panel):
 
         # Create instructions for using the model description input box.
         line1 = wx.StaticText(self.pan1, wx.ID_ANY,
-                    label="Define the Surface, Sample, and Substrate")
+                              label="Define the Surface, Sample, and Substrate")
         line2 = wx.StaticText(self.pan1, wx.ID_ANY,
-                    label="layers of your model (one layer per line):")
+                              label="layers of your model (one layer per line):")
 
         demo_model_params = \
             "# SLDensity  Thickness  Roughness" + \
@@ -187,7 +187,7 @@ class SimulationPage(wx.Panel):
         # populate it with a header but no layer information.
         # Note that the number of lines determines the height of the box.
         self.model = wx.TextCtrl(self.pan1, wx.ID_ANY, value=demo_model_params,
-                         style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.RAISED_BORDER)
+                                 style=wx.TE_MULTILINE|wx.TE_WORDWRAP|wx.RAISED_BORDER)
         self.model.SetBackgroundColour(WINDOW_BKGD_COLOUR)
 
         # Group model parameter widgets into a labeled section and
@@ -267,26 +267,26 @@ class SimulationPage(wx.Panel):
         # Instantiate object that manages and stores inversion parameters.
 
         fields = [
-                   ["SLD of Surface for Exp 1:", None, "float", 'RE', None],
-                   ["SLD of Surface for Exp 2:", None, "float", 'RE', None],
-                ###["SLD of Substrate:", 2.07, "float", 'RE', None],
-                ###["Sample Thickness:", 1000, "float", 'RE', None],
-                   ["Qmin:", 0.0, "float", 'RE', None],
-                   ["Qmax:", 0.4, "float", 'RE', None],
-                   ["# Profile Steps:", 128, "int", 'RE', None],
-                   ["Over Sampling Factor:", 4, "int", 'REL', None],
-                   ["# Inversion Iterations:", 6, "int", 'RE', None],
-                   ["# Monte Carlo Trials:", 10, "int", 'RE', None],
-                   ["Simulated Noise (as %):", 5.0, "float", 'RE', None],
-                   ["Bound State Energy:", 0.0, "float", 'RE', None],
-                   ["Perfect Reconstruction:", "False", "str", 'CRE',
-                        ("True", "False")],
-                ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
-                ###["Back Reflectivity:", "True", "str", 'CRE', ("True", "False")],
-                ###["Inversion Noise Factor:", 1, "int", 'RE', None],
-                ###["Show Iterations:", "False", "str", 'CRE', ("True", "False")]
-                ###["Monitor:", "", "str", 'RE', None]
-                 ]
+            ["SLD of Surface for Exp 1:", None, "float", 'RE', None],
+            ["SLD of Surface for Exp 2:", None, "float", 'RE', None],
+            ###["SLD of Substrate:", 2.07, "float", 'RE', None],
+            ###["Sample Thickness:", 1000, "float", 'RE', None],
+            ["Qmin:", 0.0, "float", 'RE', None],
+            ["Qmax:", 0.4, "float", 'RE', None],
+            ["# Profile Steps:", 128, "int", 'RE', None],
+            ["Over Sampling Factor:", 4, "int", 'REL', None],
+            ["# Inversion Iterations:", 6, "int", 'RE', None],
+            ["# Monte Carlo Trials:", 10, "int", 'RE', None],
+            ["Simulated Noise (as %):", 5.0, "float", 'RE', None],
+            ["Bound State Energy:", 0.0, "float", 'RE', None],
+            ["Perfect Reconstruction:", "False", "str", 'CRE',
+             ("True", "False")],
+            ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
+            ###["Back Reflectivity:", "True", "str", 'CRE', ("True", "False")],
+            ###["Inversion Noise Factor:", 1, "int", 'RE', None],
+            ###["Show Iterations:", "False", "str", 'CRE', ("True", "False")]
+            ###["Monitor:", "", "str", 'RE', None]
+            ]
 
         self.inver_param = InputListPanel(parent=self.pan1, itemlist=fields,
                                           align=True)
@@ -309,7 +309,7 @@ class SimulationPage(wx.Panel):
         calc_reso.SetBackgroundColour(WINDOW_BKGD_COLOUR)
 
         self.radio1 = wx.RadioButton(self.pan1, wx.ID_ANY, "Yes  ",
-                                style=wx.RB_GROUP)
+                                     style=wx.RB_GROUP)
         self.radio2 = wx.RadioButton(self.pan1, wx.ID_ANY, "No")
         self.radio1.SetBackgroundColour(WINDOW_BKGD_COLOUR)
         self.radio2.SetBackgroundColour(WINDOW_BKGD_COLOUR)
@@ -460,25 +460,31 @@ class SimulationPage(wx.Panel):
         layers = []
         for line in lines:
             lin = line.strip()
-            if lin.startswith('#'): continue  # skip over comment line
-            if len(lin) == 0: continue  # discard blank line
+            if lin.startswith('#'):
+                continue  # skip over comment line
+            if len(lin) == 0:
+                continue  # discard blank line
             keep = lin.split('#')
             lin = keep[0]  # discard trailing comment
             ln = lin.split(None, 4)  # we'll break into a max of 4 items
-            if len(ln) == 1: ln.append('100')  # default thickness to 100
-            if len(ln) == 2: ln.append('0')  # default roughness to 0.0
+            if len(ln) == 1:
+                ln.append('100')  # default thickness to 100
+            if len(ln) == 2:
+                ln.append('0')  # default roughness to 0.0
 
             try:
                 temp = [float(ln[0]), float(ln[1]), float(ln[2])]
-            except:
-                popup_error_message("Syntax Error",
+            except Exception:
+                popup_error_message(
+                    "Syntax Error",
                     "Please correct syntax error in model description.")
                 return
 
             layers.append(temp)
 
         if len(layers) < 3:
-            popup_error_message("Less Than 3 Layers Defined",
+            popup_error_message(
+                "Less Than 3 Layers Defined",
                 ("You must specify at least one Surface, Sample, and " +
                  "Substrate layer for your model."))
             return
@@ -560,20 +566,25 @@ class SimulationPage(wx.Panel):
             # the resolution method and in all cases avoid passing a datatype
             # of None directly or indirectly as part of a tuple.
             slits_at_Tlo = (slit1_at_Tlo, slit2_at_Tlo)
-            if slit2_at_Tlo is None: slits_at_Tlo = slit1_at_Tlo
+            if slit2_at_Tlo is None:
+                slits_at_Tlo = slit1_at_Tlo
             slits_below = (slit1_below, slit2_below)
-            if slit2_below is None: slits_below = slit1_below
+            if slit2_below is None:
+                slits_below = slit1_below
             slits_above = (slit1_above, slit2_above)
-            if slit2_above is None: slits_above = slit1_above
-            if sample_width is None: sample_width = 1e10  # set to a large value
-            if sample_broadening is None: sample_broadening = 0.0
+            if slit2_above is None:
+                slits_above = slit1_above
+            if sample_width is None:
+                sample_width = 1e10  # set to a large value
+            if sample_broadening is None:
+                sample_broadening = 0.0
 
             if (wavelength is None or
-                dLoL is None or
-                d_s1 is None or
-                d_s2 is None or
-                Tlo is None or
-                slits_at_Tlo is None):
+                    dLoL is None or
+                    d_s1 is None or
+                    d_s2 is None or
+                    Tlo is None or
+                    slits_at_Tlo is None):
                 popup_error_message("Need Instrument Parameters",
                                     INSTR_PARAM_ERRMSG)
                 return
@@ -619,16 +630,19 @@ class SimulationPage(wx.Panel):
             # of None directly or indirectly as part of a tuple.
             wavelength = (wavelength_lo, wavelength_hi)
             slits = (slit1_size, slit2_size)
-            if slit2_size is None: slits = slit1_size
-            if sample_width is None: sample_width = 1e10  # set to a large value
-            if sample_broadening is None: sample_broadening = 0.0
+            if slit2_size is None:
+                slits = slit1_size
+            if sample_width is None:
+                sample_width = 1e10  # set to a large value
+            if sample_broadening is None:
+                sample_broadening = 0.0
 
             if (wavelength is None or
-                dLoL is None or
-                d_s1 is None or
-                d_s2 is None or
-                T is None or
-                slits is None):
+                    dLoL is None or
+                    d_s1 is None or
+                    d_s2 is None or
+                    T is None or
+                    slits is None):
                 popup_error_message("Need Instrument Parameters",
                                     INSTR_PARAM_ERRMSG)
                 return
@@ -733,7 +747,8 @@ class SimulationPage(wx.Panel):
         """Shows the instrument metadata to the user and allows editing."""
 
         if self.instr_param.get_instr_idx() < 0:
-            popup_warning_message("Select an Instrument",
+            popup_warning_message(
+                "Select an Instrument",
                 "Please select an instrument to edit from the drop down list.")
             return
         self.instr_param.edit_metadata()
@@ -756,8 +771,9 @@ class SimulationPage(wx.Panel):
             fd = open(filespec, 'rU')
             demo_model_params = fd.read()
             fd.close()
-        except:
-            popup_warning_message("Load Model Error",
+        except Exception:
+            popup_warning_message(
+                "Load Model Error",
                 "Error loading demo model from file "+DEMO_MODEL1_DESC)
             return
 
@@ -796,8 +812,9 @@ class SimulationPage(wx.Panel):
             fd = open(filespec, 'rU')
             demo_model_params = fd.read()
             fd.close()
-        except:
-            popup_warning_message("Load Model Error",
+        except Exception:
+            popup_warning_message(
+                "Load Model Error",
                 "Error loading demo model from file "+DEMO_MODEL2_DESC)
             return
 
@@ -836,8 +853,9 @@ class SimulationPage(wx.Panel):
             fd = open(filespec, 'rU')
             demo_model_params = fd.read()
             fd.close()
-        except:
-            popup_warning_message("Load Model Error",
+        except Exception:
+            popup_warning_message(
+                "Load Model Error",
                 "Error loading demo model from file "+DEMO_MODEL3_DESC)
             return
 
@@ -878,7 +896,7 @@ class SimulationPage(wx.Panel):
         # Wait for user to close the dialog.
         sts = dlg.ShowModal()
         if sts == wx.ID_OK:
-            pathname  = dlg.GetDirectory()
+            pathname = dlg.GetDirectory()
             filename = dlg.GetFilename()
             filespec = os.path.join(pathname, filename)
         dlg.Destroy()
@@ -890,9 +908,10 @@ class SimulationPage(wx.Panel):
             fd = open(filespec, 'rU')
             model_params = fd.read()
             fd.close()
-        except:
-            popup_error_message("Load Model Error",
-                                "Error loading model from file "+filename)
+        except Exception:
+            popup_error_message(
+                "Load Model Error",
+                "Error loading model from file "+filename)
             return
 
         # Replace the contents of the model parameter text control box with
@@ -913,7 +932,7 @@ class SimulationPage(wx.Panel):
         # Wait for user to close the dialog.
         sts = dlg.ShowModal()
         if sts == wx.ID_OK:
-            pathname  = dlg.GetDirectory()
+            pathname = dlg.GetDirectory()
             filename = dlg.GetFilename()
             filespec = os.path.join(pathname, filename)
         dlg.Destroy()
@@ -929,7 +948,7 @@ class SimulationPage(wx.Panel):
             fd = open(filespec, 'w')
             fd.write(model_params)
             fd.close()
-        except:
+        except Exception:
             popup_error_message("Save Model Error",
                                 "Error saving model to file "+filename)
             return
@@ -948,7 +967,7 @@ def perform_simulation(sample, params, Q=None, dQ=None):
         print("*** sample =", sample)
         print("*** params =", params)
         if Q is not None:
-            print("***  Q len =", len(Q),  "  Q lo:hi =",  Q[0],  Q[-1])
+            print("***  Q len =", len(Q), "  Q lo:hi =", Q[0], Q[-1])
         if dQ is not None:
             print("*** dQ len =", len(dQ), " dQ lo:hi =", dQ[0], dQ[-1])
 
@@ -974,7 +993,8 @@ def perform_simulation(sample, params, Q=None, dQ=None):
     # hundredths value (e.g., if the user enters 5%, change it to 0.05).  Also
     # make the noise a non-zero value as Simulation cannot tolerate a zero.
     noise = params[8]
-    if noise < 0.01: noise = 0.01
+    if noise < 0.01:
+        noise = 0.01
     noise /= 100.0  # convert percent value to hundreths value
 
     # Convert flag from a string to a Boolean value.
@@ -1005,5 +1025,5 @@ def perform_simulation(sample, params, Q=None, dQ=None):
     # Generate the plots.
     sim.plot()
     pylab.subplots_adjust(wspace=0.25, hspace=0.33,
-                          left=0.09, right = 0.96,
+                          left=0.09, right=0.96,
                           top=0.95, bottom=0.08)

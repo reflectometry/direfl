@@ -315,8 +315,8 @@ class Monochromatic:
     d_s1 = None
     d_s2 = None
     # Optional attributes
-    Tlo= inf  # Use inf for fixed slits.
-    Thi= inf
+    Tlo = inf  # Use inf for fixed slits.
+    Thi = inf
     slits_at_Tlo = None  # Slit openings at Tlo, and default slits_below
     slits_below = None  # Slit openings below Tlo, or fixed slits if Tlo=inf
     slits_above = None
@@ -735,7 +735,7 @@ sample broadening = %(sample_broadening)g degrees FWHM
 """ % dict(name=self.instrument,
            L_min=self.wavelength[0], L_max=self.wavelength[1],
            dLpercent=self.dLoL*100,
-           d_s1=self.d_s1, d_s2=self.d_s2, slits = str(self.slits),
+           d_s1=self.d_s1, d_s2=self.d_s2, slits=str(self.slits),
            sample_width=self.sample_width,
            sample_broadening=self.sample_broadening,
            radiation=self.radiation,
@@ -768,7 +768,7 @@ def bins(low, high, dLoL):
     *dLoL* is the desired resolution FWHM dL/L for the bins.
     """
 
-    step = 1 + dLoL;
+    step = 1 + dLoL
     n = ceil(log(high/low)/log(step))
     edges = low*step**arange(n+1)
     L = (edges[:-1]+edges[1:])/2
@@ -869,7 +869,7 @@ def divergence(T=None, slits=None, distance=None,
     try:
         s1, s2 = slits
     except TypeError:
-        s1=s2 = slits
+        s1 = s2 = slits
 
     # Compute FWHM angular divergence dT from the slits in radians
     dT = (s1+s2)/2/(d1-d2)
@@ -877,7 +877,8 @@ def divergence(T=None, slits=None, distance=None,
     # For small samples, use the sample projection instead.
     sample_s = sample_width * sin(radians(T))
     if isscalar(sample_s):
-        if sample_s < s2: dT = (s1+sample_s)/(2*d1)
+        if sample_s < s2:
+            dT = (s1+sample_s)/(2*d1)
     else:
         idx = sample_s < s2
         #print(s1, s2, d1, d2, T, dT, sample_s)
@@ -910,7 +911,7 @@ def opening_slits(T=None, slits_at_Tlo=None, Tlo=None, Thi=None,
     try:
         b1, b2 = slits_below
     except TypeError:
-        b1=b2 = slits_below
+        b1 = b2 = slits_below
     s1 = ones_like(T) * b1
     s2 = ones_like(T) * b2
 
@@ -933,7 +934,7 @@ def opening_slits(T=None, slits_at_Tlo=None, Tlo=None, Thi=None,
         try:
             t1, t2 = slits_above
         except TypeError:
-            t1=t2 = slits_above
+            t1 = t2 = slits_above
         idx = abs(T) > Thi
         s1[idx] = t1
         s2[idx] = t2

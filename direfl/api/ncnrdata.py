@@ -67,8 +67,10 @@ def load(filename, instrument=None, **kw):
 
     Keyword arguments are as specified in :class:`resolution.Monochromatic`.
     """
-    if filename is None: return None
-    if instrument is None: instrument=Monochromatic()
+    if filename is None:
+        return None
+    if instrument is None:
+        instrument = Monochromatic()
     header, data = parse_file(filename)
     header.update(**kw)
     Q, R, dR = data
@@ -136,15 +138,18 @@ def find_xsec(filename):
     # Check if it is a string.  If not, assume it is a length 4 tuple
     try:
         filename + 's'
-    except:
+    except Exception:
         return filename
 
     if filename[-1] in 'abcdABCD':
         filename = filename[:-1]
     def check(a):
-        if os.path.exists(filename+a): return filename+a
-        elif os.path.exists(filename+a.lower()): return filename+a.lower()
-        else: return None
+        if os.path.exists(filename+a):
+            return filename+a
+        elif os.path.exists(filename+a.lower()):
+            return filename+a.lower()
+        else:
+            return None
     return (check('A'), check('B'), check('C'), check('D'))
 
 def parse_file(filename):
@@ -172,9 +177,11 @@ def parse_file(filename):
         header.setdefault('d_s1', str(instrument.d_s1))
         header.setdefault('d_s2', str(instrument.d_s2))
 
-    if 'columns' in header: header['columns'] = header['columns'].split()
+    if 'columns' in header:
+        header['columns'] = header['columns'].split()
     for key in ('wavelength', 'dLoL', 'd_s1', 'd_s2'):
-        if key in header: header[key] = float(header[key])
+        if key in header:
+            header[key] = float(header[key])
 
     return header, data
 

@@ -23,11 +23,11 @@ convolve, fixedres, varyingres
 
 __doc__ = "Fundamental reflectivity calculations"
 __author__ = "Paul Kienzle"
-__all__ = [ 'reflectivity', 'reflectivity_amplitude',
-            'magnetic_reflectivity', 'magnetic_amplitude',
-            'unpolarized_magnetic',
-            'fixedres', 'varyingres', 'convolve'
-            ]
+__all__ = ['reflectivity', 'reflectivity_amplitude',
+           'magnetic_reflectivity', 'magnetic_amplitude',
+           'unpolarized_magnetic',
+           'fixedres', 'varyingres', 'convolve'
+          ]
 
 from functools import reduce
 
@@ -85,21 +85,21 @@ def reflectivity_amplitude(Q,
 
     n = len(depth)
     if numpy.isscalar(wavelength):
-        wavelength=wavelength*numpy.ones(Q.shape, 'd')
+        wavelength = wavelength*numpy.ones(Q.shape, 'd')
     if numpy.isscalar(mu):
         mu = mu*numpy.ones(n, 'd')
     if numpy.isscalar(sigma):
         sigma = sigma*numpy.ones(n-1, 'd')
 
     wavelength, depth, rho, mu = [_dense(v, 'd')
-                                 for v in (wavelength, depth, rho, mu)]
+                                  for v in (wavelength, depth, rho, mu)]
 
     rho, mu = [v*1e-6 for v in (rho, mu)]
     if sigma is not None:
         sigma = _dense(sigma, 'd')
         reflmodule._reflectivity_amplitude_rough(rho, mu, depth, sigma, wavelength, Q, R)
     else:
-        reflmodule._reflectivity_amplitude (rho, mu, depth, wavelength, Q, R)
+        reflmodule._reflectivity_amplitude(rho, mu, depth, wavelength, Q, R)
     return R
 
 
@@ -167,7 +167,7 @@ def magnetic_amplitude(Q,
     Q = _dense(Q, 'd')
     n = len(depth)
     if numpy.isscalar(wavelength):
-        wavelength=wavelength*numpy.ones(Q.shape, 'd')
+        wavelength = wavelength*numpy.ones(Q.shape, 'd')
     if numpy.isscalar(mu):
         mu = mu*numpy.ones(n, 'd')
     if numpy.isscalar(rho_m):
@@ -175,17 +175,15 @@ def magnetic_amplitude(Q,
     if numpy.isscalar(theta_m):
         theta_m = theta_m*numpy.ones(n, 'd')
 
-    depth, rho, mu, rho_m, wavelength, theta_m \
-        = [_dense(a, 'd') for a in (depth, rho, mu,
-           rho_m, wavelength, theta_m)]
+    depth, rho, mu, rho_m, wavelength, theta_m = [
+        _dense(a, 'd') for a in (depth, rho, mu, rho_m, wavelength, theta_m)]
     R1, R2, R3, R4 = [numpy.empty(Q.shape, 'D') for pol in (1, 2, 3, 4)]
     expth = cos(theta_m * pi/180.0) + 1j*sin(theta_m * pi/180.0)
 
     rho, mu, rho_m = [v*1e-6 for v in (rho, mu, rho_m)]
     reflmodule._magnetic_amplitude(rho, mu, depth, wavelength,
-                                   rho_m,  expth, Aguide, Q,
-                                   R1, R2, R3, R4
-                                   )
+                                   rho_m, expth, Aguide, Q,
+                                   R1, R2, R3, R4)
     return R1, R2, R3, R4
 
 

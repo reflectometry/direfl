@@ -101,21 +101,31 @@ class AppFrame(wx.Frame):
         # - Arial tends to be narrower and taller than Tahoma.
         # - Verdana tends to be wider and shorter than Tahoma.
         if len(sys.argv) > 1:
-            if '--tahoma' in sys.argv[1:]: fontname = "Tahoma"
-            if '--arial' in sys.argv[1:]: fontname = "Arial"
-            if '--verdana' in sys.argv[1:]: fontname = "Verdana"
+            if '--tahoma' in sys.argv[1:]:
+                fontname = "Tahoma"
+            elif '--arial' in sys.argv[1:]:
+                fontname = "Arial"
+            elif '--verdana' in sys.argv[1:]:
+                fontname = "Verdana"
 
         fontsize = choose_fontsize(fontname=fontname)
 
         # If requested, override the font point size to use.
         if len(sys.argv) > 1:
-            if '--12pt' in sys.argv[1:]: fontsize = 12
-            if '--11pt' in sys.argv[1:]: fontsize = 11
-            if '--10pt' in sys.argv[1:]: fontsize = 10
-            if '--9pt' in sys.argv[1:]: fontsize = 9
-            if '--8pt' in sys.argv[1:]: fontsize = 8
-            if '--7pt' in sys.argv[1:]: fontsize = 7
-            if '--6pt' in sys.argv[1:]: fontsize = 6
+            if '--12pt' in sys.argv[1:]:
+                fontsize = 12
+            elif '--11pt' in sys.argv[1:]:
+                fontsize = 11
+            elif '--10pt' in sys.argv[1:]:
+                fontsize = 10
+            elif '--9pt' in sys.argv[1:]:
+                fontsize = 9
+            elif '--8pt' in sys.argv[1:]:
+                fontsize = 8
+            elif '--7pt' in sys.argv[1:]:
+                fontsize = 7
+            elif '--6pt' in sys.argv[1:]:
+                fontsize = 6
 
         # Set the default font for this and all child windows.  The font of the
         # frame's title bar is not affected (which is a good thing).  However,
@@ -153,16 +163,16 @@ class AppFrame(wx.Frame):
         help_menu = wx.Menu()
 
         _item = help_menu.Append(wx.ID_ANY, "&About",
-                                            "Get description of application")
+                                 "Get description of application")
         self.Bind(wx.EVT_MENU, self.OnAbout, _item)
         _item = help_menu.Append(wx.ID_ANY, "&Tutorial",
-                                            "Locate tutorial and documentation")
+                                 "Locate tutorial and documentation")
         self.Bind(wx.EVT_MENU, self.OnTutorial, _item)
         _item = help_menu.Append(wx.ID_ANY, "&License",
-                                            "Read license and copyright notice")
+                                 "Read license and copyright notice")
         self.Bind(wx.EVT_MENU, self.OnLicense, _item)
         _item = help_menu.Append(wx.ID_ANY, "&Credits",
-                                            "Get list of authors and sponsors")
+                                 "Get list of authors and sponsors")
         self.Bind(wx.EVT_MENU, self.OnCredits, _item)
 
         mb.Append(help_menu, "&Help")

@@ -119,7 +119,8 @@ class Simulation():
         """Reconstruct phase, invert and optimize profile."""
         self._reconstruct()
         self._invert()
-        if 0: self._optimize()
+        if 0:
+            self._optimize()
 
 
     def slab_profile(self):
@@ -269,10 +270,10 @@ class Simulation():
     def check_phase(self):
         """Check that the reconstructed phase is correct within noise."""
         resid = self.phase_residual()
-        if (resid<1e-12).any():
+        if (resid < 1e-12).any():
             self.plot_phase_residual()
             wait("phase inversion error")
-        assert (resid<1e-12).all()
+        assert (resid < 1e-12).all()
 
 
     def check_inversion(self):
@@ -329,16 +330,16 @@ class Simulation():
         # If the user requests, create data files to capture the data used to
         # generate the plots.
         if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
-            outfile='sim_phase.dat'
+            outfile = 'sim_phase.dat'
             self.phase.save(outfile=outfile, uncertainty=True)
             print("*** Created", outfile)
 
-            outfile='sim_refl.dat'
+            outfile = 'sim_refl.dat'
             z, rho = self.sample_profile()
             self.phase.save_inverted(profile=(z, rho), outfile=outfile)
             print("*** Created", outfile)
 
-            outfile='sim_profile.dat'
+            outfile = 'sim_profile.dat'
             self.invert.save(outfile=outfile)
             print("*** Created", outfile)
 
@@ -355,11 +356,11 @@ class Simulation():
 
         data1 = self.q, self.R1, 0*self.q
         data2 = self.q, self.R2, 0*self.q
-        numpy.savetxt('qrd1.' , numpy.array(data1).T)
-        numpy.savetxt('qrd2.' , numpy.array(data2).T)
+        numpy.savetxt('qrd1.', numpy.array(data1).T)
+        numpy.savetxt('qrd2.', numpy.array(data2).T)
         fid = open('varin.', 'w')
-        fid.write("%d %g %g %g\n"%(len(self.q),
-                                   self.u*1e-6, self.v1*1e-6, self.v2*1e-6))
+        fid.write("%d %g %g %g\n"
+                  % (len(self.q), self.u*1e-6, self.v1*1e-6, self.v2*1e-6))
         fid.close()
         os.system('swfvarnexdum')
         q, realR = numpy.loadtxt('qrreun.').T
@@ -371,7 +372,8 @@ def wait(msg=None):
     import pylab
     #from matplotlib.blocking_input import BlockingInput
 
-    if msg: print(msg)
+    if msg:
+        print(msg)
 
     #block = BlockingInput(fig=pylab.gcf(), eventslist=('key_press_event', ))
     #block(n=1, timeout=-1)

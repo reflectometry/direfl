@@ -62,7 +62,7 @@ from .auxiliary_page import AuxiliaryPage
 
 # Custom colors.
 PALE_GREEN = "#C8FFC8"
-PALE_BLUE  = "#E8E8FF"
+PALE_BLUE = "#E8E8FF"
 
 #==============================================================================
 
@@ -106,33 +106,33 @@ class AppPanel(wx.Panel):
         file_menu = mb.GetMenu(0)
         file_menu.PrependSeparator()
         _item = file_menu.Prepend(wx.ID_ANY, "&Save Model ...",
-                                             "Save model parameters to a file")
+                                  "Save model parameters to a file")
         frame.Bind(wx.EVT_MENU, self.OnSaveModel, _item)
         _item = file_menu.Prepend(wx.ID_ANY, "&Load Model ...",
-                                             "Load model parameters from a file")
+                                  "Load model parameters from a file")
         frame.Bind(wx.EVT_MENU, self.OnLoadModel, _item)
 
         # Add a 'Demo' menu to the menu bar and define its options.
         demo_menu = wx.Menu()
 
         _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 1",
-                                            "Load description of sample model 1")
+                                 "Load description of sample model 1")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel1, _item)
         _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 2",
-                                            "Load description of sample model 2")
+                                 "Load description of sample model 2")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel2, _item)
         _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Model 3",
-                                            "Load description of sample model 3")
+                                 "Load description of sample model 3")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoModel3, _item)
 
         demo_menu.AppendSeparator()
 
         _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Dataset 1",
-                                            "Load reflectivity data files for example 1")
+                                 "Load reflectivity data files for example 1")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoDataset1, _item)
         frame.load_demo_dataset_1_item = _item  # handle for hide/show
         _item = demo_menu.Append(wx.ID_ANY, "Load &Demo Dataset 2",
-                                            "Load reflectivity data files for example 2")
+                                 "Load reflectivity data files for example 2")
         frame.Bind(wx.EVT_MENU, self.OnLoadDemoDataset2, _item)
         frame.load_demo_dataset_2_item = _item  # handle for hide/show
 
@@ -168,10 +168,11 @@ class AppPanel(wx.Panel):
     def add_notebookbar(self):
         """Creates a notebook bar and a set of tabs, one for each page."""
 
-        nb = self.notebook = wx.Notebook(self, wx.ID_ANY,
-                             style=wx.NB_TOP|wx.NB_FIXEDWIDTH|wx.NB_NOPAGETHEME)
+        nb = self.notebook = \
+            wx.Notebook(self, wx.ID_ANY,
+                        style=wx.NB_TOP|wx.NB_FIXEDWIDTH|wx.NB_NOPAGETHEME)
         try:
-            nb.SetTabSize((100,20))  # works on Windows but not on Linux
+            nb.SetTabSize((100, 20))  # works on Windows but not on Linux
         except Exception:
             pass
 

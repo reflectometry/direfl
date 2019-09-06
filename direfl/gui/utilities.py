@@ -31,7 +31,7 @@ import os
 import sys
 import time
 
-APPNAME="DiRefl"
+APPNAME = "DiRefl"
 DATA_DIR = "examples"
 
 #==============================================================================
@@ -66,7 +66,8 @@ def resource_dir(app=APPNAME):
     """
     # If we already found it, then we are done
     global _RESOURCE_DIR
-    if _RESOURCE_DIR is not None: return _RESOURCE_DIR
+    if _RESOURCE_DIR is not None:
+        return _RESOURCE_DIR
 
     # Check for data path in the environment
     key = app.upper()+'_DATA'
@@ -184,31 +185,31 @@ class TimeStamp():
 
 if __name__ == '__main__':
     # Test the TimeStamp class and the convenience function.
-        log_time("Using log_time() function")
-        print("Sleeping for 0.54 seconds ...")
-        time.sleep(0.54)
-        log_time("Using log_time() function")
-        print("Sleeping for 0.83 seconds ...")
-        time.sleep(0.83)
-        log_time("Using log_time() function")
-        print("Creating an instance of TimeStamp (as the second timing class)")
-        ts = TimeStamp()
-        print("Sleeping for 0.66 seconds ...")
-        time.sleep(0.66)
-        ts.log_time_info(text="Using log_time_info() method")
-        ts.log_timestamp(text="Using log_timestamp() method")
-        ts.log_interval(text="Using log_interval() method")
-        print("Sleeping for 0.35 seconds ...")
-        time.sleep(0.35)
-        ts.log_interval(text="Using log_interval() method")
-        print("Sleeping for 0.42 seconds ...")
-        time.sleep(0.42)
-        ts.log_interval(text="Using log_interval() method")
-        print("Resetting the clock ...")
-        ts.reset()
-        ts.log_interval(text="Using log_interval() method")
-        print("Sleeping for 0.33 seconds ...")
-        time.sleep(0.33)
-        ts.log_interval(text="Using log_interval() method")
-        print("Switch back to the first timing class")
-        log_time("Using log_time() function")
+    log_time("Using log_time() function")
+    print("Sleeping for 0.54 seconds ...")
+    time.sleep(0.54)
+    log_time("Using log_time() function")
+    print("Sleeping for 0.83 seconds ...")
+    time.sleep(0.83)
+    log_time("Using log_time() function")
+    print("Creating an instance of TimeStamp (as the second timing class)")
+    ts = TimeStamp()
+    print("Sleeping for 0.66 seconds ...")
+    time.sleep(0.66)
+    ts.log_time_info(text="Using log_time_info() method")
+    ts.log_timestamp(text="Using log_timestamp() method")
+    ts.log_interval(text="Using log_interval() method")
+    print("Sleeping for 0.35 seconds ...")
+    time.sleep(0.35)
+    ts.log_interval(text="Using log_interval() method")
+    print("Sleeping for 0.42 seconds ...")
+    time.sleep(0.42)
+    ts.log_interval(text="Using log_interval() method")
+    print("Resetting the clock ...")
+    ts.reset()
+    ts.log_interval(text="Using log_interval() method")
+    print("Sleeping for 0.33 seconds ...")
+    time.sleep(0.33)
+    ts.log_interval(text="Using log_interval() method")
+    print("Switch back to the first timing class")
+    log_time("Using log_time() function")

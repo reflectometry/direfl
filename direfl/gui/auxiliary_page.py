@@ -73,7 +73,7 @@ class AuxiliaryPage(wx.Panel):
 
     def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
-        self.fignum=fignum
+        self.fignum = fignum
         self.SetBackgroundColour(colour)
         self.sbi = StatusBarInfo()
 
@@ -89,10 +89,14 @@ class AuxiliaryPage(wx.Panel):
 
         # Execute tests associated with the test tabs.
         if len(sys.argv) > 1 and '--xtabs' in sys.argv[1:]:
-            if (self.fignum == 10 and '--test1' in sys.argv[1:]): test1()
-            if (self.fignum == 11 and '--test2' in sys.argv[1:]): test2()
-        if self.fignum == 12: test3()
-        if self.fignum == 13: test4(self.figure)
+            if (self.fignum == 10 and '--test1' in sys.argv[1:]):
+                test1()
+            elif (self.fignum == 11 and '--test2' in sys.argv[1:]):
+                test2()
+        if self.fignum == 12:
+            test3()
+        elif self.fignum == 13:
+            test4(self.figure)
 
 
     def init_plot_panel(self):

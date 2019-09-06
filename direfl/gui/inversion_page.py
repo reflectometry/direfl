@@ -105,7 +105,7 @@ class InversionPage(wx.Panel):
     def __init__(self, parent, id=wx.ID_ANY, colour="", fignum=0, **kwargs):
         wx.Panel.__init__(self, parent, id=id, **kwargs)
 
-        self.fignum=fignum
+        self.fignum = fignum
         self.SetBackgroundColour(colour)
         self.sbi = StatusBarInfo()
         self.sbi.write(1, INV_HELP1)
@@ -290,23 +290,23 @@ class InversionPage(wx.Panel):
         # Instantiate object that manages and stores inversion parameters.
 
         fields = [
-                   ["SLD of Surface for Exp 1:", None, "float", 'RE', None],
-                   ["SLD of Surface for Exp 2:", None, "float", 'RE', None],
-                   ["SLD of Substrate:", None, "float", 'RE', None],
-                   ["Sample Thickness:", None, "float", 'RE', None],
-                   ["Qmin:", 0.0, "float", 'RE', None],
-                   ["Qmax:", None, "float", 'E', None],
-                   ["# Profile Steps:", 128, "int", 'RE', None],
-                   ["Over Sampling Factor:", 4, "int", 'REL', None],
-                   ["# Inversion Iterations:", 6, "int", 'RE', None],
-                   ["# Monte Carlo Trials:", 10, "int", 'RE', None],
-                   ["Bound State Energy:", 0.0, "float", 'RE', None],
-                ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
-                ###["Back Reflectivity:", "True", "str", 'C', ("True", "False")],
-                ###["Inversion Noise Factor:", 1, "int", 'RE', None],
-                ###["Show Iterations:", "False", "str", 'CRE', ("True", "False")]
-                ###["Monitor:", "", "str", 'RE', None]
-                 ]
+            ["SLD of Surface for Exp 1:", None, "float", 'RE', None],
+            ["SLD of Surface for Exp 2:", None, "float", 'RE', None],
+            ["SLD of Substrate:", None, "float", 'RE', None],
+            ["Sample Thickness:", None, "float", 'RE', None],
+            ["Qmin:", 0.0, "float", 'RE', None],
+            ["Qmax:", None, "float", 'E', None],
+            ["# Profile Steps:", 128, "int", 'RE', None],
+            ["Over Sampling Factor:", 4, "int", 'REL', None],
+            ["# Inversion Iterations:", 6, "int", 'RE', None],
+            ["# Monte Carlo Trials:", 10, "int", 'RE', None],
+            ["Bound State Energy:", 0.0, "float", 'RE', None],
+            ###["Cosine Transform Smoothing:", 0.0, "float", 'RE', None],
+            ###["Back Reflectivity:", "True", "str", 'C', ("True", "False")],
+            ###["Inversion Noise Factor:", 1, "int", 'RE', None],
+            ###["Show Iterations:", "False", "str", 'CRE', ("True", "False")]
+            ###["Monitor:", "", "str", 'RE', None]
+            ]
 
         self.inver_param = InputListPanel(parent=self.pan1, itemlist=fields,
                                           align=True)
@@ -438,8 +438,9 @@ class InversionPage(wx.Panel):
 
         # Verfiy that the user has selected two reflectivity data files.
         if files[0] == "" or files[1] == "":
-            popup_warning_message("Specify a Dataset",
-            "Please specify the names of two reflectometry data files to use.")
+            popup_warning_message(
+                "Specify a Dataset",
+                "Please specify the names of two reflectometry data files to use.")
             return
 
         # Make sure the files are accessible so we can display a proper error
@@ -550,7 +551,7 @@ class InversionPage(wx.Panel):
         try:
             #perform_inversion(files, params)
             ExecuteInThread(self.OnComputeEnd, perform_inversion,
-                                               files, params)
+                            files, params)
         except Exception as e:
             popup_error_message("Operation Failed", str(e))
             self.sbi.write(2, "")
@@ -593,7 +594,8 @@ class InversionPage(wx.Panel):
         """Shows the instrument metadata to the user and allows editing."""
 
         if self.instr_param.get_instr_idx() < 0:
-            popup_warning_message("Select an Instrument",
+            popup_warning_message(
+                "Select an Instrument",
                 "Please select an instrument to edit from the drop down list.")
             return
         self.instr_param.edit_metadata()
@@ -756,7 +758,8 @@ class InversionPage(wx.Panel):
         # The user could have selected 1 to n files.
         num_files = len(paths)
         if num_files > 2:
-            popup_error_message("Too Many Files Selected",
+            popup_error_message(
+                "Too Many Files Selected",
                 "You can select up to two data files, please try again.")
             return
         elif num_files == 2:
@@ -826,7 +829,8 @@ class InversionPage(wx.Panel):
         # Allow just one file to be plotted using common code that expects two.
         # This is inefficient when there is only one file because it will be
         # loaded twice, but otherwise this causes no problems.
-        if file1 is None and file2 is None: return
+        if file1 is None and file2 is None:
+            return
 
         self.plot_file1 = self.plot_file2 = True
         if file1 is None:
@@ -922,7 +926,7 @@ class InversionPage(wx.Panel):
             q1, dq1, r1, dr1, lambda1 = d1[0:5]
             q2, dq2, r2, dr2, lambda2 = d2[0:5]
 
-        if not q1.shape == q2.shape or not all(q1==q2):
+        if not q1.shape == q2.shape or not (q1 == q2).all():
             raise ValueError("Q points do not match in data files.")
 
         # Note that q2, dq2, lambda1, and lambda2 are currently discarded.
@@ -958,15 +962,15 @@ class InversionPage(wx.Panel):
             if dR is not None:
                 minR = numpy.min((R+dR))/10
             else:
-                minR = numpy.min(R[R>0])/2
+                minR = numpy.min(R[R > 0])/2
 
             pylab.semilogy(Q, numpy.maximum(R, minR), '.', label=label,
-                              color=color)
+                           color=color)
             if dR is not None:
                 idx = numpy.argsort(Q)
                 pylab.fill_between(Q, numpy.maximum(R-dR, minR),
-                                      numpy.maximum(R+dR, minR),
-                                      color=color, alpha=0.2)
+                                   numpy.maximum(R+dR, minR),
+                                   color=color, alpha=0.2)
 
         # Only show file.ext portion of the file specification on the plots.
         name1 = os.path.basename(self.name1)
@@ -1038,14 +1042,14 @@ def perform_inversion(files, params):
     # If the user requests, create data files to capture the data used to
     # generate the plots.
     if len(sys.argv) > 1 and '--write' in sys.argv[1:]:
-        outfile='inv_phase.dat'
+        outfile = 'inv_phase.dat'
         phase.save(outfile=outfile, uncertainty=True)
         print("*** Created", outfile)
 
-        outfile='inv_refl.dat'
+        outfile = 'inv_refl.dat'
         phase.save_inverted(profile=(inv.z, inv.rho), outfile=outfile)
         print("*** Created", outfile)
 
-        outfile='inv_profile.dat'
+        outfile = 'inv_profile.dat'
         inv.save(outfile=outfile)
         print("*** Created", outfile)

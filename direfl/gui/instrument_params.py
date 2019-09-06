@@ -52,7 +52,8 @@ class InstrumentParameters():
         self.instr_location = ["NCNR", "NCNR", "NCNR", "NCNR", "SNS", "SNS"]
 
         # Get the instrument name and radiation type for each instrument.
-        self.instr_names = []; self.radiation = []
+        self.instr_names = []
+        self.radiation = []
         for classname in self.instr_classes:
             self.instr_names.append(classname.instrument)
             self.radiation.append(classname.radiation)
@@ -62,24 +63,24 @@ class InstrumentParameters():
         # default values by instrument and list[1] holds their current values.
         # n is the number of instruments supported.  For a given instrument
         # only a subset of the parameters may be applicable.
-        self.wavelength =        [[None] * n, [None] * n]  # monochromatic
-        self.wavelength_lo =     [[None] * n, [None] * n]  # polychromatic
-        self.wavelength_hi =     [[None] * n, [None] * n]  # polychromatic
-        self.dLoL =              [[None] * n, [None] * n]  # both
-        self.d_s1 =              [[None] * n, [None] * n]  # both
-        self.d_s2 =              [[None] * n, [None] * n]  # both
-        self.T =                 [[None] * n, [None] * n]  # polychromatic
-        self.Tlo =               [[None] * n, [None] * n]  # monochromatic
-        self.Thi =               [[None] * n, [None] * n]  # monochromatic
-        self.slit1_size =        [[None] * n, [None] * n]  # polychromatic
-        self.slit2_size =        [[None] * n, [None] * n]  # polychromatic
-        self.slit1_at_Tlo =      [[None] * n, [None] * n]  # monochromatic
-        self.slit2_at_Tlo =      [[None] * n, [None] * n]  # monochromatic
-        self.slit1_below =       [[None] * n, [None] * n]  # monochromatic
-        self.slit2_below =       [[None] * n, [None] * n]  # monochromatic
-        self.slit1_above =       [[None] * n, [None] * n]  # monochromatic
-        self.slit2_above =       [[None] * n, [None] * n]  # monochromatic
-        self.sample_width =      [[None] * n, [None] * n]  # both
+        self.wavelength = [[None] * n, [None] * n]  # monochromatic
+        self.wavelength_lo = [[None] * n, [None] * n]  # polychromatic
+        self.wavelength_hi = [[None] * n, [None] * n]  # polychromatic
+        self.dLoL = [[None] * n, [None] * n]  # both
+        self.d_s1 = [[None] * n, [None] * n]  # both
+        self.d_s2 = [[None] * n, [None] * n]  # both
+        self.T = [[None] * n, [None] * n]  # polychromatic
+        self.Tlo = [[None] * n, [None] * n]  # monochromatic
+        self.Thi = [[None] * n, [None] * n]  # monochromatic
+        self.slit1_size = [[None] * n, [None] * n]  # polychromatic
+        self.slit2_size = [[None] * n, [None] * n]  # polychromatic
+        self.slit1_at_Tlo = [[None] * n, [None] * n]  # monochromatic
+        self.slit2_at_Tlo = [[None] * n, [None] * n]  # monochromatic
+        self.slit1_below = [[None] * n, [None] * n]  # monochromatic
+        self.slit2_below = [[None] * n, [None] * n]  # monochromatic
+        self.slit1_above = [[None] * n, [None] * n]  # monochromatic
+        self.slit2_above = [[None] * n, [None] * n]  # monochromatic
+        self.sample_width = [[None] * n, [None] * n]  # both
         self.sample_broadening = [[None] * n, [None] * n]  # both
 
         for i, classname in enumerate(self.instr_classes):
@@ -104,7 +105,7 @@ class InstrumentParameters():
             try:
                 self.wavelength_lo[0][i], \
                 self.wavelength_hi[0][i] = iclass.wavelength
-            except:
+            except Exception:
                 self.wavelength[0][i] = iclass.wavelength
         if hasattr(iclass, 'dLoL'):
             self.dLoL[0][i] = iclass.dLoL
@@ -173,39 +174,39 @@ class InstrumentParameters():
 
         i = self.instr_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", 'RH2B', None,
-                       self.instr_names[i]+" Scanning Reflectometer"],
-                   ["Instrument location:", self.instr_location[i],
-                       "str", 'R', None],
-                   ["Wavelength (A):", self.wavelength[1][i],
-                       "float", 'REH2', None, "Instrument Settings"],
-                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i],
-                       "float", 'RE', None],
-                   ["Distance to Slit 1 (mm):", self.d_s1[1][i],
-                       "float", 'RE', None],
-                   ["Distance to Slit 2 (mm):", self.d_s2[1][i],
-                       "float", 'RE', None],
-                   ["Theta Lo (deg):", self.Tlo[1][i],
-                       "float", 'REH2', None, "Measurement Settings"],
-                   ["Theta Hi (deg):", self.Thi[1][i],
-                       "float", 'E', None],
-                   ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i],
-                       "float", 'RE', None],
-                   ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i],
-                       "float", 'E', None],
-                   ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i],
-                       "float", 'RE', None],
-                   ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i],
-                       "float", 'E', None],
-                   ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i],
-                       "float", 'EL', None],
-                   ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i],
-                       "float", 'E', None],
-                   ["Sample Width (mm):", self.sample_width[1][i],
-                       "float", 'E', None],
-                   ["Sample Broadening (deg):", self.sample_broadening[1][i],
-                       "float", 'E', None],
-                 ]
+            ["Radiation Type:", self.radiation[i], "str", 'RH2B', None,
+             self.instr_names[i]+" Scanning Reflectometer"],
+            ["Instrument location:", self.instr_location[i],
+             "str", 'R', None],
+            ["Wavelength (A):", self.wavelength[1][i],
+             "float", 'REH2', None, "Instrument Settings"],
+            ["Wavelength Dispersion (dLoL):", self.dLoL[1][i],
+             "float", 'RE', None],
+            ["Distance to Slit 1 (mm):", self.d_s1[1][i],
+             "float", 'RE', None],
+            ["Distance to Slit 2 (mm):", self.d_s2[1][i],
+             "float", 'RE', None],
+            ["Theta Lo (deg):", self.Tlo[1][i],
+             "float", 'REH2', None, "Measurement Settings"],
+            ["Theta Hi (deg):", self.Thi[1][i],
+             "float", 'E', None],
+            ["Slit 1 at Theta Lo (mm):", self.slit1_at_Tlo[1][i],
+             "float", 'RE', None],
+            ["Slit 2 at Theta Lo (mm):", self.slit2_at_Tlo[1][i],
+             "float", 'E', None],
+            ["Slit 1 below Theta Lo (mm):", self.slit1_below[1][i],
+             "float", 'RE', None],
+            ["Slit 2 below Theta Lo (mm):", self.slit2_below[1][i],
+             "float", 'E', None],
+            ["Slit 1 above Theta Hi (mm):", self.slit1_above[1][i],
+             "float", 'EL', None],
+            ["Slit 2 above Theta Hi (mm):", self.slit2_above[1][i],
+             "float", 'E', None],
+            ["Sample Width (mm):", self.sample_width[1][i],
+             "float", 'E', None],
+            ["Sample Broadening (deg):", self.sample_broadening[1][i],
+             "float", 'E', None],
+            ]
 
         # Get instrument and measurement parameters via a pop-up dialog box.
         # Pass in the frame object as the parent window so that the dialog box
@@ -251,31 +252,31 @@ class InstrumentParameters():
 
         i = self.instr_idx
         fields = [
-                   ["Radiation Type:", self.radiation[i], "str", 'RH2B', None,
-                       self.instr_names[i]+" Time-of-Flight Reflectometer"],
-                   ["Instrument location:", self.instr_location[i],
-                       "str", 'R', None],
-                   ["Wavelength Lo (A):", self.wavelength_lo[1][i],
-                       "float", 'REH2', None, "Instrument Settings"],
-                   ["Wavelength Hi (A):", self.wavelength_hi[1][i],
-                       "float", 'RE', None],
-                   ["Wavelength Dispersion (dLoL):", self.dLoL[1][i],
-                       "float", 'RE', None],
-                   ["Distance to Slit 1 (mm):", self.d_s1[1][i],
-                       "float", 'RE', None],
-                   ["Distance to Slit 2 (mm):", self.d_s2[1][i],
-                       "float", 'RE', None],
-                   ["Theta (deg):", self.T[1][i],
-                       "float", 'REH2', None, "Measurement Settings"],
-                   ["Size of Slit 1 (mm):", self.slit1_size[1][i],
-                       "float", 'RE', None],
-                   ["Size of Slit 2 (mm):", self.slit2_size[1][i],
-                       "float", 'RE', None],
-                   ["Sample Width (mm):", self.sample_width[1][i],
-                       "float", 'EL', None],
-                   ["Sample Broadening (deg):", self.sample_broadening[1][i],
-                       "float", 'E', None],
-                 ]
+            ["Radiation Type:", self.radiation[i], "str", 'RH2B', None,
+             self.instr_names[i]+" Time-of-Flight Reflectometer"],
+            ["Instrument location:", self.instr_location[i],
+             "str", 'R', None],
+            ["Wavelength Lo (A):", self.wavelength_lo[1][i],
+             "float", 'REH2', None, "Instrument Settings"],
+            ["Wavelength Hi (A):", self.wavelength_hi[1][i],
+             "float", 'RE', None],
+            ["Wavelength Dispersion (dLoL):", self.dLoL[1][i],
+             "float", 'RE', None],
+            ["Distance to Slit 1 (mm):", self.d_s1[1][i],
+             "float", 'RE', None],
+            ["Distance to Slit 2 (mm):", self.d_s2[1][i],
+             "float", 'RE', None],
+            ["Theta (deg):", self.T[1][i],
+             "float", 'REH2', None, "Measurement Settings"],
+            ["Size of Slit 1 (mm):", self.slit1_size[1][i],
+             "float", 'RE', None],
+            ["Size of Slit 2 (mm):", self.slit2_size[1][i],
+             "float", 'RE', None],
+            ["Sample Width (mm):", self.sample_width[1][i],
+             "float", 'EL', None],
+            ["Sample Broadening (deg):", self.sample_broadening[1][i],
+             "float", 'E', None],
+            ]
 
         # Get instrument and measurement parameters via a pop-up dialog box.
         # Pass in the frame object as the parent window so that the dialog box

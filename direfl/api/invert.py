@@ -397,7 +397,8 @@ class Inversion():
         """
 
         q, rer, drer = self.Qinput, self.RealRinput, self.dRealRinput
-        if drer is None: drer = 0*rer
+        if drer is None:
+            drer = 0*rer
 
         # Trim from Qmin to Qmax
         if self.Qmin is not None:
@@ -676,14 +677,14 @@ class Inversion():
                 box = orig.get_position()
                 ax = pylab.axes([box.xmin+0.02, box.ymin+0.02,
                                  box.width/4, box.height/4],
-                                 axisbg=[0.95, 0.95, 0.65, 0.85])
+                                axisbg=[0.95, 0.95, 0.65, 0.85])
                 ax.plot(self.Qinput, self.RealRinput, color="blue")
                 ax.plot(self.Qinput, Rinverted)
                 ax.text(0.99, 0.01, "Q, Real R for Q<%g"%lowQ_inset,
                         transform=ax.transAxes, ha='right', va='bottom')
                 qmax = lowQ_inset
-                ymax = max(max(self.RealRinput[self.Qinput<qmax]),
-                           max(Rinverted[self.Qinput<qmax]))
+                ymax = max(max(self.RealRinput[self.Qinput < qmax]),
+                           max(Rinverted[self.Qinput < qmax]))
                 pylab.setp(ax, xticks=[], yticks=[],
                            xlim=[0, qmax], ylim=[-1, 1.1*(ymax+1)-1])
                 pylab.axes(orig)
@@ -823,7 +824,8 @@ class Inversion():
         dz = 2/(self.calcpoints*self.rhopoints)
         x = arange(0, ceil(2/dz))*dz
         maxm = len(x)
-        if maxm%2 == 0: maxm += 1
+        if maxm%2 == 0:
+            maxm += 1
         mx = int(maxm/2+0.5)
         h = 2/(2*mx-3)
         g = numpy.hstack((ctf(x[:-1]*self.thickness), 0, 0, 0))
@@ -842,8 +844,9 @@ class Inversion():
         for iter in range(iters):
             for m in range(2, mx):
                 n = array(range(m, 2*mx-(m+1)))
-                Delta[m, n] = (h**2 * q[m-1] * (g[m+n] + Delta[m-1, n])
-                        + Delta[m-1, n+1] + Delta[m-1, n-1] - Delta[m-2, n])
+                Delta[m, n] = (
+                    h**2 * q[m-1] * (g[m+n] + Delta[m-1, n])
+                    + Delta[m-1, n+1] + Delta[m-1, n-1] - Delta[m-2, n])
             udiag = -g[:2*mx-2:2] - diag(Delta)[:mx-1]
             mup = len(udiag) - 2
             h = 1/mup
@@ -874,7 +877,8 @@ def plotamp(Q, r, dr=None, scaled=True, ylabel="Real R", **kw):
     import pylab
 
     scale = 1e4*Q**2 if scaled else 1
-    if scaled: ylabel = "(100 Q)^2 "+ylabel
+    if scaled:
+        ylabel = "(100 Q)^2 "+ylabel
     [h] = pylab.plot(Q, scale*r, **kw)
     if dr is not None:
         pylab.fill_between(Q, scale*(r-dr), scale*(r+dr),
@@ -912,7 +916,8 @@ def remesh(data, xmin, xmax, npts, left=None, right=None):
 
     x, y = data
     x, y = x[isfinite(x)], y[isfinite(y)]
-    if npts > len(x): npts = len(x)
+    if npts > len(x):
+        npts = len(x)
     newx = linspace(xmin, xmax, npts)
     newy = interp(newx, x, y, left=left, right=right)
     return array((newx, newy))
@@ -953,7 +958,8 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
         *r* array of float
     """
 
-    if isscalar(Qz): Qz = array([Qz], 'd')
+    if isscalar(Qz):
+        Qz = array([Qz], 'd')
     n = len(rho)
     nQ = len(Qz)
 
@@ -975,19 +981,21 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     ## shorter than rho, mu so when reversing it, start at n-1.
     ## This allows the caller to provide an array of length n
     ## corresponding to rho, mu or of length n-1.
-    idx = (kz>=0)
+    idx = (kz >= 0)
     r = empty(len(kz), 'D')
     r[idx] = _refl_calc(kz[idx], wavelength[idx], depth, rho, mu, sigma)
-    r[~idx] = _refl_calc(abs(kz[~idx]), wavelength[~idx],
-                   depth[-1::-1], rho[-1::-1], mu[-1::-1],
-                   sigma[n-2::-1])
-    r[abs(kz)<1.e-6] = -1  # reflectivity at kz=0 is -1
+    r[~idx] = _refl_calc(
+        abs(kz[~idx]), wavelength[~idx],
+        depth[-1::-1], rho[-1::-1], mu[-1::-1],
+        sigma[n-2::-1])
+    r[abs(kz) < 1.e-6] = -1  # reflectivity at kz=0 is -1
     return r
 
 
 def _refl_calc(kz, wavelength, depth, rho, mu, sigma):
     """Abeles matrix calculation."""
-    if len(kz) == 0: return kz
+    if len(kz) == 0:
+        return kz
 
     ## Complex index of refraction is relative to the incident medium.
     ## We can get the same effect using kz_rel^2 = kz^2 + 4*pi*rho_o
@@ -1006,8 +1014,8 @@ def _refl_calc(kz, wavelength, depth, rho, mu, sigma):
         k_next = sqrt(kz_sq - (4*pi*rho[i+1] + 2j*pi*mu[i+1]/wavelength))
         F = (k - k_next) / (k + k_next)
         F *= exp(-2*k*k_next*sigma[i]**2)
-        M11 = exp(1j*k*depth[i]) if i>0 else 1
-        M22 = exp(-1j*k*depth[i]) if i>0 else 1
+        M11 = exp(1j*k*depth[i]) if i > 0 else 1
+        M22 = exp(-1j*k*depth[i]) if i > 0 else 1
         M21 = F*M11
         M12 = F*M22
         C1 = B11*M11 + B21*M12
@@ -1112,7 +1120,7 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
     ==================  =========================================
     """
 
-    return SurroundVariation(file1, file2, u, v1 , v2, stages=stages)
+    return SurroundVariation(file1, file2, u, v1, v2, stages=stages)
 
 
 class SurroundVariation():
@@ -1168,7 +1176,7 @@ class SurroundVariation():
             R1, R2 = self.refl(z, rho, resid=True)
             return numpy.sum(R1**2) + numpy.sum(R2**2)
 
-        rho_final=rho_initial
+        rho_final = rho_initial
         rho_final, f, d = fmin(cost, rho_initial, approx_grad=True, maxfun=20)
         return z, rho_final
 
@@ -1212,7 +1220,8 @@ class SurroundVariation():
         rho = numpy.hstack((self.u, rho[1:], self.u))
         rho[0] = self.u
         Q = -self.Qin
-        if self.backrefl: Q=-Q
+        if self.backrefl:
+            Q = -Q
         r = refl(Q, w, rho)
         return r.real, r.imag
 
@@ -1220,7 +1229,8 @@ class SurroundVariation():
     def _calc_refl(self, w, rho):
         Q, dQ = self.Qin, self.dQin
         # Back reflectivity is equivalent to -Q inputs
-        if self.backrefl: Q = -Q
+        if self.backrefl:
+            Q = -Q
         r = refl(Q, w, rho)
         if dQ is not None:
             R = convolve(Q, abs(r)**2, Q, dQ)
@@ -1365,7 +1375,7 @@ class SurroundVariation():
         import pylab
         plotamp(self.Q, -self.ImagR, dr=self.dImagR,
                 color='blue', label='Imag R+')
-        plotamp(self.Q,  self.ImagR, dr=self.dImagR,
+        plotamp(self.Q, self.ImagR, dr=self.dImagR,
                 color='green', label='Imag R-')
         pylab.legend(prop=FontProperties(size='medium'))
         pylab.ylabel("(100 Q)^2 Imag R")
@@ -1417,7 +1427,7 @@ class SurroundVariation():
             q1, dq1, r1, dr1, lambda1 = d1[0:5]
             q2, dq2, r2, dr2, lanbda2 = d2[0:5]
 
-        if not q1.shape == q2.shape or not all(q1==q2):
+        if not q1.shape == q2.shape or not (q1 == q2).all():
             raise ValueError("Q points do not match in data files")
 
         # Note that q2, dq2, lambda1, and lambda2 are currently discarded.
@@ -1439,7 +1449,8 @@ class SurroundVariation():
 
 
     def _calc_err(self, stages):
-        if self.dR1in is None: return
+        if self.dR1in is None:
+            return
 
         from numpy.random import normal
         runs = []
@@ -1507,7 +1518,7 @@ def main():
     import os
     from optparse import OptionParser, OptionGroup
 
-    description="""\
+    description = """\
 Compute the scattering length density profile from the real portion of the
 phase reconstructed reflectivity.  Call with a phase reconstructed reflectivity
 dataset AMP, or with a pair of reduced reflectivity datasets RF1 and RF2 for
@@ -1522,64 +1533,64 @@ through the substrate."""
 
     group = OptionGroup(parser, "Sample description", description=None)
     group.add_option("-t", "--thickness", dest="thickness",
-                      default=Inversion.thickness, type="float",
-                      help="sample thickness (A)")
+                     default=Inversion.thickness, type="float",
+                     help="sample thickness (A)")
     group.add_option("-u", "--substrate", dest="substrate",
-                      default=Inversion.substrate, type="float",
-                      help="sample substrate material (10^6 * SLD)")
+                     default=Inversion.substrate, type="float",
+                     help="sample substrate material (10^6 * SLD)")
     group.add_option("-v", "--surround", dest="surround",
-                      type="float", nargs=2,
-                      help="varying materials v1 v2 (10^6 * SLD) [for phase]")
+                     type="float", nargs=2,
+                     help="varying materials v1 v2 (10^6 * SLD) [for phase]")
     # fronting is not an inversion key
     inversion_keys += ['thickness', 'substrate']
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Data description", description=None)
     group.add_option("--Qmin", dest="Qmin",
-                      default=Inversion.Qmin, type="float",
-                      help="minimum Q value to use from the data")
+                     default=Inversion.Qmin, type="float",
+                     help="minimum Q value to use from the data")
     group.add_option("--Qmax", dest="Qmax",
-                      default=Inversion.Qmax, type="float",
-                      help="maximum Q value to use from the data")
+                     default=Inversion.Qmax, type="float",
+                     help="maximum Q value to use from the data")
     group.add_option("-n", "--noise", dest="noise",
-                      default=Inversion.noise, type="float",
-                      help="noise scaling")
+                     default=Inversion.noise, type="float",
+                     help="noise scaling")
     group.add_option("-M", "--monitor", dest="monitor",
-                      default=Inversion.monitor, type="int",
-                      help="monitor counts used for measurement")
+                     default=Inversion.monitor, type="int",
+                     help="monitor counts used for measurement")
     inversion_keys += ['Qmin', 'Qmax', 'noise', 'monitor']
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Outputs", description=None)
     group.add_option("-o", "--outfile", dest="outfile", default=None,
-                      help="profile file (infile.prf), use '-' for console")
+                     help="profile file (infile.prf), use '-' for console")
     group.add_option("--ampfile", dest="ampfile", default=None,
-                      help="amplitude file (infile.amp)")
+                     help="amplitude file (infile.amp)")
     group.add_option("-p", "--plot", dest="doplot",
-                      action="store_true",
-                      help="show plot of result")
+                     action="store_true",
+                     help="show plot of result")
     group.add_option("-q", "--quiet", dest="doplot",
-                      action="store_false", default=True,
-                      help="don't show output plot")
+                     action="store_false", default=True,
+                     help="don't show output plot")
     # doplot is a post inversion options
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Calculation controls", description=None)
     group.add_option("--rhopoints", dest="rhopoints",
-                      default=Inversion.rhopoints, type="int",
-                      help="number of profile steps [dz=thickness/rhopoints]")
+                     default=Inversion.rhopoints, type="int",
+                     help="number of profile steps [dz=thickness/rhopoints]")
     group.add_option("-z", "--dz", dest="dz",
-                      default=None, type="float",
-                      help="max profile step size (A) [rhopoints=thickness/dz]")
+                     default=None, type="float",
+                     help="max profile step size (A) [rhopoints=thickness/dz]")
     group.add_option("--calcpoints", dest="calcpoints",
-                      default=Inversion.calcpoints, type="int",
-                      help="number of calculation points per profile step")
+                     default=Inversion.calcpoints, type="int",
+                     help="number of calculation points per profile step")
     group.add_option("--stages", dest="stages",
-                      default=Inversion.stages, type="int",
-                      help="number of inversions to average over")
+                     default=Inversion.stages, type="int",
+                     help="number of inversions to average over")
     group.add_option("-a", dest="amp_only", default=False,
-                      action="store_true",
-                      help="calculate amplitude and stop")
+                     action="store_true",
+                     help="calculate amplitude and stop")
     inversion_keys += ['rhopoints', 'calcpoints', 'stages']
     parser.add_option_group(group)
 
@@ -1605,9 +1616,11 @@ through the substrate."""
             phase.plot()
             pylab.show()
 
-    if options.amp_only: return
+    if options.amp_only:
+        return
 
-    if options.dz: options.rhopoints = ceil(1/options.dz)
+    if options.dz:
+        options.rhopoints = ceil(1/options.dz)
     # Rather than trying to remember which control parameters I
     # have options for, I update the list of parameters that I
     # allow for each group of parameters, and pull the returned

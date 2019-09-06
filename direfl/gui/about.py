@@ -178,10 +178,10 @@ class AboutDialog(wx.Dialog):
         # Display hyperlink to the Reflectometry home page and/or doc page.
         if show_link:
             hyper1 = HyperLinkCtrl(self, wx.ID_ANY, label=APP_PROJECT_TAG,
-                                                    URL=APP_PROJECT_URL)
+                                   URL=APP_PROJECT_URL)
         if show_link_docs:
             hyper2 = HyperLinkCtrl(self, wx.ID_ANY, label=APP_TUTORIAL_TAG,
-                                                    URL=APP_TUTORIAL_URL)
+                                   URL=APP_TUTORIAL_URL)
 
         # Display the body of text for this about dialog box.
         info = wx.StaticText(self, wx.ID_ANY,

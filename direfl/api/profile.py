@@ -198,11 +198,11 @@ class Microslabs:
         # a pure substrate system since that has no limits on roughness.
         roughness = self.sigma
         thickness = self.w
-        if limit > 0 and len(thickness)>2:
+        if limit > 0 and len(thickness) > 2:
             s = numpy.min((thickness[:-1], thickness[1:]), axis=0)/limit
-            s[ 0] = thickness[ 1]/limit
+            s[0] = thickness[1]/limit
             s[-1] = thickness[-2]/limit
-            roughness = numpy.where(roughness<s, roughness, s)
+            roughness = numpy.where(roughness < s, roughness, s)
         return roughness
 
 
@@ -257,7 +257,7 @@ def build_profile(z, thickness, roughness, value):
     """
 
     # Find interface depths
-    offset = numpy.hstack( (-inf, 0, numpy.cumsum(thickness[1:-1]), inf) )
+    offset = numpy.hstack((-inf, 0, numpy.cumsum(thickness[1:-1]), inf))
 
     # gives the layer boundaries in terms of the index of the z
     idx = numpy.searchsorted(z, offset)
@@ -270,7 +270,7 @@ def build_profile(z, thickness, roughness, value):
     result = numpy.empty_like(z)
     for i, v in enumerate(value):
         zo = z[idx[i]:idx[i+1]]
-        if i==0:
+        if i == 0:
             lvalue = 0
             lblend = 0
         else:
@@ -299,4 +299,4 @@ def blend(z, rough):
     if rough <= 0.0:
         return numpy.where(numpy.greater(z, 0), 0.0, 1.0)
     else:
-        return 0.5*( 1.0 - erf( z/( rough*numpy.sqrt(2.0) ) ) )
+        return 0.5*(1.0 - erf(z/(rough*numpy.sqrt(2.0))))

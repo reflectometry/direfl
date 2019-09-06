@@ -134,7 +134,7 @@ def _parse_line(line):
 def indfloat(s):
     try:
         return float(s)
-    except:
+    except Exception:
         s = s.lower()
         if s == 'inf':
             return inf

@@ -28,7 +28,6 @@ This module contains GUI utility functions and classes for the application.
 from __future__ import print_function
 
 import os
-import sys
 
 import wx
 from wx.lib import delayedresult
@@ -77,14 +76,16 @@ def choose_fontsize(fontname=None):
         benchmark = wx.StaticText(frame, wx.ID_ANY, label="")
         w, h = benchmark.GetTextExtent(BENCHMARK_TEXT)
         benchmark.Destroy()
-        if w <= max_width: break
+        if w <= max_width:
+            break
 
     frame.Destroy()
     return fontsize
 
-def display_fontsize(fontname=None, benchmark_text=BENCHMARK_TEXT,
-                                    benchmark_width=BENCHMARK_WIDTH,
-                                    benchmark_height=BENCHMARK_HEIGHT):
+def display_fontsize(fontname=None,
+                     benchmark_text=BENCHMARK_TEXT,
+                     benchmark_width=BENCHMARK_WIDTH,
+                     benchmark_height=BENCHMARK_HEIGHT):
     """
     Displays the width in pixels of a benchmark text string for a given font
     at various point sizes when rendered on the application's output device
@@ -128,8 +129,8 @@ def get_bitmap(filename, type=wx.BITMAP_TYPE_PNG, scale_factor=16):
 
     fullname = os.path.join(get_datadir(), filename)
 
-    return wx.BitmapFromImage(wx.Image(name=fullname, type=type)
-                                      .Scale(scale_factor, scale_factor))
+    return wx.BitmapFromImage(
+        wx.Image(name=fullname, type=type).Scale(scale_factor, scale_factor))
 
 def popup_error_message(caption, message):
     """Displays an error message in a pop-up dialog box with an OK button."""
@@ -194,13 +195,13 @@ class StatusBarInfo():
 # call to delayedresult in a try-block so that exceptions are signaled,
 # otherwise exceptions generated in the thread will be eaten and not displayed
 # on the console making debugging a challenge.
-import traceback
 
 def startWorker(consumer=None, workerFn=None, wargs=None, wkwargs=None):
     def catch(*args, **kwargs):
+        import traceback
         try:
             workerFn(*args, **kwargs)
-        except:
+        except Exception:
             print(traceback.format_exc())
             raise
     return delayedresult.startWorker(consumer=consumer, workerFn=catch,
@@ -218,7 +219,8 @@ class ExecuteInThread():
     """
 
     def __init__(self, callback, function, *args, **kwargs):
-        if callback is None: callback = _callback
+        if callback is None:
+            callback = _callback
         #print("*** ExecuteInThread init:", callback, function, args, kwargs)
 
         startWorker(consumer=callback, workerFn=function,

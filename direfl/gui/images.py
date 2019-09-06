@@ -361,7 +361,7 @@ def getBitmap(filename, imgType=wx.BITMAP_TYPE_PNG):
 
     fullname = os.path.join(imgdir, filename)
 
-    return wx.BitmapFromImage( wx.Image(fullname, imgType).Scale(16, 16) )
+    return wx.BitmapFromImage(wx.Image(fullname, imgType).Scale(16, 16))
 
 
 def getStartJobBitmap():

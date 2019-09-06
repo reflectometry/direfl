@@ -91,7 +91,7 @@ SPLASH_WIDTH = 720
 SPLASH_HEIGHT = 540
 
 # Diagnostic timing information.
-LOGTIM = True if (len(sys.argv) > 1 and '--time' in sys.argv[1:]) else False
+LOGTIM = (len(sys.argv) > 1 and '--time' in sys.argv[1:])
 
 #==============================================================================
 
@@ -119,7 +119,8 @@ class DiReflGUIApp(wx.App):
         # Display the splash screen.  It will remain visible until the caller
         # executes app.MainLoop() AND either the splash screen timeout expires
         # or the user left clicks over the splash screen.
-        if LOGTIM: log_time("Starting to display the splash screen")
+        if LOGTIM:
+            log_time("Starting to display the splash screen")
         pic = resource(SPLASH_FILE)
         self.display_splash_screen(img_name=pic, pos=pos, size=size)
 
@@ -131,7 +132,8 @@ class DiReflGUIApp(wx.App):
         # Create the application frame, but it will not be shown until the
         # splash screen terminates.  Note that import of AppFrame is done here
         # while the user is viewing the splash screen.
-        if LOGTIM: log_time("Starting to build the GUI application")
+        if LOGTIM:
+            log_time("Starting to build the GUI application")
 
         from .app_frame import AppFrame
 
@@ -180,9 +182,12 @@ class DiReflGUIApp(wx.App):
             print("*** Reported screen size including taskbar is %d x %d"%(j, k))
             print("*** Reported screen size excluding taskbar is %d x %d"%(w, h))
 
-        if w > 1920: w = 1280  # display on left side, not centered on screen
-        if w > desired_width:  xpos = x + (w - desired_width)/2
-        if h > desired_height: ypos = y + (h - desired_height)/2
+        if w > 1920:
+            w = 1280  # display on left side, not centered on screen
+        if w > desired_width:
+            xpos = x + (w - desired_width)/2
+        if h > desired_height:
+            ypos = y + (h - desired_height)/2
 
         # Return the suggested position and size for the application frame.
         return (xpos, ypos), (min(w, desired_width), min(h, desired_height))
@@ -220,14 +225,16 @@ class DiReflGUIApp(wx.App):
         """
 
         # To show the frame earlier, uncomment Show() code in OnInit.
-        if LOGTIM: log_time("Terminating the splash screen and showing the GUI")
+        if LOGTIM:
+            log_time("Terminating the splash screen and showing the GUI")
         self.frame.Show(True)
         event.Skip()
 
 #==============================================================================
 
 def main():
-    if LOGTIM: log_time("Starting DiRefl")
+    if LOGTIM:
+        log_time("Starting DiRefl")
 
     # Instantiate the application class and give control to wxPython.
     app = DiReflGUIApp(redirect=False, filename=None)
@@ -247,7 +254,8 @@ def main():
             print("%5d  %s" %(i, p))
 
     # Enter event loop which allows the user to interact with the application.
-    if LOGTIM: log_time("Entering the event loop")
+    if LOGTIM:
+        log_time("Entering the event loop")
     app.MainLoop()
 
 if __name__ == "__main__":
