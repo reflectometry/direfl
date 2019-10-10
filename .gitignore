@@ -3,3 +3,13 @@ __pycache__
 *.so
 *.dll
 /build
+
+*.png
+*.json
+*.err
+*.par
+*.dat
+
+
+
+/.idea
