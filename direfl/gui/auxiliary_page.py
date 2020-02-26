@@ -51,7 +51,7 @@ from matplotlib.backend_bases import FigureManagerBase
 #from matplotlib import pyplot as plt
 import pylab
 
-import numpy
+import numpy as np
 from numpy import linspace
 
 from .utilities import example_data, log_time
@@ -221,16 +221,16 @@ def test3():
     pylab.suptitle("Test use of procedural interface to Pylab", fontsize=16)
 
     pylab.subplot(211)
-    x = numpy.arange(0, 6, 0.01)
-    y = numpy.sin(x**2)*numpy.exp(-x)
+    x = np.arange(0, 6, 0.01)
+    y = np.sin(x**2)*np.exp(-x)
     pylab.xlabel("x-axis")
     pylab.ylabel("y-axis")
     pylab.title("First Plot")
     pylab.plot(x, y)
 
     pylab.subplot(212)
-    x = numpy.arange(0, 8, 0.01)
-    y = numpy.sin(x**2)*numpy.exp(-x) + 1
+    x = np.arange(0, 8, 0.01)
+    y = np.sin(x**2)*np.exp(-x) + 1
     pylab.xlabel("x-axis")
     pylab.ylabel("y-axis")
     pylab.title("Second Plot")
@@ -246,19 +246,19 @@ def test4(figure):
     """
 
     axes = figure.add_subplot(311)
-    x = numpy.arange(0, 6, 0.01)
-    y = numpy.sin(x**2)*numpy.exp(-x)
+    x = np.arange(0, 6, 0.01)
+    y = np.sin(x**2)*np.exp(-x)
     axes.plot(x, y)
 
     axes = figure.add_subplot(312)
-    x = numpy.arange(0, 8, 0.01)
-    y = numpy.sin(x**2)*numpy.exp(-x) + 1
+    x = np.arange(0, 8, 0.01)
+    y = np.sin(x**2)*np.exp(-x) + 1
     axes.plot(x, y)
     axes.set_ylabel("y-axis")
 
     axes = figure.add_subplot(313)
-    x = numpy.arange(0, 4, 0.01)
-    y = numpy.sin(x**2)*numpy.exp(-x) + 2
+    x = np.arange(0, 4, 0.01)
+    y = np.sin(x**2)*np.exp(-x) + 2
     axes.plot(x, y)
     axes.set_xlabel("x-axis")
 

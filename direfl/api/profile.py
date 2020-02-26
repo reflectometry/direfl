@@ -2,7 +2,7 @@
 # Author: Paul Kienzle
 from __future__ import division, print_function
 
-import numpy
+import numpy as np
 from numpy import inf
 from scipy.special import erf
 
@@ -43,8 +43,8 @@ class Microslabs:
         self._num_slabs = 0
         # _slabs contains the 1D objects w, sigma, rho_M, theta_M of len n
         # _slabsQ contains the 2D objects rho, irho
-        self._slabs = numpy.empty(shape=(0, 2))
-        self._slabsQ = numpy.empty(shape=(0, nprobe, 2))
+        self._slabs = np.empty(shape=(0, 2))
+        self._slabsQ = np.empty(shape=(0, nprobe, 2))
         self._slabsM = []
         self.dz = dz
 
@@ -60,7 +60,7 @@ class Microslabs:
         their own slices so long as the step size is approximately
         slabs.dz in the varying region.
         """
-        edges = numpy.arange(0, thickness+self.dz, self.dz, dtype='d')
+        edges = np.arange(0, thickness+self.dz, self.dz, dtype='d')
         edges[-1] = thickness
         centers = (edges[1:] + edges[:-1])/2
         widths = edges[1:] - edges[:-1]
@@ -92,8 +92,8 @@ class Microslabs:
         fromidx = slice(start, end)
         toidx = slice(end, end+repeats*length)
         self._reserve(repeats*length)
-        self._slabs[toidx] = numpy.tile(self._slabs[fromidx], [repeats, 1])
-        self._slabsQ[toidx] = numpy.tile(self._slabsQ[fromidx], [repeats, 1, 1])
+        self._slabs[toidx] = np.tile(self._slabs[fromidx], [repeats, 1])
+        self._slabsQ[toidx] = np.tile(self._slabsQ[fromidx], [repeats, 1, 1])
         self._num_slabs += repeats*length
 
         # if any magnetic sections are within the repeat, they need to be
@@ -121,8 +121,8 @@ class Microslabs:
         self._slabs[idx, 1] = sigma
         #self._slabs[idx, 2] = rhoM
         #self._slabs[idx, 3] = thetaM
-        self._slabsQ[idx, :, 0] = numpy.asarray(rho).T
-        self._slabsQ[idx, :, 1] = numpy.asarray(irho).T
+        self._slabsQ[idx, :, 0] = np.asarray(rho).T
+        self._slabsQ[idx, :, 1] = np.asarray(irho).T
 
     def magnetic(self, anchor, w, rhoM=0, thetaM=0):
         self._slabsM.append(anchor, w, rhoM, thetaM)
@@ -131,7 +131,7 @@ class Microslabs:
         """
         Total thickness of the profile.
         """
-        return numpy.sum(self._slabs[:self._num_slabs, 0])
+        return np.sum(self._slabs[:self._num_slabs, 0])
 
     def interface(self, I):
         """
@@ -199,10 +199,10 @@ class Microslabs:
         roughness = self.sigma
         thickness = self.w
         if limit > 0 and len(thickness) > 2:
-            s = numpy.min((thickness[:-1], thickness[1:]), axis=0)/limit
+            s = np.min((thickness[:-1], thickness[1:]), axis=0)/limit
             s[0] = thickness[1]/limit
             s[-1] = thickness[-2]/limit
-            roughness = numpy.where(roughness < s, roughness, s)
+            roughness = np.where(roughness < s, roughness, s)
         return roughness
 
 
@@ -212,14 +212,14 @@ class Microslabs:
 
         Nevot-Croce roughness is not represented.
         """
-        rho = numpy.vstack([self.rho[0, :]]*2).T.flatten()
-        irho = numpy.vstack([self.irho[0, :]]*2).T.flatten()
+        rho = np.vstack([self.rho[0, :]]*2).T.flatten()
+        irho = np.vstack([self.irho[0, :]]*2).T.flatten()
         if len(self.w) > 2:
-            ws = numpy.cumsum(self.w[1:-1])
-            z = numpy.vstack([numpy.hstack([-10, 0, ws]),
-                              numpy.hstack([0, ws, ws[-1]+10])]).T.flatten()
+            ws = np.cumsum(self.w[1:-1])
+            z = np.vstack([np.hstack([-10, 0, ws]),
+                           np.hstack([0, ws, ws[-1]+10])]).T.flatten()
         else:
-            z = numpy.array([-10, 0, 0, 10])
+            z = np.array([-10, 0, 0, 10])
         return z, rho, irho
 
     def smooth_profile(self, dz=1, roughness_limit=0):
@@ -235,10 +235,10 @@ class Microslabs:
         *roughness_limit* is the minimum number of roughness widths that must
         lie within each profile.
         """
-        w = numpy.sum(self.w[1:-1])
+        w = np.sum(self.w[1:-1])
         left = -self.sigma[0]*3
         right = w+self.sigma[-1]*3
-        z = numpy.arange(left, right+dz, dz)
+        z = np.arange(left, right+dz, dz)
         roughness = self.limited_sigma(limit=roughness_limit)
         rho = build_profile(z, self.w, roughness, self.rho[0])
         irho = build_profile(z, self.w, roughness, self.irho[0])
@@ -257,17 +257,17 @@ def build_profile(z, thickness, roughness, value):
     """
 
     # Find interface depths
-    offset = numpy.hstack((-inf, 0, numpy.cumsum(thickness[1:-1]), inf))
+    offset = np.hstack((-inf, 0, np.cumsum(thickness[1:-1]), inf))
 
     # gives the layer boundaries in terms of the index of the z
-    idx = numpy.searchsorted(z, offset)
+    idx = np.searchsorted(z, offset)
     # TODO: The following hack makes sure the final z value is calculated.
     # TODO: Make sure it works even when z is wider than the range of offsets.
     if idx[-1] < len(z):
         idx[-1] = len(z)
 
     # compute the results
-    result = numpy.empty_like(z)
+    result = np.empty_like(z)
     for i, v in enumerate(value):
         zo = z[idx[i]:idx[i+1]]
         if i == 0:
@@ -297,6 +297,6 @@ def blend(z, rough):
     profile you expect to find in the current profile at depth z.
     """
     if rough <= 0.0:
-        return numpy.where(numpy.greater(z, 0), 0.0, 1.0)
+        return np.where(np.greater(z, 0), 0.0, 1.0)
     else:
-        return 0.5*(1.0 - erf(z/(rough*numpy.sqrt(2.0))))
+        return 0.5*(1.0 - erf(z/(rough*np.sqrt(2.0))))

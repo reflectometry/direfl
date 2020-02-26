@@ -5,7 +5,7 @@ import sys
 
 from setuptools import setup, find_packages, Extension
 
-import numpy
+import numpy as np
 import direfl
 
 packages = ['direfl']
@@ -34,7 +34,7 @@ def reflmodule_config():
                          "src/reflrough.cc","src/resolution.c")]
     module = Extension('direfl.api.reflmodule',
                        sources=sources,
-                       include_dirs=[numpy.get_include()],
+                       include_dirs=[np.get_include()],
                        language="c++",
                        )
     return module

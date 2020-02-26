@@ -34,6 +34,8 @@ import os
 import sys
 import time
 
+import numpy as np
+
 import wx
 from wx.lib import delayedresult
 
@@ -56,9 +58,7 @@ from matplotlib.backend_bases import FigureManagerBase
 #from matplotlib import pyplot as plt
 import pylab
 
-import numpy
-from numpy import linspace, inf
-
+from ..api.util import isstr
 from ..api.invert import SurroundVariation, Inversion
 from .utilities import example_data
 
@@ -893,15 +893,15 @@ class InversionPage(wx.Panel):
         # 3-column data: Q, R, dR
         # 4-column data: Q, dQ, R, dR
         # 5-column data: Q, dQ, R, dR, Lambda
-        if isinstance(file1, basestring):
-            d1 = numpy.loadtxt(file1).T
+        if isstr(file1):
+            d1 = np.loadtxt(file1).T
             name1 = file1
         else:
             d1 = file1
             name1 = "data1"
 
-        if isinstance(file2, basestring):
-            d2 = numpy.loadtxt(file2).T
+        if isstr(file2):
+            d2 = np.loadtxt(file2).T
             name2 = file2
         else:
             d2 = file2
@@ -960,16 +960,16 @@ class InversionPage(wx.Panel):
             # way.  This technique was developed by Paul Kienzle and will
             # likely be improved over time.
             if dR is not None:
-                minR = numpy.min((R+dR))/10
+                minR = np.min((R+dR))/10
             else:
-                minR = numpy.min(R[R > 0])/2
+                minR = np.min(R[R > 0])/2
 
-            pylab.semilogy(Q, numpy.maximum(R, minR), '.', label=label,
+            pylab.semilogy(Q, np.maximum(R, minR), '.', label=label,
                            color=color)
             if dR is not None:
-                idx = numpy.argsort(Q)
-                pylab.fill_between(Q, numpy.maximum(R-dR, minR),
-                                   numpy.maximum(R+dR, minR),
+                idx = np.argsort(Q)
+                pylab.fill_between(Q, np.maximum(R-dR, minR),
+                                   np.maximum(R+dR, minR),
                                    color=color, alpha=0.2)
 
         # Only show file.ext portion of the file specification on the plots.

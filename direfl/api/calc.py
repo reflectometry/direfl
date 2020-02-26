@@ -31,7 +31,7 @@ __all__ = ['reflectivity', 'reflectivity_amplitude',
 
 from functools import reduce
 
-import numpy
+import numpy as np
 from numpy import pi, sin, cos, conj
 from numpy import ascontiguousarray as _dense
 from . import reflmodule
@@ -81,15 +81,15 @@ def reflectivity_amplitude(Q,
     See reflectivity for details.
     """
     Q = _dense(Q, 'd')
-    R = numpy.empty(Q.shape, 'D')
+    R = np.empty(Q.shape, 'D')
 
     n = len(depth)
-    if numpy.isscalar(wavelength):
-        wavelength = wavelength*numpy.ones(Q.shape, 'd')
-    if numpy.isscalar(mu):
-        mu = mu*numpy.ones(n, 'd')
-    if numpy.isscalar(sigma):
-        sigma = sigma*numpy.ones(n-1, 'd')
+    if np.isscalar(wavelength):
+        wavelength = wavelength*np.ones(Q.shape, 'd')
+    if np.isscalar(mu):
+        mu = mu*np.ones(n, 'd')
+    if np.isscalar(sigma):
+        sigma = sigma*np.ones(n-1, 'd')
 
     wavelength, depth, rho, mu = [_dense(v, 'd')
                                   for v in (wavelength, depth, rho, mu)]
@@ -148,7 +148,7 @@ def unpolarized_magnetic(*args, **kw):
 
     See magnetic_reflectivity for details.
     """
-    return reduce(numpy.add, magnetic_reflectivity(*args, **kw))/2.
+    return reduce(np.add, magnetic_reflectivity(*args, **kw))/2.
 
 def magnetic_amplitude(Q,
                        depth,
@@ -166,18 +166,18 @@ def magnetic_amplitude(Q,
     """
     Q = _dense(Q, 'd')
     n = len(depth)
-    if numpy.isscalar(wavelength):
-        wavelength = wavelength*numpy.ones(Q.shape, 'd')
-    if numpy.isscalar(mu):
-        mu = mu*numpy.ones(n, 'd')
-    if numpy.isscalar(rho_m):
-        rho_m = rho_m*numpy.ones(n, 'd')
-    if numpy.isscalar(theta_m):
-        theta_m = theta_m*numpy.ones(n, 'd')
+    if np.isscalar(wavelength):
+        wavelength = wavelength*np.ones(Q.shape, 'd')
+    if np.isscalar(mu):
+        mu = mu*np.ones(n, 'd')
+    if np.isscalar(rho_m):
+        rho_m = rho_m*np.ones(n, 'd')
+    if np.isscalar(theta_m):
+        theta_m = theta_m*np.ones(n, 'd')
 
     depth, rho, mu, rho_m, wavelength, theta_m = [
         _dense(a, 'd') for a in (depth, rho, mu, rho_m, wavelength, theta_m)]
-    R1, R2, R3, R4 = [numpy.empty(Q.shape, 'D') for pol in (1, 2, 3, 4)]
+    R1, R2, R3, R4 = [np.empty(Q.shape, 'D') for pol in (1, 2, 3, 4)]
     expth = cos(theta_m * pi/180.0) + 1j*sin(theta_m * pi/180.0)
 
     rho, mu, rho_m = [v*1e-6 for v in (rho, mu, rho_m)]
@@ -196,7 +196,7 @@ def fixedres(wavelength, dLoL, dT, Q):
     between the slits and s1, s2 is the slit openings.  Slits and
     distances should use the same units.
     """
-    dQ = numpy.empty(Q.shape, 'd')
+    dQ = np.empty(Q.shape, 'd')
     reflmodule._fixedres(wavelength, dLoL, dT, _dense(Q, 'd'), dQ)
     return dQ
 
@@ -207,7 +207,7 @@ def varyingres(wavelength, dLoL, dToT, Q):
 
     Angular divergence dT/T is (s1+s2)/d/theta(Q(s1, s2)).
     """
-    dQ = numpy.empty(Q.shape, 'd')
+    dQ = np.empty(Q.shape, 'd')
     reflmodule._varyingres(wavelength, dLoL, dToT, _dense(Q, 'd'), dQ)
     return dQ
 
@@ -216,7 +216,7 @@ def convolve(Qi, Ri, Q, dQ):
     """
     Return convolution R[k] of width dQ[k] at points Q[k].
     """
-    R = numpy.empty(Q.shape, 'd')
+    R = np.empty(Q.shape, 'd')
     reflmodule._convolve(_dense(Qi, 'd'), _dense(Ri, 'd'),
                          _dense(Q, 'd'), _dense(dQ, 'd'), R)
     return R

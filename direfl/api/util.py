@@ -1,5 +1,12 @@
+import numpy as np
 from numpy import pi, inf, nan, sqrt, log, degrees, radians, cos, sin, tan
-from numpy import arcsin as asin, ceil, clip
+from numpy import arcsin as asin
+
+def isstr(s):
+    try: # CRUFT: python3 does not define unicode
+        return isinstance(s, (str, unicode))
+    except NameError:
+        return isinstance(s, str)
 
 _FWHM_scale = sqrt(log(256))
 def FWHM2sigma(s):
@@ -67,7 +74,6 @@ def parse_file(file):
     Comment lines look like # float float float
     Data may contain inf or nan values.
     """
-    import numpy
     if hasattr(file, 'readline'):
         fh = file
     elif not string_like(file):
@@ -92,7 +98,7 @@ def parse_file(file):
         fh.close()
     #print([len(d) for d in data])
     #print("\n".join(k+":"+v for k, v in header.items()))
-    return header, numpy.array(data).T
+    return header, np.array(data).T
 
 def string_like(s):
     try:
@@ -153,11 +159,11 @@ def dhsv(color, dh=0, ds=0, dv=0, da=0):
     *dv* change intensity, e.g., +0.1 to brighten, -0.1 to darken.
     *dh* change hue, e.g.,
     """
+    import numpy as np
     from matplotlib.colors import colorConverter
     from colorsys import rgb_to_hsv, hsv_to_rgb
-    from numpy import clip, array
     r, g, b, a = colorConverter.to_rgba(color)
     h, s, v = rgb_to_hsv(r, g, b)
-    h, s, v, a = [clip(val, 0, 1) for val in (h+dh, s+ds, v+dv, a+da)]
+    h, s, v, a = [np.clip(val, 0, 1) for val in (h+dh, s+ds, v+dv, a+da)]
     r, b, g = hsv_to_rgb(h, s, v)
-    return array((r, g, b, a))
+    return np.array((r, g, b, a))

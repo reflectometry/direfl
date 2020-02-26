@@ -98,11 +98,11 @@ Generating a simulation probe is similarly convenient:
 
     >>> from ncnrdata import ANDR
     >>> instrument = ANDR(Tlo=0.5, slits_at_Tlo=0.2, slits_below=0.1)
-    >>> probe = instrument.simulate(T=numpy.arange(0, 5, 100))
+    >>> probe = instrument.simulate(T=np.arange(0, 5, 100))
 
 and for magnetic systems in polarized beam::
 
-    >>> probe = instrument.simulate_magnetic(T=numpy.arange(0, 5, 100))
+    >>> probe = instrument.simulate_magnetic(T=np.arange(0, 5, 100))
 
 When loading or simulating a data set, any of the instrument parameters
 and measurement geometry information can be specified, replacing the
@@ -257,9 +257,9 @@ Because d is fixed, that means s1(T) = s1(To) * T/To and s2(T) = s2(To) * T/To
 # TODO: the resolution calculator should not be responsible for loading
 # the data; maybe do it as a mixin?
 
-import numpy
-from numpy import pi, inf, sqrt, log, degrees, radians, cos, sin, tan
-from numpy import arcsin as asin, ceil
+import numpy as np
+from numpy import pi, inf, sqrt, log, degrees, radians, cos, sin, tan, ceil
+from numpy import arcsin as asin
 from numpy import ones_like, arange, isscalar, asarray
 from .util import TL2Q, QL2T, dTdL2dQ, dQdT2dLoL, FWHM2sigma, sigma2FWHM
 
@@ -362,7 +362,7 @@ class Monochromatic:
         """
 
         # Load the data
-        data = numpy.loadtxt(filename).T
+        data = np.loadtxt(filename).T
         if data.shape[0] == 2:
             Q, R = data
             dR = None
@@ -405,7 +405,7 @@ class Monochromatic:
             # Compute Q from angle T and wavelength L
             L = kw.get('wavelength', self.wavelength)
             Q = TL2Q(T, L)
-        resolution = self.resolution(Q=numpy.asarray(Q), **kw)
+        resolution = self.resolution(Q=np.asarray(Q), **kw)
         return resolution.probe(**kw)
 
     def simulate_magnetic(self, T=None, Tguide=270, shared_beam=True, **kw):
@@ -619,7 +619,7 @@ class Polychromatic:
         """
 
         # Load the data
-        data = numpy.loadtxt(filename).T
+        data = np.loadtxt(filename).T
         Q, dQ, R, dR, L = data
         dL = binwidths(L)
         T = kw.pop('T', QL2T(Q, L))
@@ -831,7 +831,7 @@ def binedges(L):
     else:
         dLoL = L[0]/L[1] - 1
     E = L*2/(2+dLoL)
-    return numpy.hstack((E, E[-1]*(1+dLoL)))
+    return np.hstack((E, E[-1]*(1+dLoL)))
 
 def divergence(T=None, slits=None, distance=None,
                sample_width=1e10, sample_broadening=0):
@@ -988,7 +988,7 @@ def demo():
 
 def demo2():
     import numpy, pylab
-    Q, R, dR = numpy.loadtxt('ga128.refl.mce').T
+    Q, R, dR = np.loadtxt('ga128.refl.mce').T
     dQ = resolution(Q, s=0.154, Tlo=0.36, d=1500., L=4.75, dLoL=0.02)
     pylab.errorbar(Q, R, xerr=dQ, yerr=dR, fmt=',r', capsize=0)
     pylab.grid(True)

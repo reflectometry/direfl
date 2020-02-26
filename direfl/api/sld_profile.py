@@ -1,8 +1,8 @@
 import cmath
-import numpy
-
 from math import pi, ceil
-from numpy import array, sin, cos, exp
+
+import numpy as np
+from numpy import sin, cos
 from scipy.interpolate import interp1d
 
 """
@@ -49,7 +49,7 @@ def reflection_matrix(q, sld, thickness, as_matrix=False):
     a, b, c, d = cos(theta), 1 / n * sin(theta), -n * sin(theta), cos(theta)
 
     if as_matrix:
-        return array([[a, b], [c, d]])
+        return np.array([[a, b], [c, d]])
     return a, b, c, d
 
 class SLDProfile(object):
@@ -87,12 +87,12 @@ class ConcatSLDProfile(SLDProfile):
         m = len(self._slds) * [None]
         for i in range(0, len(self._slds)):
             a, b, c, d = self._slds[i].as_matrix(q)
-            m[i] = array([[a, b], [c, d]])
+            m[i] = np.array([[a, b], [c, d]])
 
         if self._reverse:
             m = list(reversed(m))
 
-        m = numpy.linalg.multi_dot(m)
+        m = np.linalg.multi_dot(m)
         return m[0][0], m[0][1], m[1][0], m[1][1]
 
 
@@ -102,8 +102,8 @@ class FunctionSLDProfile(SLDProfile):
         self._supp = support
         self._dx = dx
 
-        self._xspace = numpy.linspace(support[0], support[1],
-                                      ceil((support[1] - support[0]) * 1 / dx))
+        self._xspace = np.linspace(support[0], support[1],
+                                   ceil((support[1] - support[0]) * 1 / dx))
         self._feval = [self._f(x) for x in self._xspace]
         self._m = [ConstantSLDProfile(fx, dx) for fx in self._feval]
         self._concat = ConcatSLDProfile(self._m, reverse=False)
@@ -148,7 +148,6 @@ class SlabsSLDProfile(SLDProfile):
 
         # WARNING: from_slabs and from_sample do not create the same slab profile
         # they are shifted profiles (by I'd guess 3*roughness[0])
-
         from refl1d.profile import build_profile
 
         w = thickness
@@ -166,9 +165,9 @@ class SlabsSLDProfile(SLDProfile):
             # computation
             w[0] = 3 * roughness[0]
 
-        z = numpy.linspace(0, sum(w) + roughness[-1] * 5, int(precision * sum(w)) + 1)
+        z = np.linspace(0, sum(w) + roughness[-1] * 5, int(precision * sum(w)) + 1)
 
-        offsets = numpy.cumsum(w)
+        offsets = np.cumsum(w)
         rho = build_profile(z, offsets, roughness, sld)
 
         return cls(z, rho)
@@ -189,7 +188,7 @@ class SlabsSLDProfile(SLDProfile):
     def as_matrix(self, q):
         from functools import reduce
         # len(dz) = len(self._z) - 1
-        dz = numpy.diff(self._z)
+        dz = np.diff(self._z)
         m = len(dz) * [None]
 
         for idx in range(0, len(dz)):
@@ -203,7 +202,7 @@ class SlabsSLDProfile(SLDProfile):
         # and redo the grouping in the next step. this should be then O(log n)
         # compared to the seq. multiplication which is O(n)....
         # BUT: this has to be done in C code, not in a python implementation :/
-        m = reduce(numpy.dot, m)
+        m = reduce(np.dot, m)
         return m[0][0], m[0][1], m[1][0], m[1][1]
 
 
@@ -215,11 +214,11 @@ class Reflectivity(object):
         self._f, self._b = fronting, backing
 
         # The input should be of the magnitude 1e-6 ... 1e-5
-        if any(abs(array([fronting, backing])) >= 1e-1):
+        if any(abs(np.array([fronting, backing])) >= 1e-1):
             raise RuntimeWarning("Given fronting/backing SLD values are too high")
 
     def reflection(self, q_space, as_function=True):
-        r = numpy.ones(len(q_space), dtype=complex)
+        r = np.ones(len(q_space), dtype=complex)
 
         for idx, q in enumerate(q_space):
             if abs(q) < 1e-10:

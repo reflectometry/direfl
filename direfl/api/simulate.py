@@ -21,8 +21,7 @@ from __future__ import division, print_function
 
 import sys
 
-import numpy
-from numpy import linspace, real
+import numpy as np
 
 from matplotlib.font_manager import FontProperties
 
@@ -59,8 +58,8 @@ class Simulation():
                  u=2.07, v1=0, v2=6.33, noise=0, seed=None,
                  phase_args={}, invert_args={},
                  perfect_reconstruction=False):
-        if numpy.isscalar(dq):
-            dq = dq*numpy.ones_like(q)
+        if np.isscalar(dq):
+            dq = dq*np.ones_like(q)
         self.q, self.dq = q, dq
         self.sample, self.urough = sample, urough
         self.u, self.v1, self.v2 = u, v1, v2
@@ -104,7 +103,7 @@ class Simulation():
             R1, R2 = [convolve(q, R, q, self.dq) for R in (R1, R2)]
         if self.noise > 0:
             self.dR1, self.dR2 = self.noise*R1, self.noise*R2
-            rng = numpy.random.RandomState(seed=self.seed)
+            rng = np.random.RandomState(seed=self.seed)
             self.R1 = rng.normal(R1, self.dR1)
             self.R2 = rng.normal(R2, self.dR2)
         else:
@@ -127,12 +126,12 @@ class Simulation():
         """Generate the sample profile."""
         z, rho_u = self.invert.z, self.invert.substrate
         rhos, widths, sigmas = zip(*self.sample)
-        substrate_width = self.invert.thickness - numpy.sum(widths)
-        widths = numpy.hstack((0, widths, substrate_width))
-        rhos = numpy.hstack((0, rhos, rho_u))
+        substrate_width = self.invert.thickness - np.sum(widths)
+        widths = np.hstack((0, widths, substrate_width))
+        rhos = np.hstack((0, rhos, rho_u))
 
-        interface_z = numpy.cumsum(widths)
-        rho_idx = numpy.searchsorted(interface_z, z)
+        interface_z = np.cumsum(widths)
+        rho_idx = np.searchsorted(interface_z, z)
         rho = rhos[rho_idx]
         #print(rho, z)
         #print(rhos, interface_z)
@@ -143,10 +142,10 @@ class Simulation():
     def sample_profile(self):
         z, rho_u, sigma_u = self.invert.z, self.invert.substrate, self.urough
         rhos, widths, sigmas = zip(*self.sample)
-        substrate_width = self.invert.thickness - numpy.sum(widths)
-        widths = numpy.hstack((0, widths, substrate_width))
-        rhos = numpy.hstack((0, rhos, rho_u))
-        sigmas = numpy.hstack((sigmas, sigma_u))
+        substrate_width = self.invert.thickness - np.sum(widths)
+        widths = np.hstack((0, widths, substrate_width))
+        rhos = np.hstack((0, rhos, rho_u))
+        sigmas = np.hstack((sigmas, sigma_u))
 
         #rhos, widths, sigmas = rhos[::-1], widths[::-1], sigmas[::-1]
         rho = profile.build_profile(z, value=rhos,
@@ -157,7 +156,7 @@ class Simulation():
 
     def phase_residual(self):
         """Return normalized residual from phase reconstruction."""
-        resid = (self.phase.RealR - real(self.rfree))/abs(self.rfree)
+        resid = (self.phase.RealR - np.real(self.rfree))/abs(self.rfree)
         return resid
 
 
@@ -202,7 +201,7 @@ class Simulation():
                                color=h.get_color(), alpha=0.2)
 
         # Plot free film phase for comparison
-        q_free, re_free = self.q, real(self.rfree)
+        q_free, re_free = self.q, np.real(self.rfree)
         scale = 1e4*q_free**2
         pylab.plot(q_free, scale*re_free, label="Ideal")
 
@@ -247,7 +246,7 @@ class Simulation():
         z, rho = self.sample_profile()
         pylab.cla()
         [h] = pylab.plot(z, rho, color='blue')
-        pylab.fill_between(z, numpy.zeros_like(rho), rho,
+        pylab.fill_between(z, np.zeros_like(rho), rho,
                            color=h.get_color(), alpha=0.2)
         self.invert.plot_profile()
 
@@ -318,11 +317,11 @@ class Simulation():
     def _invert(self):
         """Drive direct inversion."""
         if self.perfect_reconstruction:
-            data = self.q, real(self.rfree)
+            data = self.q, np.real(self.rfree)
         else:
             data = self.phase.Q, self.phase.RealR, self.phase.dRealR
         substrate = self.phase.u
-        thickness = numpy.sum(L[1] for L in self.sample) + 50
+        thickness = np.sum(L[1] for L in self.sample) + 50
         self.invert = Inversion(data=data, thickness=thickness,
                                 substrate=substrate, **self.invert_args)
         self.invert.run()
@@ -356,14 +355,14 @@ class Simulation():
 
         data1 = self.q, self.R1, 0*self.q
         data2 = self.q, self.R2, 0*self.q
-        numpy.savetxt('qrd1.', numpy.array(data1).T)
-        numpy.savetxt('qrd2.', numpy.array(data2).T)
+        np.savetxt('qrd1.', np.array(data1).T)
+        np.savetxt('qrd2.', np.array(data2).T)
         fid = open('varin.', 'w')
         fid.write("%d %g %g %g\n"
                   % (len(self.q), self.u*1e-6, self.v1*1e-6, self.v2*1e-6))
         fid.close()
         os.system('swfvarnexdum')
-        q, realR = numpy.loadtxt('qrreun.').T
+        q, realR = np.loadtxt('qrreun.').T
         self.chuckr = realR
 
 

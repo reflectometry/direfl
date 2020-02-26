@@ -1,21 +1,16 @@
-import cmath
-import numpy
-
 from math import pi
-from numpy import array
+import cmath
 
+import numpy as np
+
+from .util import isstr
 from .invert import SurroundVariation, remesh
 from .sld_profile import SLDProfile, refr_idx
-
-try:  # CRUFT: basestring isn't used in python3
-    basestring
-except:
-    basestring = str
 
 
 """
     References:
-    
+
     [Majkrzak2003] C. F. Majkrzak, N. F. Berk: Physica B 336 (2003) 27-38
         Phase sensitive reflectometry and the unambiguous determination
         of scattering  length density profiles
@@ -92,8 +87,8 @@ class AbstractReferenceVariation(SurroundVariation):
     def load(self, file, sld_profile, use_columns=None):
         assert isinstance(sld_profile, SLDProfile)
 
-        if isinstance(file, basestring):
-            d = numpy.loadtxt(file, usecols=use_columns).T
+        if isstr(file):
+            d = np.loadtxt(file, usecols=use_columns).T
             name = file
         else:
             d = file
@@ -123,9 +118,9 @@ class AbstractReferenceVariation(SurroundVariation):
     def _calc(self):
         self.Q, self.Rall = self._phase_reconstruction()
         l = len(self.Rall)
-        self.Rp, self.Rm = numpy.zeros(l, dtype=complex), numpy.zeros(l, dtype=complex)
+        self.Rp, self.Rm = np.zeros(l, dtype=complex), np.zeros(l, dtype=complex)
         for idx, el in enumerate(self.Rall):
-            if type(el) is numpy.ndarray or type(el) is list:
+            if type(el) is np.ndarray or type(el) is list:
                 self.Rp[idx] = el[0]
                 self.Rm[idx] = el[1]
             else:
@@ -204,7 +199,7 @@ class AbstractReferenceVariation(SurroundVariation):
             except RuntimeWarning as e:
                 print("Could not reconstruct the phase for q = {}. Reason: {}".format(q, e))
 
-        return array(qs), array(r)
+        return np.array(qs), np.array(r)
 
     def _solve_reference_layer(self, A, c):
         """
@@ -245,12 +240,12 @@ class AbstractReferenceVariation(SurroundVariation):
             # First, calculate alpha, beta as a function of gamma,
             # i.e. alpha = u1 - v2*gamma, beta = u2 - v2*gamma
             B = [[A[0][0], A[0][1]], [A[1][0], A[1][1]]]
-            u = numpy.linalg.solve(B, c)
-            v = numpy.linalg.solve(B, [A[0][2], A[1][2]])
+            u = np.linalg.solve(B, c)
+            v = np.linalg.solve(B, [A[0][2], A[1][2]])
             # Alternatively
-            # Binv = numpy.linalg.inv(B)
-            # u = numpy.dot(Binv, c)
-            # v = numpy.dot(Binv, [A[0][2], A[1][2]])
+            # Binv = np.linalg.inv(B)
+            # u = np.dot(Binv, c)
+            # v = np.dot(Binv, [A[0][2], A[1][2]])
 
             # Next, we can solve the equation gamma^2 = alpha * beta - 1
             # by simply substituting alpha and beta from above.
@@ -296,17 +291,17 @@ class AbstractReferenceVariation(SurroundVariation):
             # Highly ill-conditioned, better throw away the solution than pretending it's
             # good ...
             # TODO: maybe least squares?
-            condition_number = numpy.linalg.cond(A)
+            condition_number = np.linalg.cond(A)
             if condition_number > self.MATRIX_ILL_CONDITIONED:
                 raise RuntimeWarning("Given linear constraints are ill conditioned. "
                                      "Condition number {}".format(condition_number))
 
-            alpha_u, beta_u, gamma_u = numpy.linalg.solve(A, c)
+            alpha_u, beta_u, gamma_u = np.linalg.solve(A, c)
             return self._refl(alpha_u, beta_u, gamma_u)
 
         if len(A) > 3:
             # Silence the FutureWarning with rcond=None
-            solution, residuals, rank, singular_values = numpy.linalg.lstsq(A, c, rcond=None)
+            solution, residuals, rank, singular_values = np.linalg.lstsq(A, c, rcond=None)
             alpha_u, beta_u, gamma_u = solution
             return self._refl(alpha_u, beta_u, gamma_u)
 
@@ -368,7 +363,7 @@ class AbstractReferenceVariation(SurroundVariation):
                 pm = pm + 1
             imag_result.append(r_imag[pm % 2][idx])
 
-        return array(result) + 1j * array(imag_result), jump, djump
+        return np.array(result) + 1j * np.array(imag_result), jump, djump
 
     def plot_r_branches(self):
         import pylab

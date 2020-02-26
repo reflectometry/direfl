@@ -85,16 +85,15 @@ References
 
 .. [Sacks1993]    P.E. Sacks, *Wave Motion* 18, 21-30 (1993).
 """
-
 from __future__ import division, print_function
 import os
 from functools import reduce
 
-import numpy
-from numpy import pi, inf, nan, sqrt, exp, sin, cos, tan, log
-from numpy import ceil, floor, real, imag, sign, isinf, isnan, isfinite
-from numpy import (interp, diff, sum, mean, std,
-                   linspace, array, asarray, arange, hstack, zeros, diag)
+import numpy as np
+from numpy import (
+    pi, inf, nan, sqrt, exp, sin, cos, tan, log,
+    ceil, floor, real, imag, sign, isinf, isnan, isfinite,
+    diff, mean, std, arange, diag, isscalar)
 from numpy.fft import fft
 
 # The following line is temporarily commented out because Sphinx on Windows
@@ -108,14 +107,8 @@ from numpy.fft import fft
 # these functions.
 #from numpy.random import uniform, poisson, normal
 
-from matplotlib.font_manager import FontProperties
-
 from .calc import convolve
-
-try:  # CRUFT: basestring isn't used in python3
-    basestring
-except Exception:
-    basestring = str
+from .util import isstr
 
 # Custom colors
 DARK_RED = "#990000"
@@ -126,7 +119,6 @@ sapphire = Al2O3 = 5.0
 water = H2O = -0.56
 heavywater = D2O = 6.33
 lightheavywater = HDO = 2.9 # 50-50 mixture of H2O and D2O
-
 
 def invert(**kw):
     """
@@ -353,7 +345,7 @@ class Inversion():
 
     def __init__(self, data=None, **kw):
         # Load the data
-        if isinstance(data, basestring):
+        if isstr(data):
             self._loaddata(data)
         else: # assume it is a pair, e.g., a tuple, a list, or an Nx2 array
             self._setdata(data)
@@ -366,7 +358,7 @@ class Inversion():
         """
         Load data from a file of Q, real(R), dreal(R).
         """
-        data = numpy.loadtxt(file).T
+        data = np.loadtxt(file).T
         self._setdata(data, name=file)
 
 
@@ -382,8 +374,8 @@ class Inversion():
             q, rer = data
             drer = None
         # Force equal spacing by interpolation
-        self.Qinput, self.RealRinput = asarray(q), asarray(rer)
-        self.dRealRinput = asarray(drer) if drer is not None else None
+        self.Qinput, self.RealRinput = np.asarray(q), np.asarray(rer)
+        self.dRealRinput = np.asarray(drer) if drer is not None else None
 
 
     def _remesh(self):
@@ -485,7 +477,7 @@ class Inversion():
         #print("min dR", min(self.dRealR[self.dRealR>1e-15]))
         q, rer, drer = self.Q[idx], self.RealR[idx], self.dRealR[idx]
         rerinv = real(self.refl(q))
-        chisq = numpy.sum(((rer - rerinv)/drer)**2)/len(q)
+        chisq = np.sum(((rer - rerinv)/drer)**2)/len(q)
         return chisq
 
 
@@ -549,7 +541,7 @@ class Inversion():
             outfile = basefile+os.extsep+"amp"
         fid = open(outfile, "w")
         fid.write("#  Z  Rho  dRho\n")
-        numpy.savetxt(fid, array([self.z, self.rho, self.drho]).T)
+        np.savetxt(fid, np.array([self.z, self.rho, self.drho]).T)
         fid.close()
 
 
@@ -582,8 +574,8 @@ class Inversion():
             # and has an implicit substrate in front and behind.
             surround = self.substrate
             Q = -Q
-        dz = hstack((0, diff(self.z), 0))
-        rho = hstack((surround, self.rho[1:], self.substrate))
+        dz = np.hstack((0, diff(self.z), 0))
+        rho = np.hstack((surround, self.rho[1:], self.substrate))
         r = refl(Q, dz, rho)
         return  r
 
@@ -651,7 +643,7 @@ class Inversion():
         **Returns:**
             *None*
         """
-
+        from matplotlib.font_manager import FontProperties
         import pylab
 
         if details:
@@ -828,7 +820,7 @@ class Inversion():
             maxm += 1
         mx = int(maxm/2+0.5)
         h = 2/(2*mx-3)
-        g = numpy.hstack((ctf(x[:-1]*self.thickness), 0, 0, 0))
+        g = np.hstack((ctf(x[:-1]*self.thickness), 0, 0, 0))
         q = 2 * diff(g[:-2])/h
         q[-1] = 0
         ut = arange(2*mx-2)*h*self.thickness/2
@@ -837,13 +829,13 @@ class Inversion():
             du = self.ctf_window*h*self.thickness/2
             qinter = Interpolator(ut, q, porder=1)
             q = (qinter(ut - du) + qinter(ut) + qinter(ut + du))/3
-        q = hstack((q, 0))
+        q = np.hstack((q, 0))
         qp = [(ut, -2*q*self.rhoscale)]
 
-        Delta = zeros((mx, 2*mx), 'd')
+        Delta = np.zeros((mx, 2*mx), 'd')
         for iter in range(iters):
             for m in range(2, mx):
-                n = array(range(m, 2*mx-(m+1)))
+                n = np.array(range(m, 2*mx-(m+1)))
                 Delta[m, n] = (
                     h**2 * q[m-1] * (g[m+n] + Delta[m-1, n])
                     + Delta[m-1, n+1] + Delta[m-1, n-1] - Delta[m-2, n])
@@ -853,7 +845,7 @@ class Inversion():
             ut = arange(mup)*h*self.thickness
             q = 2 * diff(udiag[:-1])/h
             qp.append((ut, self.rhoscale*q))
-            q = hstack((q, 0, 0))
+            q = np.hstack((q, 0, 0))
         return qp
 
 
@@ -902,7 +894,7 @@ class Interpolator():
             raise NotImplementedError(
                 "Interpolator only supports polynomial order of 1")
     def __call__(self, x):
-        return interp(x, self.xi, self.yi)
+        return np.interp(x, self.xi, self.yi)
 
 
 def phase_shift(q, r, shift=0):
@@ -918,9 +910,9 @@ def remesh(data, xmin, xmax, npts, left=None, right=None):
     x, y = x[isfinite(x)], y[isfinite(y)]
     if npts > len(x):
         npts = len(x)
-    newx = linspace(xmin, xmax, npts)
-    newy = interp(newx, x, y, left=left, right=right)
-    return array((newx, newy))
+    newx = np.linspace(xmin, xmax, npts)
+    newy = np.interp(newx, x, y, left=left, right=right)
+    return np.array((newx, newy))
 
 
 # This program is public domain.
@@ -930,9 +922,6 @@ Optical matrix form of the reflectivity calculation.
 
 O.S. Heavens, Optical Properties of Thin Solid Films
 """
-
-from numpy import isscalar, asarray, zeros, ones, empty
-from numpy import exp, sqrt
 
 def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     """
@@ -959,18 +948,18 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     """
 
     if isscalar(Qz):
-        Qz = array([Qz], 'd')
+        Qz = np.array([Qz], 'd')
     n = len(rho)
     nQ = len(Qz)
 
     # Make everything into arrays
-    kz = asarray(Qz, 'd')/2
-    depth = asarray(depth, 'd')
-    rho = asarray(rho, 'd')
-    mu = mu*ones(n, 'd') if isscalar(mu) else asarray(mu, 'd')
-    wavelength = wavelength*ones(nQ, 'd') \
-        if isscalar(wavelength) else asarray(wavelength, 'd')
-    sigma = sigma*ones(n-1, 'd') if isscalar(sigma) else asarray(sigma, 'd')
+    kz = np.asarray(Qz, 'd')/2
+    depth = np.asarray(depth, 'd')
+    rho = np.asarray(rho, 'd')
+    mu = mu*np.ones(n, 'd') if isscalar(mu) else np.asarray(mu, 'd')
+    wavelength = wavelength*np.ones(nQ, 'd') \
+        if isscalar(wavelength) else np.asarray(wavelength, 'd')
+    sigma = sigma*np.ones(n-1, 'd') if isscalar(sigma) else np.asarray(sigma, 'd')
 
     # Scale units
     rho = rho*1e-6
@@ -982,7 +971,7 @@ def refl(Qz, depth, rho, mu=0, wavelength=1, sigma=0):
     ## This allows the caller to provide an array of length n
     ## corresponding to rho, mu or of length n-1.
     idx = (kz >= 0)
-    r = empty(len(kz), 'D')
+    r = np.empty(len(kz), 'D')
     r[idx] = _refl_calc(kz[idx], wavelength[idx], depth, rho, mu, sigma)
     r[~idx] = _refl_calc(
         abs(kz[~idx]), wavelength[~idx],
@@ -1174,7 +1163,7 @@ class SurroundVariation():
 
         def cost(rho):
             R1, R2 = self.refl(z, rho, resid=True)
-            return numpy.sum(R1**2) + numpy.sum(R2**2)
+            return np.sum(R1**2) + np.sum(R2**2)
 
         rho_final = rho_initial
         rho_final, f, d = fmin(cost, rho_initial, approx_grad=True, maxfun=20)
@@ -1202,8 +1191,8 @@ class SurroundVariation():
                 Return the reflectivities R1 and R2 for the film *z*, *rho*.
         """
 
-        w = numpy.hstack((0, numpy.diff(z), 0))
-        rho = numpy.hstack((0, rho[1:], self.u))
+        w = np.hstack((0, np.diff(z), 0))
+        rho = np.hstack((0, rho[1:], self.u))
         rho[0] = self.v1
         R1 = self._calc_refl(w, rho)
         rho[0] = self.v2
@@ -1216,8 +1205,8 @@ class SurroundVariation():
 
     def _calc_free(self, z, rho):
         # This is more or less cloned code that should be written just once.
-        w = numpy.hstack((0, numpy.diff(z), 0))
-        rho = numpy.hstack((self.u, rho[1:], self.u))
+        w = np.hstack((0, np.diff(z), 0))
+        rho = np.hstack((self.u, rho[1:], self.u))
         rho[0] = self.u
         Q = -self.Qin
         if self.backrefl:
@@ -1284,7 +1273,7 @@ class SurroundVariation():
 
         fid = open(outfile, "w")
         fid.write(header+"\n")
-        numpy.savetxt(fid, array(v).T)
+        np.savetxt(fid, np.array(v).T)
         fid.close()
 
 
@@ -1295,10 +1284,10 @@ class SurroundVariation():
 
         R1, R2 = self.refl(*profile)
         rer, imr = self._calc_free(*profile)
-        data = numpy.vstack((self.Qin, R1, R2, rer, imr))
+        data = np.vstack((self.Qin, R1, R2, rer, imr))
         fid = open(outfile, "w")
         fid.write("#  Q  R1  R2  RealR  ImagR\n")
-        numpy.savetxt(fid, array(data).T)
+        np.savetxt(fid, np.array(data).T)
         fid.close()
 
 
@@ -1311,6 +1300,7 @@ class SurroundVariation():
 
     def plot_measurement(self, profile=None):
         """Plot the data, and if available, the inverted theory."""
+        from matplotlib.font_manager import FontProperties
         import pylab
 
         def plot1(Q, R, dR, Rth, surround, label, color):
@@ -1326,7 +1316,7 @@ class SurroundVariation():
                 pylab.fill_between(Q, (R-dR)/F, (R+dR)/F,
                                    color=color, alpha=0.2)
                 if Rth is not None:
-                    chisq = sum(((R-Rth)/dR)**2)
+                    chisq = np.sum(((R-Rth)/dR)**2)
                 else:
                     chisq = 0
                 return chisq, len(Q)
@@ -1362,6 +1352,7 @@ class SurroundVariation():
 
 
     def plot_phase(self):
+        from matplotlib.font_manager import FontProperties
         import pylab
         plotamp(self.Q, self.ImagR, dr=self.dImagR,
                 color='blue', label='Imag R')
@@ -1372,6 +1363,7 @@ class SurroundVariation():
 
 
     def plot_imaginary(self):
+        from matplotlib.font_manager import FontProperties
         import pylab
         plotamp(self.Q, -self.ImagR, dr=self.dImagR,
                 color='blue', label='Imag R+')
@@ -1394,15 +1386,15 @@ class SurroundVariation():
         # 3-column data: Q, R, dR
         # 4-column data: Q, dQ, R, dR
         # 5-column data: Q, dQ, R, dR, Lambda
-        if isinstance(file1, basestring):
-            d1 = numpy.loadtxt(file1).T
+        if isstr(file1):
+            d1 = np.loadtxt(file1).T
             name1 = file1
         else:
             d1 = file1
             name1 = "SimData1"
 
-        if isinstance(file2, basestring):
-            d2 = numpy.loadtxt(file2).T
+        if isstr(file2):
+            d2 = np.loadtxt(file2).T
             name2 = file2
         else:
             d2 = file2
@@ -1474,9 +1466,9 @@ def valid_f(f, A, axis=0):
     if the calculation should summarize the entire array.
     """
 
-    A = numpy.asarray(A)
-    A = numpy.ma.masked_array(A, mask=~isfinite(A))
-    return numpy.asarray(f(A, axis=axis))
+    A = np.asarray(A)
+    A = np.ma.masked_array(A, mask=~isfinite(A))
+    return np.asarray(f(A, axis=axis))
 
 
 def _phase_reconstruction(Q, R1sq, R2sq, rho_u, rho_v1, rho_v2):
@@ -1497,14 +1489,15 @@ def _phase_reconstruction(Q, R1sq, R2sq, rho_u, rho_v1, rho_v2):
     Qsq = Q**2 + 16.*pi*rho_u*1e-6
     usq, v1sq, v2sq = [(1-16*pi*rho*1e-6/Qsq) for rho in (rho_u, rho_v1, rho_v2)]
 
-    sigma1 = 2 * sqrt(v1sq*usq) * (1+R1sq) / (1-R1sq)
-    sigma2 = 2 * sqrt(v2sq*usq) * (1+R2sq) / (1-R2sq)
+    with np.errstate(invalid='ignore'):
+        sigma1 = 2 * sqrt(v1sq*usq) * (1+R1sq) / (1-R1sq)
+        sigma2 = 2 * sqrt(v2sq*usq) * (1+R2sq) / (1-R2sq)
 
-    alpha = usq * (sigma1-sigma2) / (v1sq-v2sq)
-    beta = (v2sq*sigma1-v1sq*sigma2) / (v2sq-v1sq)
-    gamma = sqrt(alpha*beta - usq**2)
-    Rre = (alpha-beta) / (2*usq+alpha+beta)
-    Rim = -2*gamma / (2*usq+alpha+beta)
+        alpha = usq * (sigma1-sigma2) / (v1sq-v2sq)
+        beta = (v2sq*sigma1-v1sq*sigma2) / (v2sq-v1sq)
+        gamma = sqrt(alpha*beta - usq**2)
+        Rre = (alpha-beta) / (2*usq+alpha+beta)
+        Rim = -2*gamma / (2*usq+alpha+beta)
 
     return Rre, Rim
 

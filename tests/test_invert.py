@@ -7,7 +7,7 @@
 # within the package.  If this appears to be the case, then augment sys.path to
 # include the parent directory of the package so that the import can succeed.
 try:
-    import inversion
+    import direfl
 except:
     import os
     import sys
@@ -22,11 +22,11 @@ except:
     elif os.path.basename(grandparent_dir_path) == 'inversion':
         sys.path.insert(1, (os.path.dirname(grandparent_dir_path)))
     else:
-        print """\
+        print("""\
         *** To run this test script, either install the inversion package or
-        *** place this module inside the package no more than 2 levels deep."""
+        *** place this module inside the package no more than 2 levels deep.""")
 
-from inversion.api.simulate import Simulation
+from direfl.api.simulate import Simulation
 from numpy import linspace
 
 def test():

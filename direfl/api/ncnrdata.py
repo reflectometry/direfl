@@ -49,10 +49,7 @@ And for magnetic::
 
 See :module:`resolution` for details.
 """
-
 import os
-import numpy
-from numpy import inf, pi
 
 from .resolution import Monochromatic
 from . import util
@@ -120,6 +117,8 @@ def load_magnetic(filename, Tguide=270, shared_beam=True, **kw):
     For full control, specify filename as a list of files, with None
     for the missing cross sections.
     """
+    from refl1d.probe import PolarizedNeutronProbe
+
     probes = [load(v, **kw) for v in find_xsec(filename)]
     if all(p is None for p in probes):
         raise IOError("Data set has no magnetic cross sections: '%s'"%filename)
@@ -204,7 +203,7 @@ class NCNRLoader(Monochromatic):
         M = Experiment(probe=probe, sample=sample)
         _, Rth = M.reflectivity()
         dR = 0.01*M.fresnel()
-        R = Rth + numpy.random.randn(*Rth.shape)*dR
+        R = Rth + np.random.randn(*Rth.shape)*dR
         probe.data = R, dR
 
         return probe
