@@ -4,7 +4,7 @@ from refl1d.names import *
 
 # Call via: refl1d generate.py --store=sim --steps=0 --simulate --noise=1e-10
 data = load4("sim/generate-1-refl.datA", name="data", columns="Q dQ R dR", radiation="neutron",
-             L=4, dL=1e-9, simulation_range=numpy.linspace(0, 1, 5001))
+             L=4, dL=1e-9, simulation_range=np.linspace(0, 1, 5001))
 
 Si = Material("Si", name="Si")
 Cu = Material("Cu")

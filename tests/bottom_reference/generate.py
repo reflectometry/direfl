@@ -58,7 +58,7 @@ models = [
 
 # Calculate the exact reflection coefficient (not the reflectivity!)
 ampl = models[3].amplitude()
-numpy.savetxt("sim/reflection.dat", zip(ampl[0], ampl[1].real, -ampl[1].imag))
+np.savetxt("sim/reflection.dat", zip(ampl[0], ampl[1].real, -ampl[1].imag))
 
 # plot the reflectivity
 problem = MultiFitProblem([models[0], models[1], models[2]])
