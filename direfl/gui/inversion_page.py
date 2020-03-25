@@ -746,7 +746,7 @@ class InversionPage(wx.Panel):
                             defaultFile="",
                             wildcard=(REFL_FILES+"|"+DATA_FILES+"|"+
                                       TEXT_FILES+"|"+ALL_FILES),
-                            style=wx.OPEN|wx.MULTIPLE|wx.CHANGE_DIR)
+                            style=wx.FD_OPEN|wx.FD_MULTIPLE|wx.FD_CHANGE_DIR)
         # Wait for user to close the dialog.
         sts = dlg.ShowModal()
         if sts == wx.ID_OK:
@@ -790,7 +790,7 @@ class InversionPage(wx.Panel):
                             defaultFile="",
                             wildcard=(REFL_FILES+"|"+DATA_FILES+"|"+
                                       TEXT_FILES+"|"+ALL_FILES),
-                            style=wx.OPEN|wx.CHANGE_DIR)
+                            style=wx.FD_OPEN|wx.FD_CHANGE_DIR)
         # Wait for user to close the dialog.
         sts = dlg.ShowModal()
         if sts == wx.ID_OK:

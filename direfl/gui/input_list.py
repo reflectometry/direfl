@@ -39,7 +39,7 @@ Yellow means an input value is required.
 Pink indicates a syntax error."""
 
 
-class ItemListValidator(wx.PyValidator):
+class ItemListValidator(wx.Validator):
     """
     This class implements a custom input field validator.  Each instance of
     this class services one data entry field (typically implemented as
@@ -58,7 +58,7 @@ class ItemListValidator(wx.PyValidator):
     """
 
     def __init__(self, datatype='str', required=False):
-        wx.PyValidator.__init__(self)
+        wx.Validator.__init__(self)
         self.datatype = datatype
         self.required = required
 

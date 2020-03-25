@@ -212,7 +212,7 @@ class InstrumentParameters():
         # Pass in the frame object as the parent window so that the dialog box
         # will inherit font info from it instead of using system defaults.
         frame = wx.FindWindowByName("AppFrame")
-        x, y = frame.GetPositionTuple()
+        x, y = frame.GetPosition()
         dlg = InputListDialog(parent=frame,
                               title="Instrument Properties",
                               pos=(x+350, y+50),
@@ -282,7 +282,7 @@ class InstrumentParameters():
         # Pass in the frame object as the parent window so that the dialog box
         # will inherit font info from it instead of using system defaults.
         frame = wx.FindWindowByName("AppFrame")
-        x, y = frame.GetPositionTuple()
+        x, y = frame.GetPosition()
         dlg = InputListDialog(parent=frame,
                               title="Instrument Properties",
                               pos=(x+350, y+50),

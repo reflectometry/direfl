@@ -892,7 +892,7 @@ class SimulationPage(wx.Panel):
                             defaultDir=os.getcwd(),
                             defaultFile="",
                             wildcard=DATA_FILES+"|"+TEXT_FILES+"|"+ALL_FILES,
-                            style=wx.OPEN)
+                            style=wx.FD_OPEN)
         # Wait for user to close the dialog.
         sts = dlg.ShowModal()
         if sts == wx.ID_OK:
