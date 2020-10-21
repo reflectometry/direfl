@@ -1022,7 +1022,7 @@ def _refl_calc(kz, wavelength, depth, rho, mu, sigma):
 
 
 def reconstruct(file1, file2, u, v1, v2, stages=100):
-    """
+    r"""
     Two reflectivity measurements of a film with different surrounding media
     :math:`|r_1|^2` and :math:`|r_2|^2` can be combined to compute the expected
     complex reflection amplitude r_reversed of the free standing film measured
@@ -1107,6 +1107,63 @@ def reconstruct(file1, file2, u, v1, v2, stages=100):
     *save(file)*        save Q, RealR, ImagR to a file
     *show()*, *plot()*  display the results
     ==================  =========================================
+
+    **Notes:**
+
+    There is a question of how beam effects (scale, background, resolution)
+    will show up in the phase reconstruction. To understand this we can play
+    with the reverse problem applying beam effects (intensity=A, background=B,
+    resolution=G) to the reflectivity amplitude $r$ such that the computed
+    $|r|^2$ matches the measured $R = A G*|r|^2 + B$, where $*$ is the
+    convolution operator.
+
+    There is a reasonably pretty solution for intensity and background: set
+    $s =  r \surd A + i r \surd B / |r|$ so that
+    $|s|^2 = A |r|^2 + |r|^2 B/|r|^2 = A |r|^2 + B$. Since $r$ is complex,
+    the intensity and background will show up in both real and imaginary
+    channels of the phase reconstruction.
+
+    It is not so pretty for resolution since the sum of the squares does not
+    match the square of the sum:
+
+    .. math::
+
+        G * |r|^2 = \int G(q'-q)|r(q)|^2 dq \ne |\int G(q'-q)r(q)dq|^2 = |G*r|^2
+
+    This is an area may have been investigated in the 90's when the theory of
+    neutron phase reconstruction and inversion was developing, but this
+    reconstruction code does not do anything to take resolution into account.
+    Given that we known $\Delta q$ for each measured $R$ we should be able to
+    deconvolute using a matrix approximation to the integral:
+
+    .. math::
+
+        R = G R' \Rightarrow R' = G^{-1} R
+
+    where each row of $G$ is the gaussian weights $G(q_k - q)$ with width
+    $\Delta q_k$ evaluated at all measured points $q$. Trying this didn't
+    produce a useful (or believable) result. Maybe it was a problem with the
+    test code, or maybe it is an effect of applying an ill-conditioned
+    linear operator over data that varies by orders of magnitude.
+
+    So question: are there techniques for deconvoluting reflectivity curves?
+
+    Going the other direction, we can apply a resolution function to $Re(r)$
+    and $Im(r)$ to see how well they reproduce the resolution applied to
+    $|r|^2$. The answer is that it does a pretty good job, but the overall
+    smoothing is somewhat less than expected.
+
+    .. figure:: ../images/resolution.png
+        :alt: Reflectivity after applying resolution to amplitude.
+
+        Amplitude effects of applying a 2% $\Delta Q/Q$ resolution to the
+        complex amplitude prior to squaring.
+
+    I'm guessing that our reconstructed amplitude is going to show a similar
+    decay due to resolution. This ought to show up as a rounding off of edges
+    in the inverted profile (guessing again from the effects of applying
+    windowing functions to reduce ringing in the Fourier transform). This is
+    intuitive: poor resolution should show less detail in the profile.
     """
 
     return SurroundVariation(file1, file2, u, v1, v2, stages=stages)
